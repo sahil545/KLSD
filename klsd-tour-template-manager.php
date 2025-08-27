@@ -339,6 +339,9 @@ class KLSD_Tour_Template_Manager {
                 <button type="button" class="klsd-test-button" onclick="window.open('<?php echo get_permalink($post->ID); ?>?klsd_test_override=1', '_blank')">
                     Force Test Override
                 </button>
+                <button type="button" class="klsd-test-button" onclick="window.open('<?php echo get_permalink($post->ID); ?>?klsd_emergency=1', '_blank')" style="background: #dc3545;">
+                    Emergency Test
+                </button>
                 <?php endif; ?>
 
                 <h4 style="margin-top: 20px; margin-bottom: 10px;">WordPress Environment:</h4>
