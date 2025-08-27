@@ -1191,8 +1191,8 @@ get_header(); ?>
         $product = wc_get_product($product_id);
         $product_data = $this->prepare_product_data_for_url($product, $product_id);
 
-        // Use the actual product template with real data
-        $fetch_url = $netlify_url . "/" . $template_path . "?" . $product_data;
+        // Use the actual product template with real data (SSR parameters)
+        $fetch_url = $netlify_url . "/" . $template_path . "?" . $product_data . "&ssr=1&wordpress=1";
 
         error_log('KLSD: Attempting to fetch Next.js HTML from: ' . $fetch_url);
 
