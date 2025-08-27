@@ -8,7 +8,9 @@ interface ClientPageWrapperProps {
   productData?: any;
 }
 
-export default function ClientPageWrapper({ productData }: ClientPageWrapperProps) {
+export default function ClientPageWrapper({
+  productData,
+}: ClientPageWrapperProps) {
   return (
     <>
       <TourPageNavigation />
