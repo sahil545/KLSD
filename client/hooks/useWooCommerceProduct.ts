@@ -138,19 +138,19 @@ export function useWooCommerceProduct(): {
   useEffect(() => {
     const checkDevelopmentMode = () => {
       return (
-        window.location.hostname.includes("fly.dev") ||
         window.location.hostname === "localhost" ||
-        window.location.hostname.includes("vercel.app") ||
-        window.location.hostname.includes("netlify.app") ||
-        window.location.hostname.includes("-2ecb0f6537f44a3b8351b24af") // This specific environment
+        window.location.port === "3000" ||
+        window.location.port === "5173"
       );
     };
-    const devMode = true; // Force development mode for now
+    const devMode = checkDevelopmentMode();
     console.log(
       "Development mode check:",
       devMode,
       "hostname:",
       window.location.hostname,
+      "port:",
+      window.location.port,
     );
     setIsDevelopment(devMode);
   }, []);
