@@ -47,17 +47,27 @@ export default function ChristStatueTourStatic() {
       name: searchParams.get("product_name") || defaultProduct.name,
       price: searchParams.get("product_price") || defaultProduct.price,
       categories: searchParams.get("product_categories")
-        ? JSON.parse(decodeURIComponent(searchParams.get("product_categories")!))
+        ? JSON.parse(
+            decodeURIComponent(searchParams.get("product_categories")!),
+          )
         : defaultProduct.categories,
       images: searchParams.get("product_images")
         ? JSON.parse(decodeURIComponent(searchParams.get("product_images")!))
         : defaultProduct.images,
       tourData: {
-        duration: searchParams.get("tour_duration") || defaultProduct.tourData.duration,
-        groupSize: searchParams.get("tour_group_size") || defaultProduct.tourData.groupSize,
-        location: searchParams.get("tour_location") || defaultProduct.tourData.location,
-        difficulty: searchParams.get("tour_difficulty") || defaultProduct.tourData.difficulty,
-        gearIncluded: searchParams.get("tour_gear_included") === "1" || defaultProduct.tourData.gearIncluded,
+        duration:
+          searchParams.get("tour_duration") || defaultProduct.tourData.duration,
+        groupSize:
+          searchParams.get("tour_group_size") ||
+          defaultProduct.tourData.groupSize,
+        location:
+          searchParams.get("tour_location") || defaultProduct.tourData.location,
+        difficulty:
+          searchParams.get("tour_difficulty") ||
+          defaultProduct.tourData.difficulty,
+        gearIncluded:
+          searchParams.get("tour_gear_included") === "1" ||
+          defaultProduct.tourData.gearIncluded,
         highlights: searchParams.get("tour_highlights")
           ? JSON.parse(decodeURIComponent(searchParams.get("tour_highlights")!))
           : defaultProduct.tourData.highlights,
