@@ -597,8 +597,9 @@ get_header(); ?>
         $html = str_replace("href='/", "href='" . $netlify_url . "/", $html);
         $html = str_replace("src='/", "src='" . $netlify_url . "/", $html);
 
-        // Add wrapper with proper WordPress styling
-        return '<div class="klsd-nextjs-content" data-product-id="' . esc_attr($product_id) . '">' . $html . '</div>';
+        // Add wrapper with proper WordPress styling and booking handler
+        $booking_script = $this->get_booking_handler_script($product_id);
+        return '<div class="klsd-nextjs-content" data-product-id="' . esc_attr($product_id) . '">' . $html . '</div>' . $booking_script;
     }
 
     /**
