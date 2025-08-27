@@ -396,6 +396,10 @@ class KLSD_WooCommerce_Templates {
      * Save custom fields
      */
     public function save_custom_fields($post_id) {
+        // Save Next.js frontend toggle
+        $use_nextjs = isset($_POST['_klsd_use_nextjs_frontend']) ? '1' : '0';
+        update_post_meta($post_id, '_klsd_use_nextjs_frontend', $use_nextjs);
+
         // Get all KLSD meta fields from POST data
         foreach ($_POST as $key => $value) {
             if (strpos($key, '_klsd_') === 0) {
