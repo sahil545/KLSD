@@ -335,6 +335,17 @@ class KLSD_Tour_Template_Manager {
                 <?php endif; ?>
             </div>
 
+            <div class="klsd-diag-item warning">
+                <strong>⚠️ Theme Interference Detected:</strong>
+                <p style="margin: 5px 0;">Your active theme (<?php echo wp_get_theme()->get('Name'); ?>) may be overriding our template system.</p>
+                <p style="margin: 5px 0; font-size: 12px;">Use the buttons below to test different bypass methods:</p>
+                <ul style="margin: 5px 0 0 20px; font-size: 12px;">
+                    <li><strong>Normal Test:</strong> Uses template_include filter (may be blocked by theme)</li>
+                    <li><strong>Emergency Test:</strong> Bypasses conditions but uses WordPress template system</li>
+                    <li><strong>Force Bypass:</strong> Completely bypasses theme - ultimate test</li>
+                </ul>
+            </div>
+
             <div style="margin-top: 15px;">
                 <button type="button" class="klsd-test-button" onclick="window.open('<?php echo $netlify_url . '/api/template-test'; ?>', '_blank')">
                     Test Next.js API
