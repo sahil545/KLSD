@@ -6,9 +6,19 @@ const nextConfig = {
   // Optimize for production deployment
   productionBrowserSourceMaps: false,
 
+  // Fix static generation issues for API routes
+  generateBuildId: async () => {
+    return 'key-largo-diving-' + Date.now()
+  },
+
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['lucide-react'],
+  },
+
+  // Skip static generation for API routes during build
+  async generateStaticParams() {
+    return []
   },
   
   // Development optimizations
