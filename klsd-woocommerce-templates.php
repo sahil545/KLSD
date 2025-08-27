@@ -120,8 +120,8 @@ class KLSD_WooCommerce_Templates {
         .klsd-template-assignment { background: #fff; border: 1px solid #c3c4c7; box-shadow: 0 1px 1px rgba(0,0,0,0.04); margin-bottom: 20px; }
         .klsd-template-assignment h3 { font-size: 14px; color: #1d2327; font-weight: 600; padding: 10px 12px; margin: 0; background: #f9f9f9; border-left: 4px solid #2271b1; }
         .klsd-template-info { background: #e7f3ff; border: 1px solid #72aee6; border-radius: 4px; padding: 12px; margin: 12px; }
-        .klsd-custom-fields { background: #fff; border: 1px solid #c3c4c7; margin-bottom: 20px; }
-        .klsd-custom-fields h3 { padding: 10px 12px; margin: 0; background: #f9f9f9; border-left: 4px solid #00a32a; font-size: 14px; font-weight: 600; }
+        .klsd-template-fields { background: #fff; border: 1px solid #c3c4c7; margin-top: 15px; border-radius: 4px; }
+        .klsd-template-fields h4 { padding: 10px 12px; margin: 0; background: #f9f9f9; border-left: 4px solid #00a32a; font-size: 14px; font-weight: 600; }
         .klsd-field { margin-bottom: 12px; padding: 0 12px; }
         .klsd-field label { font-weight: 600; color: #1d2327; margin-bottom: 6px; display: block; }
         .klsd-field input, .klsd-field textarea, .klsd-field select { width: 100%; padding: 6px 8px; border: 1px solid #8c8f94; border-radius: 4px; }
