@@ -1,0 +1,31 @@
+import type { Metadata } from "next";
+import "./globals.css";
+
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import ClientErrorHandler from "./components/ClientErrorHandler";
+
+export const metadata: Metadata = {
+  title: "Key Largo Scuba Diving",
+  description:
+    "Premium scuba diving tours and certification in Key Largo, Florida Keys",
+  keywords:
+    "scuba diving, Key Largo, Florida Keys, dive tours, certification, snorkeling",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <head>{/* Error handling initialization */}</head>
+      <body>
+        <ErrorBoundary>
+          <ClientErrorHandler />
+          {children}
+        </ErrorBoundary>
+      </body>
+    </html>
+  );
+}
