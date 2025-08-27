@@ -428,6 +428,248 @@ class KLSD_WooCommerce_Templates {
     public function ajax_save_template_data() {
         wp_send_json_success(array('message' => 'Template data saved'));
     }
+
+    /**
+     * Override product template to use Next.js frontend when enabled
+     */
+    public function override_product_template($template) {
+        // Only override on single product pages
+        if (!is_product()) {
+            return $template;
+        }
+
+        global $post;
+        $use_nextjs = get_post_meta($post->ID, '_klsd_use_nextjs_frontend', true);
+
+        // If Next.js is not enabled for this product, use default template
+        if ($use_nextjs !== '1') {
+            return $template;
+        }
+
+        // Get the template assignment
+        $template_info = $this->get_product_template($post->ID);
+
+        if (!$template_info) {
+            return $template; // No template assigned, use default
+        }
+
+        // Create custom template file path
+        $custom_template = KLSD_PLUGIN_PATH . 'templates/nextjs-product-template.php';
+
+        // Create the template file if it doesn't exist
+        if (!file_exists($custom_template)) {
+            $this->create_nextjs_template_file($custom_template);
+        }
+
+        return $custom_template;
+    }
+
+    /**
+     * Create the Next.js template file
+     */
+    private function create_nextjs_template_file($template_path) {
+        $template_dir = dirname($template_path);
+
+        // Create templates directory if it doesn't exist
+        if (!file_exists($template_dir)) {
+            wp_mkdir_p($template_dir);
+        }
+
+        $template_content = $this->get_nextjs_template_content();
+        file_put_contents($template_path, $template_content);
+    }
+
+    /**
+     * Get Next.js template content
+     */
+    private function get_nextjs_template_content() {
+        return '<?php
+/**
+ * KLSD Next.js Product Template
+ * This template renders Next.js frontend content within WordPress
+ */
+
+get_header(); ?>
+
+<div id="klsd-nextjs-product-container">
+    <?php
+    global $post;
+    $product_id = $post->ID;
+    $template_info = (new KLSD_WooCommerce_Templates())->get_product_template($product_id);
+
+    if ($template_info) {
+        echo $this->render_nextjs_content($product_id, $template_info);
+    } else {
+        echo "<div class=\"notice\">Template not assigned for this product.</div>";
+    }
+    ?>
+</div>
+
+<?php get_footer(); ?>';
+    }
+
+    /**
+     * Render Next.js content for the product
+     */
+    public function render_nextjs_content($product_id, $template_info) {
+        // Get product data
+        $product = wc_get_product($product_id);
+
+        if (!$product) {
+            return '<div class="error">Product not found.</div>';
+        }
+
+        // Prepare product data for Next.js
+        $product_data = $this->prepare_product_data($product);
+
+        // Get the template path
+        $template_path = $template_info["template"];
+
+        // Start output buffering
+        ob_start();
+        ?>
+
+        <script>
+        // Product data for Next.js components
+        window.klsdProductData = <?php echo json_encode($product_data); ?>;
+        window.klsdTemplatePath = "<?php echo esc_js($template_path); ?>";
+        </script>
+
+        <div id="nextjs-product-root" data-product-id="<?php echo esc_attr($product_id); ?>" data-template="<?php echo esc_attr($template_path); ?>">
+            <div class="loading-placeholder" style="text-align: center; padding: 40px;">
+                <h2><?php echo esc_html($product->get_name()); ?></h2>
+                <p>Loading enhanced product view...</p>
+                <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto;"></div>
+            </div>
+        </div>
+
+        <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        </style>
+
+        <script>
+        // Load Next.js component
+        (function() {
+            const netlifyUrl = "https://livewsnklsdlaucnh.netlify.app";
+            const templatePath = window.klsdTemplatePath;
+            const productData = window.klsdProductData;
+
+            // Create iframe to load Next.js content
+            const iframe = document.createElement("iframe");
+            iframe.src = netlifyUrl + templatePath + "?product=" + <?php echo $product_id; ?> + "&wordpress=1";
+            iframe.style.width = "100%";
+            iframe.style.border = "none";
+            iframe.style.minHeight = "800px";
+            iframe.onload = function() {
+                document.querySelector(".loading-placeholder").style.display = "none";
+            };
+
+            document.getElementById("nextjs-product-root").appendChild(iframe);
+        })();
+        </script>
+
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Prepare product data for Next.js
+     */
+    private function prepare_product_data($product) {
+        return array(
+            "id" => $product->get_id(),
+            "name" => $product->get_name(),
+            "price" => $product->get_price(),
+            "description" => $product->get_description(),
+            "short_description" => $product->get_short_description(),
+            "images" => $this->get_product_images($product),
+            "categories" => $this->get_product_categories($product),
+            "meta_data" => $this->get_product_meta_data($product->get_id())
+        );
+    }
+
+    /**
+     * Get product images
+     */
+    private function get_product_images($product) {
+        $images = array();
+        $image_ids = $product->get_gallery_image_ids();
+
+        // Add featured image
+        if ($product->get_image_id()) {
+            array_unshift($image_ids, $product->get_image_id());
+        }
+
+        foreach ($image_ids as $image_id) {
+            $image_url = wp_get_attachment_image_url($image_id, "full");
+            if ($image_url) {
+                $images[] = array(
+                    "src" => $image_url,
+                    "alt" => get_post_meta($image_id, "_wp_attachment_image_alt", true)
+                );
+            }
+        }
+
+        return $images;
+    }
+
+    /**
+     * Get product categories
+     */
+    private function get_product_categories($product) {
+        $categories = array();
+        $terms = wp_get_post_terms($product->get_id(), "product_cat");
+
+        foreach ($terms as $term) {
+            $categories[] = array(
+                "id" => $term->term_id,
+                "name" => $term->name,
+                "slug" => $term->slug
+            );
+        }
+
+        return $categories;
+    }
+
+    /**
+     * Get product meta data
+     */
+    private function get_product_meta_data($product_id) {
+        $meta_data = array();
+        $all_meta = get_post_meta($product_id);
+
+        foreach ($all_meta as $key => $value) {
+            if (strpos($key, "_klsd_") === 0) {
+                $meta_data[] = array(
+                    "key" => $key,
+                    "value" => is_array($value) ? $value[0] : $value
+                );
+            }
+        }
+
+        return $meta_data;
+    }
+
+    /**
+     * Add Next.js specific meta tags for SEO
+     */
+    public function add_nextjs_meta_tags() {
+        if (!is_product()) {
+            return;
+        }
+
+        global $post;
+        $use_nextjs = get_post_meta($post->ID, "_klsd_use_nextjs_frontend", true);
+
+        if ($use_nextjs === "1") {
+            echo "\n<!-- KLSD Next.js Frontend Active -->\n";
+            echo "<meta name=\"klsd-frontend\" content=\"nextjs\" />\n";
+            echo "<meta name=\"klsd-version\" content=\"" . KLSD_PLUGIN_VERSION . "\" />\n";
+        }
+    }
 }
 
 // Initialize the plugin
