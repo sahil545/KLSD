@@ -28,40 +28,32 @@ export const TEMPLATE_MAPPINGS: TemplateMapping[] = [
       "snorkeling",
       "snorkel",
       "tours",
-      "trips", 
+      "trips",
       "diving",
       "dive",
       "water-activities",
-      "marine-tours"
+      "marine-tours",
     ],
-    parentCategories: [
-      "all-tours-trips",
-      "tours-trips",
-      "all-tours-and-trips"
-    ]
+    parentCategories: ["all-tours-trips", "tours-trips", "all-tours-and-trips"],
   },
   {
-    templatePath: "/product-template-1a", 
+    templatePath: "/product-template-1a",
     templateName: "Scuba Gear Template",
     description: "For diving equipment, gear, and accessories",
     categories: [
       "scuba-gear",
-      "diving-gear", 
+      "diving-gear",
       "equipment",
       "gear",
       "accessories",
       "diving-equipment",
-      "underwater-gear"
+      "underwater-gear",
     ],
-    parentCategories: [
-      "scuba-gear",
-      "diving-gear",
-      "equipment"
-    ]
+    parentCategories: ["scuba-gear", "diving-gear", "equipment"],
   },
   {
     templatePath: "/certification-template",
-    templateName: "Certification Template", 
+    templateName: "Certification Template",
     description: "For PADI courses, certifications, and training",
     categories: [
       "certification",
@@ -70,14 +62,10 @@ export const TEMPLATE_MAPPINGS: TemplateMapping[] = [
       "training",
       "padi",
       "education",
-      "certification-courses"
-    ],
-    parentCategories: [
       "certification-courses",
-      "certifications",
-      "training"
-    ]
-  }
+    ],
+    parentCategories: ["certification-courses", "certifications", "training"],
+  },
 ];
 
 /**
@@ -85,34 +73,38 @@ export const TEMPLATE_MAPPINGS: TemplateMapping[] = [
  * @param categories Array of product categories
  * @returns Template mapping or null if no match found
  */
-export function getTemplateForProduct(categories: ProductCategory[]): TemplateMapping | null {
+export function getTemplateForProduct(
+  categories: ProductCategory[],
+): TemplateMapping | null {
   if (!categories || categories.length === 0) {
     return null;
   }
 
   // Convert category names to lowercase for comparison
-  const categoryNames = categories.map(cat => cat.name.toLowerCase());
-  const categorySlugs = categories.map(cat => cat.slug.toLowerCase());
-  
+  const categoryNames = categories.map((cat) => cat.name.toLowerCase());
+  const categorySlugs = categories.map((cat) => cat.slug.toLowerCase());
+
   // Find parent categories (categories with no parent or parent = 0)
   const parentCategories = categories
-    .filter(cat => !cat.parent || cat.parent === 0)
-    .map(cat => cat.name.toLowerCase());
+    .filter((cat) => !cat.parent || cat.parent === 0)
+    .map((cat) => cat.name.toLowerCase());
 
   // Check each template mapping
   for (const mapping of TEMPLATE_MAPPINGS) {
     // Check if any category matches the template's category patterns
-    const categoryMatch = mapping.categories.some(pattern => 
-      categoryNames.some(name => name.includes(pattern)) ||
-      categorySlugs.some(slug => slug.includes(pattern))
+    const categoryMatch = mapping.categories.some(
+      (pattern) =>
+        categoryNames.some((name) => name.includes(pattern)) ||
+        categorySlugs.some((slug) => slug.includes(pattern)),
     );
 
-    // Check if any parent category matches the template's parent category patterns  
-    const parentCategoryMatch = mapping.parentCategories.some(pattern =>
-      parentCategories.some(name => 
-        name.includes(pattern) || 
-        name.replace(/[-\s]/g, '').includes(pattern.replace(/[-\s]/g, ''))
-      )
+    // Check if any parent category matches the template's parent category patterns
+    const parentCategoryMatch = mapping.parentCategories.some((pattern) =>
+      parentCategories.some(
+        (name) =>
+          name.includes(pattern) ||
+          name.replace(/[-\s]/g, "").includes(pattern.replace(/[-\s]/g, "")),
+      ),
     );
 
     if (categoryMatch || parentCategoryMatch) {
@@ -125,7 +117,7 @@ export function getTemplateForProduct(categories: ProductCategory[]): TemplateMa
 
 /**
  * Check if a product belongs to Tours & Trips category (enhanced version)
- * @param categories Array of product categories  
+ * @param categories Array of product categories
  * @returns boolean
  */
 export function isTourProduct(categories: ProductCategory[]): boolean {
@@ -166,6 +158,12 @@ export function getAllTemplates(): TemplateMapping[] {
  * @param templatePath Template path to search for
  * @returns Template mapping or null
  */
-export function getTemplateByPath(templatePath: string): TemplateMapping | null {
-  return TEMPLATE_MAPPINGS.find(mapping => mapping.templatePath === templatePath) || null;
+export function getTemplateByPath(
+  templatePath: string,
+): TemplateMapping | null {
+  return (
+    TEMPLATE_MAPPINGS.find(
+      (mapping) => mapping.templatePath === templatePath,
+    ) || null
+  );
 }

@@ -259,8 +259,6 @@ export default function EditContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, id]);
 
-
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -522,12 +520,15 @@ export default function EditContent() {
                           🎨 Template Assignment
                         </h3>
                         {(() => {
-                          const template = getProductTemplate(contentData.categories);
+                          const template = getProductTemplate(
+                            contentData.categories,
+                          );
                           if (template) {
                             return (
                               <div className="space-y-2">
                                 <p className="text-blue-800">
-                                  <strong>Assigned Template:</strong> {template.templateName}
+                                  <strong>Assigned Template:</strong>{" "}
+                                  {template.templateName}
                                 </p>
                                 <p className="text-blue-700 text-sm">
                                   {template.description}
@@ -549,7 +550,8 @@ export default function EditContent() {
                           } else {
                             return (
                               <p className="text-blue-800">
-                                No template assigned. Add categories to assign a template automatically.
+                                No template assigned. Add categories to assign a
+                                template automatically.
                               </p>
                             );
                           }
@@ -1047,7 +1049,8 @@ export default function EditContent() {
                           </div>
                         </div>
                       </>
-                    ) : contentData && isScubaGearProduct(contentData.categories) ? (
+                    ) : contentData &&
+                      isScubaGearProduct(contentData.categories) ? (
                       // Scuba Gear Product Form
                       <>
                         <div className="border-b pb-6">
@@ -1155,13 +1158,16 @@ export default function EditContent() {
                                 Scuba Gear Template (Product Template 1A)
                               </h4>
                               <p className="text-sm text-purple-800">
-                                This product will use the professional scuba gear template with product gallery, detailed specifications, and e-commerce features.
+                                This product will use the professional scuba
+                                gear template with product gallery, detailed
+                                specifications, and e-commerce features.
                               </p>
                             </div>
                           </div>
                         </div>
                       </>
-                    ) : contentData && isCertificationProduct(contentData.categories) ? (
+                    ) : contentData &&
+                      isCertificationProduct(contentData.categories) ? (
                       // Certification Course Form
                       <>
                         <div className="border-b pb-6">
@@ -1275,7 +1281,9 @@ export default function EditContent() {
                                 Certification Template
                               </h4>
                               <p className="text-sm text-green-800">
-                                This course will use the dedicated certification template with course details, instructor information, and booking system.
+                                This course will use the dedicated certification
+                                template with course details, instructor
+                                information, and booking system.
                               </p>
                             </div>
                           </div>
@@ -1291,7 +1299,8 @@ export default function EditContent() {
                           Custom Fields
                         </h3>
                         <p className="mb-2">
-                          This product doesn't match any specific template categories yet.
+                          This product doesn't match any specific template
+                          categories yet.
                         </p>
                         {contentData && (
                           <div className="text-sm text-gray-600 mt-4">
@@ -1302,7 +1311,9 @@ export default function EditContent() {
                                 .join(", ")}
                             </p>
                             <p className="mt-1 text-blue-600">
-                              Add this product to "All Tours & Trips", "Scuba Gear", or "Certification Courses" categories to enable template-specific forms.
+                              Add this product to "All Tours & Trips", "Scuba
+                              Gear", or "Certification Courses" categories to
+                              enable template-specific forms.
                             </p>
                           </div>
                         )}
