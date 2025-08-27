@@ -71,17 +71,21 @@ class KLSD_WooCommerce_Templates {
         // Product admin hooks
         add_action('woocommerce_product_options_general_product_data', array($this, 'add_custom_fields'));
         add_action('woocommerce_process_product_meta', array($this, 'save_custom_fields'));
-        
+
         // Category-based template assignment
         add_action('woocommerce_product_options_general_product_data', array($this, 'show_template_assignment'));
-        
+
         // Admin styles and scripts
         add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
-        
+
         // Product category hooks
         add_action('created_product_cat', array($this, 'assign_template_on_category_change'));
         add_action('edited_product_cat', array($this, 'assign_template_on_category_change'));
-        
+
+        // Template override hooks for Next.js frontend
+        add_filter('template_include', array($this, 'override_product_template'));
+        add_action('wp_head', array($this, 'add_nextjs_meta_tags'));
+
         // Ajax handlers
         add_action('wp_ajax_klsd_get_template_fields', array($this, 'ajax_get_template_fields'));
         add_action('wp_ajax_klsd_save_template_data', array($this, 'ajax_save_template_data'));
