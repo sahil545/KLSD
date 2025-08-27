@@ -72,8 +72,8 @@ class KLSD_Tour_Template_Manager {
         add_action('add_meta_boxes', array($this, 'add_template_metaboxes'));
         add_action('save_post', array($this, 'save_template_fields'));
         
-        // Template override hooks for Next.js frontend
-        add_filter('template_include', array($this, 'override_product_template'));
+        // Template override hooks for Next.js frontend (high priority to ensure it runs)
+        add_filter('template_include', array($this, 'override_product_template'), 99);
         add_action('wp_head', array($this, 'add_nextjs_meta_tags'));
         
         // Booking data hooks
