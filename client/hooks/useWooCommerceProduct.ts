@@ -209,6 +209,7 @@ export function useWooCommerceProduct(): {
         const urlParam = getProductParamFromUrl();
         const mockProduct = getMockProductData(pathname, urlParam);
         setProduct(mockProduct);
+        setLoading(false);
       } catch (err) {
         // Handle errors by falling back to mock data
         console.error("Error fetching product:", err);
