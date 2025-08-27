@@ -38,7 +38,9 @@ async function getProductData(searchParams: {
 
   // Read product data from URL parameters (sent by WordPress)
   const productData = {
-    id: searchParams.product_id ? parseInt(searchParams.product_id as string, 10) : defaultProduct.id,
+    id: searchParams.product_id
+      ? parseInt(searchParams.product_id as string, 10)
+      : defaultProduct.id,
     name: searchParams.product_name
       ? decodeURIComponent(searchParams.product_name as string)
       : defaultProduct.name,
