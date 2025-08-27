@@ -162,6 +162,20 @@ export function useWooCommerceProduct(): {
         setLoading(true);
         setError(null);
 
+        // Check if we're running in WordPress context (no Next.js API available)
+        const isWordPressContext = window.location.hostname !== 'localhost' &&
+                                   !window.location.hostname.includes('netlify') &&
+                                   !window.location.pathname.startsWith('/_next');
+
+        if (isWordPressContext) {
+          console.log("Running in WordPress context, using mock data directly");
+          const urlParam = getProductParamFromUrl();
+          const mockProduct = getMockProductData(pathname, urlParam);
+          setProduct(mockProduct);
+          setLoading(false);
+          return;
+        }
+
         // Try to fetch real WooCommerce data first, fallback to mock data if failed
         console.log("Attempting to fetch WooCommerce data...");
 
