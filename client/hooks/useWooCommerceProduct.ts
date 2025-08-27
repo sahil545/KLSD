@@ -163,23 +163,31 @@ export function useWooCommerceProduct(): {
 
         // Check if we're embedded in WordPress (Next.js content loaded inside WordPress)
         const isEmbeddedInWordPress =
-          document.querySelector('meta[name="klsd-frontend"][content="nextjs"]') ||
-          document.querySelector('.klsd-nextjs-content') ||
-          document.querySelector('meta[name="generator"][content*="WordPress"]');
+          document.querySelector(
+            'meta[name="klsd-frontend"][content="nextjs"]',
+          ) ||
+          document.querySelector(".klsd-nextjs-content") ||
+          document.querySelector(
+            'meta[name="generator"][content*="WordPress"]',
+          );
 
         console.log("Context detection:", {
           hostname: window.location.hostname,
           pathname: window.location.pathname,
           isEmbeddedInWordPress,
           hasKLSDMeta: !!document.querySelector('meta[name="klsd-frontend"]'),
-          hasKLSDContent: !!document.querySelector('.klsd-nextjs-content'),
-          hasWordPress: !!document.querySelector('meta[name="generator"][content*="WordPress"]'),
-          willUseMockData: isEmbeddedInWordPress
+          hasKLSDContent: !!document.querySelector(".klsd-nextjs-content"),
+          hasWordPress: !!document.querySelector(
+            'meta[name="generator"][content*="WordPress"]',
+          ),
+          willUseMockData: isEmbeddedInWordPress,
         });
 
         // When embedded in WordPress, use mock data directly since API routes aren't available
         if (isEmbeddedInWordPress) {
-          console.log("Running embedded in WordPress, using mock data directly");
+          console.log(
+            "Running embedded in WordPress, using mock data directly",
+          );
           const urlParam = getProductParamFromUrl();
           const mockProduct = getMockProductData(pathname, urlParam);
           setProduct(mockProduct);

@@ -34,7 +34,9 @@ export default function StaticHero({ product }: StaticHeroProps) {
     id: 34450,
     name: "Christ of the Abyss Snorkeling Tour",
     price: "89.00",
-    categories: [{ id: 15, name: "Snorkeling Tours", slug: "snorkeling-tours" }],
+    categories: [
+      { id: 15, name: "Snorkeling Tours", slug: "snorkeling-tours" },
+    ],
     images: [
       {
         src: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&h=600&fit=crop",
