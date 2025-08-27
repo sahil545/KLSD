@@ -199,18 +199,38 @@ class KLSD_WooCommerce_Templates {
      */
     public function show_template_assignment() {
         global $post;
-        
+
         $template = $this->get_product_template($post->ID);
-        
+        $use_nextjs = get_post_meta($post->ID, '_klsd_use_nextjs_frontend', true);
+
         echo '<div class="klsd-template-assignment options_group">';
         echo '<h3>🎨 Template Assignment</h3>';
         echo '<div style="padding: 12px;">';
-        
+
+        // Next.js Frontend Toggle
+        echo '<div class="klsd-nextjs-toggle" style="background: #e7f3ff; border: 1px solid #72aee6; border-radius: 4px; padding: 12px; margin-bottom: 15px;">';
+        echo '<h4 style="margin: 0 0 10px 0; color: #1d2327;">⚡ Frontend Engine</h4>';
+        echo '<label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">';
+        echo '<input type="checkbox" name="_klsd_use_nextjs_frontend" value="1"' . checked($use_nextjs, '1', false) . ' />';
+        echo '<span style="font-weight: 600;">Use Next.js Frontend (Modern Templates)</span>';
+        echo '</label>';
+        echo '<p style="margin: 8px 0 0 0; font-size: 13px; color: #646970;">';
+        echo 'When enabled, this product will use the modern Next.js frontend templates. ';
+        echo 'When disabled, uses standard WordPress/WooCommerce templates.';
+        echo '</p>';
+        echo '</div>';
+
         if ($template) {
             echo '<div class="klsd-template-info">';
             echo '<strong>Assigned Template:</strong> ' . esc_html($template['name']) . '<br>';
             echo '<strong>Template Path:</strong> <code>/' . esc_html($template['template']) . '</code><br>';
-            echo '<small style="color: #646970;">This template is automatically assigned based on product categories.</small><br><br>';
+            if ($use_nextjs) {
+                echo '<strong>Frontend Engine:</strong> <span style="color: #00a32a; font-weight: 600;">Next.js (Modern)</span><br>';
+                echo '<small style="color: #646970;">This product will use the Next.js frontend template when viewed.</small><br><br>';
+            } else {
+                echo '<strong>Frontend Engine:</strong> <span style="color: #d63638;">WordPress (Classic)</span><br>';
+                echo '<small style="color: #646970;">This product will use the standard WordPress template when viewed.</small><br><br>';
+            }
             echo '<button type="button" class="klsd-configure-template" data-template="' . esc_attr($template['template']) . '">';
             echo 'Configure Template Fields</button>';
             echo '</div>';
@@ -220,7 +240,7 @@ class KLSD_WooCommerce_Templates {
             echo '<small>Add this product to "All Tours & Trips", "Scuba Gear", or "Certification Courses" categories to enable template-specific fields.</small>';
             echo '</div>';
         }
-        
+
         echo '</div>';
         echo '</div>';
     }
