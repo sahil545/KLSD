@@ -251,6 +251,7 @@ class KLSD_Tour_Template_Manager {
             <?php
             switch ($template['template']) {
                 case 'christ-statue-tour':
+                case 'christ-statue-tour-static':
                     $this->render_tours_fields_table($post->ID);
                     break;
                 case 'product-template-1a':
