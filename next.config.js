@@ -3,13 +3,12 @@ const nextConfig = {
   // Fix cross-origin HMR issues
   allowedDevOrigins: ['dc167d03e0d948deb7929a3120e07975-2ecb0f6537f44a3b8351b24af.fly.dev'],
 
-  // For deployment
-  output: 'standalone',
+  // Optimize for production deployment
+  productionBrowserSourceMaps: false,
 
-  // Optimize for development stability
+  // Performance optimizations
   experimental: {
-    // Disable experimental features that might cause HMR issues
-    optimizePackageImports: [],
+    optimizePackageImports: ['lucide-react'],
   },
   
   // Development optimizations
