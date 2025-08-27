@@ -225,7 +225,7 @@ export function useWooCommerceProduct(): {
 
     // Always try to fetch data, with fallback to mock data
     fetchProduct();
-  }, [pathname, isDevelopment]);
+  }, [pathname]);
 
   return { product, loading, error };
 }
