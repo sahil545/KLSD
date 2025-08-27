@@ -336,7 +336,19 @@ class KLSD_Tour_Template_Manager {
                 <button type="button" class="klsd-test-button" onclick="window.open('<?php echo get_permalink($post->ID); ?>', '_blank')">
                     Test Frontend Override
                 </button>
+                <button type="button" class="klsd-test-button" onclick="window.open('<?php echo get_permalink($post->ID); ?>?klsd_test_override=1', '_blank')">
+                    Force Test Override
+                </button>
                 <?php endif; ?>
+
+                <h4 style="margin-top: 20px; margin-bottom: 10px;">WordPress Environment:</h4>
+                <div style="font-size: 11px; font-family: monospace; background: #f0f0f0; padding: 10px; border-radius: 4px;">
+                    <div>Active Theme: <?php echo wp_get_theme()->get('Name'); ?></div>
+                    <div>WooCommerce Version: <?php echo WC()->version; ?></div>
+                    <div>Plugin Path: <?php echo KLSD_TOUR_PLUGIN_PATH; ?></div>
+                    <div>Template Directory: <?php echo KLSD_TOUR_PLUGIN_PATH . 'templates/'; ?></div>
+                    <div>Directory Writable: <?php echo is_writable(dirname(KLSD_TOUR_PLUGIN_PATH . 'templates/')) ? 'YES' : 'NO'; ?></div>
+                </div>
             </div>
         </div>
         <?php
