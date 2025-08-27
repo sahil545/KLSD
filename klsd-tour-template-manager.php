@@ -810,6 +810,12 @@ class KLSD_Tour_Template_Manager {
         error_log('KLSD: is_single(): ' . (is_single() ? 'YES' : 'NO'));
         error_log('KLSD: Current post type: ' . get_post_type());
 
+        // Emergency bypass for testing - if URL contains klsd_emergency=1
+        if (isset($_GET['klsd_emergency']) && $_GET['klsd_emergency'] === '1') {
+            error_log('KLSD: EMERGENCY BYPASS ACTIVATED');
+            return $this->create_emergency_template();
+        }
+
         // Only override on single product pages
         if (!is_product()) {
             error_log('KLSD: Not a product page, skipping override. Post type: ' . get_post_type());
