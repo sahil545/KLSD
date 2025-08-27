@@ -184,7 +184,7 @@ export function useWooCommerceProduct(): {
         } else {
           // Check for URL parameter first (client-side only)
           const urlParam = getProductParamFromUrl();
-          const slug = urlParam || extractSlugFromPath(pathname);
+          let slug = urlParam || extractSlugFromPath(pathname);
 
           if (slug) {
             console.log(`Trying to fetch product by slug: ${slug}`);

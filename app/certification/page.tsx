@@ -3,7 +3,7 @@
 import React from "react";
 import { Navigation } from "../../client/components/Navigation";
 import { Footer } from "../../client/components/Footer";
-import { CertificationContent } from "../../client/components/CertificationContent";
+import CertificationContent  from "../../client/components/CertificationContent";
 
 export default function Certification() {
   return (

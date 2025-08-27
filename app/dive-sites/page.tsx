@@ -1,19 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
-import { MapPin, Anchor, Compass, Map } from "lucide-react";
-
 import { Navigation } from "../../client/components/Navigation";
 import { Footer } from "../../client/components/Footer";
 import { Button } from "../../client/components/ui/button";
 import { Badge } from "../../client/components/ui/badge";
 import { Card, CardContent } from "../../client/components/ui/card";
+import { MapPin, Anchor, Compass, Map } from "lucide-react";
 import DiveSitesMapWrapper from "../../client/components/DiveSitesMapWrapper";
 import { DiveSiteData } from "../../client/components/DiveSitesMap";
 
 import Image from "next/image";
 
- const filters = ["All", "Reef", "Wreck", "Shallow", "Deep", "Night Dive"];
+export default function DiveSites() {
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [selectedSite, setSelectedSite] = useState<number | null>(null);
+  const [showMap, setShowMap] = useState(true);
+
+  const filters = ["All", "Reef", "Wreck", "Shallow", "Deep", "Night Dive"];
 
   const diveSites: DiveSiteData[] = [
     {
@@ -137,11 +141,6 @@ import Image from "next/image";
     },
   ];
 
-export default function DiveSites() {
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [selectedSite, setSelectedSite] = useState<number | null>(null);
-  const [showMap, setShowMap] = useState(true);
-
   const filteredSites =
     activeFilter === "All"
       ? diveSites
@@ -219,9 +218,9 @@ export default function DiveSites() {
             <p className="text-gray-600">Find the perfect dive site for your skill level and interests</p>
           </div>
           <div className="flex flex-wrap justify-center gap-3">
-            {filters.map((filter,index) => (
+            {filters.map((filter) => (
               <Button
-                key={index}
+                key={filter}
                 variant="outline"
                 className={`${
                   activeFilter === filter
