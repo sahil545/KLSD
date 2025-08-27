@@ -1271,42 +1271,61 @@ get_header(); ?>
 
         // Extract content but preserve hero sections that might be outside main
         $content_extracted = false;
+        error_log('KLSD: Starting content extraction from HTML length: ' . strlen($html));
 
         // First, try to get everything inside min-h-screen (full page layout)
         if (preg_match('/<div[^>]*class="[^"]*min-h-screen[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
-            // Extract everything inside min-h-screen but remove navigation
             $content = $matches[1];
+            error_log('KLSD: Found min-h-screen content length: ' . strlen($content));
+            // Remove navigation but keep everything else
             $content = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $content);
             $html = $content;
             $content_extracted = true;
-            error_log('KLSD: Extracted full content from min-h-screen div');
+            error_log('KLSD: Extracted full content from min-h-screen div, final length: ' . strlen($html));
         }
-        // If no min-h-screen, try to extract main + any hero sections that come before it
+        // If no min-h-screen, try to extract main + sections outside main
         elseif (preg_match('/<main[^>]*>(.*?)<\/main>/is', $html, $main_matches)) {
             $main_content = $main_matches[1];
+            error_log('KLSD: Found main content length: ' . strlen($main_content));
 
-            // Look for hero sections that might be before the main tag
-            $hero_content = '';
-            if (preg_match_all('/<section[^>]*class="[^"]*hero[^"]*"[^>]*>.*?<\/section>/is', $html, $hero_matches)) {
-                $hero_content = implode('', $hero_matches[0]);
-            } elseif (preg_match_all('/<div[^>]*class="[^"]*hero[^"]*"[^>]*>.*?<\/div>/is', $html, $hero_div_matches)) {
-                $hero_content = implode('', $hero_div_matches[0]);
+            // Look for any sections that might be outside main (like hero sections)
+            $sections_content = '';
+            if (preg_match_all('/<section[^>]*>.*?<\/section>/is', $html, $section_matches)) {
+                // Filter out sections that are already inside main
+                foreach ($section_matches[0] as $section) {
+                    if (strpos($main_content, $section) === false) {
+                        $sections_content .= $section;
+                    }
+                }
+                error_log('KLSD: Found additional sections length: ' . strlen($sections_content));
             }
 
-            $html = $hero_content . $main_content;
+            $html = $sections_content . $main_content;
             $content_extracted = true;
-            error_log('KLSD: Extracted main content with hero sections');
+            error_log('KLSD: Extracted main + sections, final length: ' . strlen($html));
         }
-        // Fallback to container
-        elseif (preg_match('/<div[^>]*class="[^"]*container[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
-            $html = $matches[1];
-            $content_extracted = true;
-            error_log('KLSD: Extracted content from container div');
-        }
-        // Last resort - use body content but remove nav
+        // Fallback - just remove nav and use everything
         else {
+            error_log('KLSD: No main or min-h-screen found, using fallback extraction');
+            $original_length = strlen($html);
             $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
-            error_log('KLSD: No main/container found, using body content without nav');
+            $html = preg_replace('/<footer[^>]*>.*?<\/footer>/is', '', $html);
+            error_log('KLSD: Fallback extraction - original: ' . $original_length . ', final: ' . strlen($html));
+        }
+
+        // Safety check - if content is too short, something went wrong
+        if (strlen($html) < 100) {
+            error_log('KLSD: WARNING - Extracted content is too short (' . strlen($html) . ' chars), reverting to body content');
+            // Get everything and just remove problematic tags
+            $html = $original_html;
+            $html = preg_replace('/<\!DOCTYPE[^>]*>/i', '', $html);
+            $html = preg_replace('/<html[^>]*>/i', '', $html);
+            $html = preg_replace('/<\/html>/i', '', $html);
+            $html = preg_replace('/<head[^>]*>.*?<\/head>/is', '', $html);
+            $html = preg_replace('/<body[^>]*>/i', '', $html);
+            $html = preg_replace('/<\/body>/i', '', $html);
+            $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
+            $html = preg_replace('/<footer[^>]*>.*?<\/footer>/is', '', $html);
         }
 
         error_log('KLSD: Final processed content length: ' . strlen($html));
