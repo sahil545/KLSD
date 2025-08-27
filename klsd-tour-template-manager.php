@@ -1187,8 +1187,12 @@ get_header(); ?>
     private function fetch_nextjs_html($product_id, $template_path) {
         $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
 
-        // Use the actual product template
-        $fetch_url = $netlify_url . "/" . $template_path . "?product=" . $product_id;
+        // Get product data to pass to static template
+        $product = wc_get_product($product_id);
+        $product_data = $this->prepare_product_data_for_url($product, $product_id);
+
+        // Use the actual product template with real data
+        $fetch_url = $netlify_url . "/" . $template_path . "?" . $product_data;
 
         error_log('KLSD: Attempting to fetch Next.js HTML from: ' . $fetch_url);
 
