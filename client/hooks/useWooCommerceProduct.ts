@@ -48,6 +48,14 @@ const parseTourData = (product: WooCommerceProduct): TourData => {
   const attributes = product.attributes || [];
   const meta_data = product.meta_data || [];
 
+  // Get data from new snorkeling tour plugin custom fields
+  const duration = getMetaValue(meta_data, "_tour_duration");
+  const groupSize = getMetaValue(meta_data, "_tour_group_size");
+  const location = getMetaValue(meta_data, "_tour_location");
+  const gearIncluded = getMetaValue(meta_data, "_tour_gear_included") === "yes";
+  const highlights = getMetaValue(meta_data, "_tour_highlights") || [];
+  const whatsIncluded = getMetaValue(meta_data, "_tour_whats_included") || [];
+
   // Helper to safely parse meta data that might be stored as array or JSON
   const parseMetaArray = (key: string, fallback: string[] = []) => {
     const value = getMetaValue(meta_data, key);

@@ -5,10 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Navigation } from "../client/components/Navigation";
 import { Footer } from "../client/components/Footer";
-import { Button } from "../client/components/ui/button";
-import { Badge } from "../client/components/ui/badge";
-import { Card } from "../client/components/ui/card";
-import { Dialog, DialogContent } from "../client/components/ui/dialog";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Card } from "../components/ui/card";
+import { Dialog, DialogContent } from "../components/ui/dialog";
 import Booking from "../client/components/Booking";
 
 import FloatingBubbles from "../client/components/FloatingBubbles";
@@ -399,7 +399,7 @@ export default function Homepage() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen scroll-smooth">
       {/* Demo Navigation Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 relative z-10">
         <div className="max-w-6xl mx-auto px-4 text-center">

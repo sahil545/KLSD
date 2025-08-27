@@ -18,6 +18,15 @@ export default function WooCommerceHeroNoBooking() {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const { product, loading, error } = useWooCommerceProduct();
 
+  // Debug: Log the product data to see if plugin fields are coming through
+  useEffect(() => {
+    if (product) {
+      console.log("Product data from plugin:", product.tourData);
+      console.log("Duration from plugin:", product.tourData?.duration);
+      console.log("Group size from plugin:", product.tourData?.groupSize);
+    }
+  }, [product]);
+
   const scrollToBooking = () => {
     const bookingSection = document.getElementById("booking-section");
     if (bookingSection) {

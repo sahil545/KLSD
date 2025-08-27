@@ -23,19 +23,21 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Key Largo Scuba Diving | #1 Rated Tours & PADI Certification",
-    description: "Experience world-famous diving sites in Key Largo, Florida Keys. PADI certified guides, crystal-clear waters, and unforgettable underwater adventures.",
+    description:
+      "Experience world-famous diving sites in Key Largo, Florida Keys. PADI certified guides, crystal-clear waters, and unforgettable underwater adventures.",
     url: "https://livewsnklsdlaucnh.netlify.app",
     siteName: "Key Largo Scuba Diving",
     type: "website",
     locale: "en_US",
   },
   other: {
-    'deployment-version': '1.0.0'
+    "deployment-version": "1.0.0",
   },
   twitter: {
     card: "summary_large_image",
     title: "Key Largo Scuba Diving | #1 Rated Tours",
-    description: "Experience world-famous diving sites in Key Largo, Florida Keys",
+    description:
+      "Experience world-famous diving sites in Key Largo, Florida Keys",
   },
 };
 
@@ -45,9 +47,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <head>{/* Error handling initialization */}</head>
-      <body>
+      <body className="antialiased">
         <ErrorBoundary>
           <ClientErrorHandler />
           {children}
