@@ -255,8 +255,88 @@ class KLSD_Tour_Template_Manager {
         </div>
         <?php
     }
-    
-    
+
+    /**
+     * Template diagnostics metabox for debugging
+     */
+    public function template_diagnostics_metabox($post) {
+        $template = $this->get_product_template($post->ID);
+        $use_nextjs = get_post_meta($post->ID, '_klsd_use_nextjs_frontend', true);
+        $product_cats = wp_get_post_terms($post->ID, 'product_cat', array('fields' => 'names'));
+        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+
+        // Test connectivity to Next.js
+        $test_url = $netlify_url . "/api/template-test?test=1";
+        $test_response = wp_remote_get($test_url, array('timeout' => 5));
+        $connectivity_status = is_wp_error($test_response) ? 'Failed: ' . $test_response->get_error_message() : 'Success (HTTP ' . wp_remote_retrieve_response_code($test_response) . ')';
+
+        // Check if we're on a product page (this will always be false in admin, but useful for reference)
+        $is_product_page = is_product();
+
+        // Check template file
+        $custom_template = KLSD_TOUR_PLUGIN_PATH . 'templates/nextjs-product-template.php';
+        $template_exists = file_exists($custom_template);
+
+        ?>
+        <style>
+        .klsd-diagnostics { font-family: monospace; background: #f9f9f9; padding: 15px; border-radius: 4px; }
+        .klsd-diag-item { margin: 8px 0; padding: 8px; background: white; border-left: 4px solid #ddd; }
+        .klsd-diag-item.success { border-left-color: #00a32a; }
+        .klsd-diag-item.warning { border-left-color: #dba617; }
+        .klsd-diag-item.error { border-left-color: #d63638; }
+        .klsd-test-button { background: #0073aa; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin: 10px 5px 0 0; }
+        </style>
+
+        <div class="klsd-diagnostics">
+            <div class="klsd-diag-item <?php echo $use_nextjs === '1' ? 'success' : 'warning'; ?>">
+                <strong>Next.js Toggle:</strong> <?php echo $use_nextjs === '1' ? 'ENABLED ✓' : 'DISABLED ⚠️'; ?>
+            </div>
+
+            <div class="klsd-diag-item <?php echo $template ? 'success' : 'error'; ?>">
+                <strong>Template Assignment:</strong> <?php echo $template ? $template['name'] . ' (' . $template['template'] . ') ✓' : 'NONE ASSIGNED ❌'; ?>
+            </div>
+
+            <div class="klsd-diag-item">
+                <strong>Product Categories:</strong> <?php echo !empty($product_cats) ? implode(', ', $product_cats) : 'None'; ?>
+            </div>
+
+            <div class="klsd-diag-item <?php echo $template_exists ? 'success' : 'warning'; ?>">
+                <strong>Template File:</strong> <?php echo $template_exists ? 'EXISTS ✓' : 'WILL BE CREATED'; ?>
+                <br><small><?php echo $custom_template; ?></small>
+            </div>
+
+            <div class="klsd-diag-item">
+                <strong>Next.js Connectivity:</strong> <?php echo $connectivity_status; ?>
+                <br><small>Testing: <?php echo $test_url; ?></small>
+            </div>
+
+            <div class="klsd-diag-item">
+                <strong>Override Conditions:</strong>
+                <?php if ($use_nextjs === '1' && $template): ?>
+                    <span style="color: #00a32a;">READY - Override should work on frontend ✓</span>
+                <?php else: ?>
+                    <span style="color: #d63638;">NOT READY ❌</span>
+                    <ul style="margin: 5px 0 0 20px;">
+                        <?php if ($use_nextjs !== '1'): ?><li>Next.js toggle must be enabled</li><?php endif; ?>
+                        <?php if (!$template): ?><li>Product must be in a supported category</li><?php endif; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button type="button" class="klsd-test-button" onclick="window.open('<?php echo $netlify_url . '/api/template-test'; ?>', '_blank')">
+                    Test Next.js API
+                </button>
+                <?php if ($template && $use_nextjs === '1'): ?>
+                <button type="button" class="klsd-test-button" onclick="window.open('<?php echo get_permalink($post->ID); ?>', '_blank')">
+                    Test Frontend Override
+                </button>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php
+    }
+
     /**
      * Render Tours & Trips template fields table
      */
