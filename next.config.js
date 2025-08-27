@@ -3,22 +3,15 @@ const nextConfig = {
   // Fix cross-origin HMR issues
   allowedDevOrigins: ['dc167d03e0d948deb7929a3120e07975-2ecb0f6537f44a3b8351b24af.fly.dev'],
 
+  // For Netlify deployment - use server-side rendering
+  output: 'standalone',
+
   // Optimize for production deployment
   productionBrowserSourceMaps: false,
-
-  // Fix static generation issues for API routes
-  generateBuildId: async () => {
-    return 'key-largo-diving-' + Date.now()
-  },
 
   // Performance optimizations
   experimental: {
     optimizePackageImports: ['lucide-react'],
-  },
-
-  // Skip static generation for API routes during build
-  async generateStaticParams() {
-    return []
   },
   
   // Development optimizations
