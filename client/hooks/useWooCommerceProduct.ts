@@ -227,19 +227,8 @@ export function useWooCommerceProduct(): {
       }
     };
 
-    // Handle both development and production modes
-    if (isDevelopment) {
-      // Development mode: Set mock data immediately without async operation
-      console.log("Development mode: Setting mock data immediately");
-      const urlParam = getProductParamFromUrl();
-      const mockProduct = getMockProductData(pathname, urlParam);
-      console.log("Mock product data:", mockProduct.name);
-      setProduct(mockProduct);
-      setLoading(false);
-    } else {
-      // Production mode: fetch from API
-      fetchProduct();
-    }
+    // Always try to fetch data, with fallback to mock data
+    fetchProduct();
   }, [pathname, isDevelopment]);
 
   return { product, loading, error };
