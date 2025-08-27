@@ -707,34 +707,49 @@ class KLSD_Tour_Template_Manager {
      * Override product template to use Next.js frontend when enabled
      */
     public function override_product_template($template) {
+        // Debug logging
+        error_log('KLSD: Template override function called for template: ' . $template);
+
         // Only override on single product pages
         if (!is_product()) {
+            error_log('KLSD: Not a product page, skipping override');
             return $template;
         }
-        
+
         global $post;
+        error_log('KLSD: Product ID: ' . $post->ID);
+
         $use_nextjs = get_post_meta($post->ID, '_klsd_use_nextjs_frontend', true);
-        
+        error_log('KLSD: Next.js enabled: ' . ($use_nextjs === '1' ? 'YES' : 'NO') . ' (value: ' . $use_nextjs . ')');
+
         // If Next.js is not enabled for this product, use default template
         if ($use_nextjs !== '1') {
+            error_log('KLSD: Next.js not enabled, using default template');
             return $template;
         }
-        
+
         // Get the template assignment
         $template_info = $this->get_product_template($post->ID);
-        
+        error_log('KLSD: Template info: ' . print_r($template_info, true));
+
         if (!$template_info) {
+            error_log('KLSD: No template assigned, using default');
             return $template; // No template assigned, use default
         }
-        
+
         // Create custom template file path
         $custom_template = KLSD_TOUR_PLUGIN_PATH . 'templates/nextjs-product-template.php';
-        
+        error_log('KLSD: Custom template path: ' . $custom_template);
+
         // Create the template file if it doesn't exist
         if (!file_exists($custom_template)) {
+            error_log('KLSD: Creating template file');
             $this->create_nextjs_template_file($custom_template);
+        } else {
+            error_log('KLSD: Template file already exists');
         }
-        
+
+        error_log('KLSD: Returning custom template: ' . $custom_template);
         return $custom_template;
     }
     
