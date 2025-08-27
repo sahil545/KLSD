@@ -320,7 +320,7 @@ class KLSD_Tour_Template_Manager {
                 <?php if ($use_nextjs === '1' && $template): ?>
                     <span style="color: #00a32a;">READY - Override should work on frontend ✓</span>
                 <?php else: ?>
-                    <span style="color: #d63638;">NOT READY ��</span>
+                    <span style="color: #d63638;">NOT READY ❌</span>
                     <ul style="margin: 5px 0 0 20px;">
                         <?php if ($use_nextjs !== '1'): ?><li>Next.js toggle must be enabled</li><?php endif; ?>
                         <?php if (!$template): ?><li>Product must be in a supported category</li><?php endif; ?>
@@ -839,6 +839,39 @@ class KLSD_Tour_Template_Manager {
 
         error_log('KLSD: Returning custom template: ' . $custom_template);
         return $custom_template;
+    }
+
+    /**
+     * Force test override for debugging - bypasses all conditions
+     */
+    public function force_test_override($template) {
+        error_log('KLSD: ===== FORCE TEST OVERRIDE ACTIVATED =====');
+
+        // Always return a simple test template
+        $test_template_content = '<?php
+get_header(); ?>
+<div style="background: #ff6b6b; color: white; padding: 40px; text-align: center; margin: 20px;">
+    <h1>🔧 KLSD Template Override Test Mode</h1>
+    <p>If you see this, the template override system is working!</p>
+    <p>Product ID: ' . get_the_ID() . '</p>
+    <p>Template: ' . $template . '</p>
+    <p>URL: ' . $_SERVER['REQUEST_URI'] . '</p>
+</div>
+<?php get_footer(); ?>';
+
+        $test_template_path = KLSD_TOUR_PLUGIN_PATH . 'templates/test-override.php';
+
+        // Create templates directory if it doesn't exist
+        $template_dir = dirname($test_template_path);
+        if (!file_exists($template_dir)) {
+            wp_mkdir_p($template_dir);
+        }
+
+        // Write the test template
+        file_put_contents($test_template_path, $test_template_content);
+
+        error_log('KLSD: Force override returning: ' . $test_template_path);
+        return $test_template_path;
     }
     
     /**
