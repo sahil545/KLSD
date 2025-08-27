@@ -246,28 +246,6 @@ class KLSD_Tour_Template_Manager {
         <?php
     }
     
-    /**
-     * Template help metabox
-     */
-    public function template_help_metabox($post) {
-        ?>
-        <div style="background: #fcf3cd; border: 1px solid #ddd; border-radius: 4px; padding: 20px;">
-            <h4 style="margin-top: 0;">📋 To Enable Template Fields:</h4>
-            <ol style="margin: 15px 0;">
-                <li><strong>Assign Category:</strong> Add this product to one of these categories:
-                    <ul style="margin: 10px 0 10px 20px;">
-                        <li>• <strong>Tours & Trips</strong> (Snorkeling/Diving tours)</li>
-                        <li>• <strong>Scuba Gear</strong> (Equipment & gear)</li>
-                        <li>• <strong>Certification Courses</strong> (Training & courses)</li>
-                    </ul>
-                </li>
-                <li><strong>Save Product:</strong> Click "Update" to refresh the page</li>
-                <li><strong>Configure Fields:</strong> Template-specific fields will appear</li>
-            </ol>
-            <p style="margin-bottom: 0;"><em>Template assignment is automatic based on product categories.</em></p>
-        </div>
-        <?php
-    }
     
     /**
      * Render Tours & Trips template fields table
