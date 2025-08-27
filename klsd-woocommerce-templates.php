@@ -256,6 +256,7 @@ class KLSD_WooCommerce_Templates {
 
         switch ($template['template']) {
             case 'christ-statue-tour':
+            case 'christ-statue-tour-static':
                 $this->render_tours_fields($product_id);
                 break;
             case 'product-template-1a':
