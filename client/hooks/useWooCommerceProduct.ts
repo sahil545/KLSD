@@ -164,7 +164,9 @@ export function useWooCommerceProduct(): {
         // Always try API first for development and Netlify deployments
         // Only skip API for true WordPress context (with WordPress-specific DOM elements)
         const hasWordPressElements =
-          document.querySelector('meta[name="generator"][content*="WordPress"]') ||
+          document.querySelector(
+            'meta[name="generator"][content*="WordPress"]',
+          ) ||
           document.querySelector('link[href*="/wp-content/"]') ||
           document.querySelector('script[src*="/wp-includes/"]') ||
           window.location.pathname.includes("/wp-");
@@ -180,7 +182,7 @@ export function useWooCommerceProduct(): {
           pathname: window.location.pathname,
           hasWordPressElements,
           isWordPressContext,
-          willTryAPI: !isWordPressContext
+          willTryAPI: !isWordPressContext,
         });
 
         if (isWordPressContext) {
