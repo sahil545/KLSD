@@ -1232,6 +1232,8 @@ get_header(); ?>
 
         // Extract CSS and meta tags from head before removing it
         $head_content = '';
+        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+
         if (preg_match('/<head[^>]*>(.*?)<\/head>/is', $html, $head_matches)) {
             $head_html = $head_matches[1];
 
@@ -1240,9 +1242,18 @@ get_header(); ?>
             preg_match_all('/<style[^>]*>.*?<\/style>/is', $head_html, $inline_styles);
             preg_match_all('/<meta[^>]*>/i', $head_html, $meta_tags);
 
+            // Fix CSS links to use absolute URLs
+            $fixed_css_links = array();
+            foreach ($css_links[0] as $css_link) {
+                // Make relative URLs absolute
+                $fixed_link = str_replace('href="/', 'href="' . $netlify_url . '/', $css_link);
+                $fixed_link = str_replace("href='/", "href='" . $netlify_url . "/", $fixed_link);
+                $fixed_css_links[] = $fixed_link;
+            }
+
             // Combine all head content we want to preserve
-            $head_content = implode("\n", $css_links[0]) . "\n" . implode("\n", $inline_styles[0]) . "\n" . implode("\n", $meta_tags[0]);
-            error_log('KLSD: Extracted head content length: ' . strlen($head_content));
+            $head_content = implode("\n", $fixed_css_links) . "\n" . implode("\n", $inline_styles[0]) . "\n" . implode("\n", $meta_tags[0]);
+            error_log('KLSD: Extracted and fixed head content length: ' . strlen($head_content));
         }
 
         // Remove doctype, html, head, and body tags to get just the content
