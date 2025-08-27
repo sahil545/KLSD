@@ -162,10 +162,28 @@ export function useWooCommerceProduct(): {
         setError(null);
 
         // Check if we're running in WordPress context (no Next.js API available)
+        // We need to be more specific about WordPress detection to avoid false positives
+        // with Netlify deployments accessed through custom domains
         const isWordPressContext =
           window.location.hostname !== "localhost" &&
           !window.location.hostname.includes("netlify") &&
-          !window.location.pathname.startsWith("/_next");
+          !window.location.pathname.startsWith("/_next") &&
+          // Additional check: WordPress should have PHP-specific indicators
+          (window.location.pathname.includes("/wp-") ||
+            document.querySelector('meta[name="generator"][content*="WordPress"]') ||
+            document.querySelector('link[href*="/wp-content/"]') ||
+            document.querySelector('script[src*="/wp-includes/"]'));
+
+        console.log("Context detection:", {
+          hostname: window.location.hostname,
+          pathname: window.location.pathname,
+          hasNetlify: window.location.hostname.includes("netlify"),
+          hasWordPress: window.location.pathname.includes("/wp-") ||
+            document.querySelector('meta[name="generator"][content*="WordPress"]') ||
+            document.querySelector('link[href*="/wp-content/"]') ||
+            document.querySelector('script[src*="/wp-includes/"]'),
+          isWordPressContext
+        });
 
         if (isWordPressContext) {
           console.log("Running in WordPress context, using mock data directly");
