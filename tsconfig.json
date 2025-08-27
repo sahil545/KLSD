@@ -1,9 +1,18 @@
 {
   "compilerOptions": {
+<<<<<<< HEAD
     "lib": ["dom", "dom.iterable", "es6"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+=======
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "es6"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+>>>>>>> refs/remotes/origin/main
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -17,6 +26,7 @@
         "name": "next"
       }
     ],
+<<<<<<< HEAD
     "paths": {
       "@/*": ["./*"]
     }
@@ -24,3 +34,24 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }
+=======
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./client/*"],
+      "@shared/*": ["./shared/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "CLEAN-MIGRATION/**/*",
+    "DOWNLOAD-*",
+    "BUILDER-IO-*/**/*",
+    "nextjs-*/**/*",
+    "klsd-*/**/*",
+    "woocommerce-*/**/*",
+    "wordpress-*/**/*",
+    "scripts/**/*"
+  ]
+}
+>>>>>>> refs/remotes/origin/main

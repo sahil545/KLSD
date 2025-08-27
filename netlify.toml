@@ -1,5 +1,6 @@
 [build]
   command = "npm run build"
+<<<<<<< HEAD
   publish = "out"
 
 [[plugins]]
@@ -13,3 +14,10 @@
   from = "/*"
   to = "/index.html"
   status = 200
+=======
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--production=false"
+>>>>>>> refs/remotes/origin/main

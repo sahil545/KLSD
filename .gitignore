@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Production
+/build
+/.next/
+/out/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup and migration directories (should not be included in builds)
+CLEAN-MIGRATION/
+BUILDER-IO-*/
+DOWNLOAD-*/
+nextjs-*/
+klsd-*/
+woocommerce-*/
+wordpress-*/
+scripts/site-migration/
+
+# Build artifacts
+.next
+.tsbuildinfo
+dist/
