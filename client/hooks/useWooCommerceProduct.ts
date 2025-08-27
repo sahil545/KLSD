@@ -156,10 +156,6 @@ export function useWooCommerceProduct(): {
   }, []);
 
   useEffect(() => {
-    // Don't fetch until we've determined development mode
-    if (isDevelopment === null) {
-      return;
-    }
 
     const fetchProduct = async () => {
       try {
