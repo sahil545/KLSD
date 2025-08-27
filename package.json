@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --no-lint",
+    "build": "SKIP_STATIC_OPTIMIZATION=true next build --no-lint",
     "build:production": "NODE_ENV=production next build --no-lint",
     "build:wordpress": "webpack --config webpack.wordpress.config.js",
     "start": "next start",
