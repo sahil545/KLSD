@@ -156,16 +156,16 @@ export function useWooCommerceProduct(): {
   }, []);
 
   useEffect(() => {
-
     const fetchProduct = async () => {
       try {
         setLoading(true);
         setError(null);
 
         // Check if we're running in WordPress context (no Next.js API available)
-        const isWordPressContext = window.location.hostname !== 'localhost' &&
-                                   !window.location.hostname.includes('netlify') &&
-                                   !window.location.pathname.startsWith('/_next');
+        const isWordPressContext =
+          window.location.hostname !== "localhost" &&
+          !window.location.hostname.includes("netlify") &&
+          !window.location.pathname.startsWith("/_next");
 
         if (isWordPressContext) {
           console.log("Running in WordPress context, using mock data directly");
@@ -181,7 +181,7 @@ export function useWooCommerceProduct(): {
 
         try {
           // Check if we can get data from the sync endpoint
-          const response = await fetch('/api/products/sync');
+          const response = await fetch("/api/products/sync");
           const syncData = await response.json();
 
           if (syncData.success && syncData.data?.real_products?.length > 0) {
@@ -194,18 +194,22 @@ export function useWooCommerceProduct(): {
               price: rawProduct.price,
               regular_price: rawProduct.price,
               sale_price: "",
-              description: "Experience the beauty of Key Largo's underwater world",
-              short_description: "Professional guided snorkeling tour to famous underwater sites",
+              description:
+                "Experience the beauty of Key Largo's underwater world",
+              short_description:
+                "Professional guided snorkeling tour to famous underwater sites",
               stock_quantity: 25,
               stock_status: "instock",
               manage_stock: true,
               in_stock: true,
               permalink: rawProduct.permalink,
               categories: rawProduct.categories || [],
-              images: [{
-                src: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=600&fit=crop",
-                alt: "Underwater tour experience"
-              }],
+              images: [
+                {
+                  src: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=600&fit=crop",
+                  alt: "Underwater tour experience",
+                },
+              ],
               attributes: [],
               meta_data: [],
               tourData: parseTourData({} as WooCommerceProduct), // Use default tour data for now
