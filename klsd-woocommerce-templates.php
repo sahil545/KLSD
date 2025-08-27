@@ -68,12 +68,9 @@ class KLSD_WooCommerce_Templates {
      * Initialize hooks
      */
     private function init_hooks() {
-        // Product admin hooks
-        add_action('woocommerce_product_options_general_product_data', array($this, 'add_custom_fields'));
-        add_action('woocommerce_process_product_meta', array($this, 'save_custom_fields'));
-
-        // Category-based template assignment
+        // Product admin hooks - consolidated template management
         add_action('woocommerce_product_options_general_product_data', array($this, 'show_template_assignment'));
+        add_action('woocommerce_process_product_meta', array($this, 'save_custom_fields'));
 
         // Admin styles and scripts
         add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
