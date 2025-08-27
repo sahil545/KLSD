@@ -661,7 +661,7 @@ class KLSD_Tour_Template_Manager {
     /**
      * Get template assignment for product based on categories
      */
-    private function get_product_template($product_id) {
+    public function get_product_template($product_id) {
         $categories = wp_get_post_terms($product_id, 'product_cat');
         
         if (empty($categories)) {
