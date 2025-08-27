@@ -351,6 +351,10 @@ class KLSD_Tour_Template_Manager {
                 </button>
                 <?php endif; ?>
 
+                <button type="button" class="klsd-test-button" onclick="window.open('<?php echo get_permalink($post->ID); ?>?klsd_force_bypass=1', '_blank')" style="background: #6f42c1; color: white;">
+                    🚀 Force Bypass Theme
+                </button>
+
                 <h4 style="margin-top: 20px; margin-bottom: 10px;">WordPress Environment:</h4>
                 <div style="font-size: 11px; font-family: monospace; background: #f0f0f0; padding: 10px; border-radius: 4px;">
                     <div>Active Theme: <?php echo wp_get_theme()->get('Name'); ?></div>
