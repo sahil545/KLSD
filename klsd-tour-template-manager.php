@@ -126,10 +126,10 @@ class KLSD_Tour_Template_Manager {
      */
     public function template_manager_metabox($post) {
         wp_nonce_field('klsd_template_metabox', 'klsd_template_nonce');
-        
+
         $template = $this->get_product_template($post->ID);
         $use_nextjs = get_post_meta($post->ID, '_klsd_use_nextjs_frontend', true);
-        
+
         ?>
         <style>
         .klsd-metabox { background: #fff; }
@@ -141,17 +141,30 @@ class KLSD_Tour_Template_Manager {
         .klsd-template-info { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 15px; }
         .klsd-status-enabled { color: #00a32a; font-weight: 600; }
         .klsd-status-disabled { color: #d63638; font-weight: 600; }
+        .klsd-warning { background: #fcf3cd; border: 1px solid #ddd; border-radius: 4px; padding: 15px; }
         .klsd-description { font-style: italic; color: #666; font-size: 12px; margin-top: 5px; }
         </style>
-        
+
         <div class="klsd-metabox">
             <table class="klsd-metabox-table">
                 <tr>
                     <th>Template Assigned</th>
                     <td>
-                        <strong><?php echo esc_html($template['name']); ?></strong><br>
-                        <code><?php echo esc_html($template['template']); ?></code>
-                        <div class="klsd-description">Automatically assigned based on product categories</div>
+                        <?php if ($template): ?>
+                            <strong><?php echo esc_html($template['name']); ?></strong><br>
+                            <code><?php echo esc_html($template['template']); ?></code>
+                            <div class="klsd-description">Automatically assigned based on product categories</div>
+                        <?php else: ?>
+                            <div class="klsd-warning">
+                                <strong>⚠️ No Template Assigned</strong><br>
+                                Add this product to one of these categories to enable custom templates:
+                                <ul style="margin: 10px 0 0 20px;">
+                                    <li>• <strong>Tours & Trips</strong> (snorkeling, diving tours)</li>
+                                    <li>• <strong>Scuba Gear</strong> (equipment & gear)</li>
+                                    <li>• <strong>Certification Courses</strong> (training courses)</li>
+                                </ul>
+                            </div>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <tr>
@@ -163,15 +176,22 @@ class KLSD_Tour_Template_Manager {
                                 <span style="font-weight: 600;">Use Next.js Frontend (Modern Templates)</span>
                             </label>
                             <div class="klsd-description" style="margin-top: 10px;">
-                                When enabled, this product will use modern Next.js frontend templates.<br>
-                                When disabled, uses standard WordPress/WooCommerce templates.
+                                <?php if ($template): ?>
+                                    When enabled, this product will use modern Next.js frontend templates.<br>
+                                    When disabled, uses standard WordPress/WooCommerce templates.
+                                <?php else: ?>
+                                    <strong>Note:</strong> This toggle will only take effect once a template is assigned via product categories.<br>
+                                    Currently will use standard WordPress/WooCommerce templates regardless of this setting.
+                                <?php endif; ?>
                             </div>
                         </div>
-                        
+
                         <div class="klsd-template-info">
-                            <strong>Current Status:</strong> 
-                            <?php if ($use_nextjs): ?>
+                            <strong>Current Status:</strong>
+                            <?php if ($use_nextjs && $template): ?>
                                 <span class="klsd-status-enabled">Next.js Frontend Active</span>
+                            <?php elseif ($use_nextjs && !$template): ?>
+                                <span class="klsd-status-disabled">Next.js Enabled but No Template (WordPress Frontend)</span>
                             <?php else: ?>
                                 <span class="klsd-status-disabled">WordPress Frontend</span>
                             <?php endif; ?>
