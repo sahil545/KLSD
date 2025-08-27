@@ -965,8 +965,8 @@ get_header(); ?>
     private function fetch_nextjs_html($product_id, $template_path) {
         $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
 
-        // For debugging, try test endpoint first
-        $fetch_url = $netlify_url . "/api/template-test?product=" . $product_id . "&template=" . $template_path . "&ssr=1&wordpress=1";
+        // For debugging, use simple test endpoint that always returns HTML
+        $fetch_url = $netlify_url . "/api/wp-debug?action=test-template&product=" . $product_id . "&template=" . $template_path;
 
         error_log('KLSD: Attempting to fetch Next.js HTML from: ' . $fetch_url);
 
