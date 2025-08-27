@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
   },
+  other: {
+    'deployment-version': '1.0.0'
+  },
   twitter: {
     card: "summary_large_image",
     title: "Key Largo Scuba Diving | #1 Rated Tours",
