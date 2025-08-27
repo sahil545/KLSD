@@ -737,7 +737,11 @@ get_header(); ?>
         </style>
 
         <?php
-        return ob_get_clean();
+        $fallback_html = ob_get_clean();
+
+        // Add booking handler script to fallback content too
+        $booking_script = $this->get_booking_handler_script($product->get_id());
+        return $fallback_html . $booking_script;
     }
 
     /**
