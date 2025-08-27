@@ -603,6 +603,87 @@ get_header(); ?>
     }
 
     /**
+     * Get booking handler JavaScript
+     */
+    private function get_booking_handler_script($product_id) {
+        ob_start();
+        ?>
+        <script>
+        // Listen for booking data from Next.js components
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'KLSD_ADD_TO_CART') {
+                const bookingData = event.data;
+                console.log('Received booking data:', bookingData);
+
+                // Prepare form data for WooCommerce Bookings
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '<?php echo esc_url(wc_get_cart_url()); ?>';
+
+                // Add product to cart fields
+                const fields = {
+                    'add-to-cart': bookingData.productId || '<?php echo esc_js($product_id); ?>',
+                    'quantity': bookingData.guestCount || 1,
+                    'wc_bookings_field_duration': '1',
+                    'wc_bookings_field_resource': '',
+                    'wc_bookings_field_persons': bookingData.guestCount || 1
+                };
+
+                // Add booking date if available
+                if (bookingData.selectedDate) {
+                    const bookingDate = new Date(bookingData.selectedDate);
+                    fields['wc_bookings_field_start_date_year'] = bookingDate.getFullYear();
+                    fields['wc_bookings_field_start_date_month'] = bookingDate.getMonth() + 1;
+                    fields['wc_bookings_field_start_date_day'] = bookingDate.getDate();
+                }
+
+                // Add customer details as custom fields
+                if (bookingData.bookingData && bookingData.bookingData.lead_guest) {
+                    const leadGuest = bookingData.bookingData.lead_guest;
+                    fields['klsd_lead_guest_name'] = leadGuest.firstName + ' ' + leadGuest.lastName;
+                    fields['klsd_lead_guest_email'] = leadGuest.email;
+                    fields['klsd_lead_guest_phone'] = leadGuest.phone;
+                    fields['klsd_lead_guest_location'] = leadGuest.location;
+                    fields['klsd_special_requests'] = leadGuest.specialRequests;
+
+                    if (bookingData.bookingData.passengers) {
+                        fields['klsd_passengers'] = JSON.stringify(bookingData.bookingData.passengers);
+                    }
+                }
+
+                // Create hidden form fields
+                for (const [key, value] of Object.entries(fields)) {
+                    if (value) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = value;
+                        form.appendChild(input);
+                    }
+                }
+
+                // Submit the form to add to cart
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+
+        // Also listen for iframe messages
+        window.addEventListener('message', function(event) {
+            // Handle messages from iframe if needed
+            if (event.origin === 'https://livewsnklsdlaucnh.netlify.app') {
+                if (event.data.type === 'KLSD_ADD_TO_CART') {
+                    // Same handler as above
+                    window.dispatchEvent(new CustomEvent('message', { data: event.data }));
+                }
+            }
+        });
+        </script>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
      * Render fallback content if Next.js fetch fails
      */
     private function render_fallback_content($product, $template_info) {
