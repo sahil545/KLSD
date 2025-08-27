@@ -1112,7 +1112,7 @@ get_header(); ?>
 }
 
 // Initialize the plugin
-new KLSD_Tour_Template_Manager();
+$GLOBALS['klsd_tour_template_manager'] = new KLSD_Tour_Template_Manager();
 
 /**
  * Activation hook
