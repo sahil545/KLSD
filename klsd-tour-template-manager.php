@@ -1272,54 +1272,20 @@ get_header(); ?>
         // Remove Next.js navigation to avoid duplicate headers
         $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
 
-        // Extract content but preserve hero sections that might be outside main
-        $content_extracted = false;
-        error_log('KLSD: Starting content extraction from HTML length: ' . strlen($html));
+        // Simplified approach - just remove nav and footer, keep everything else
+        error_log('KLSD: Starting simplified content extraction from HTML length: ' . strlen($html));
 
-        // First, try to get everything inside min-h-screen (full page layout)
-        if (preg_match('/<div[^>]*class="[^"]*min-h-screen[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
-            $content = $matches[1];
-            error_log('KLSD: Found min-h-screen content length: ' . strlen($content));
-            // Remove navigation but keep everything else
-            $content = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $content);
-            $html = $content;
-            $content_extracted = true;
-            error_log('KLSD: Extracted full content from min-h-screen div, final length: ' . strlen($html));
-        }
-        // If no min-h-screen, try to extract main + sections outside main
-        elseif (preg_match('/<main[^>]*>(.*?)<\/main>/is', $html, $main_matches)) {
-            $main_content = $main_matches[1];
-            error_log('KLSD: Found main content length: ' . strlen($main_content));
+        // Remove navigation elements (to avoid duplicate headers)
+        $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
 
-            // Look for any sections that might be outside main (like hero sections)
-            $sections_content = '';
-            if (preg_match_all('/<section[^>]*>.*?<\/section>/is', $html, $section_matches)) {
-                // Filter out sections that are already inside main
-                foreach ($section_matches[0] as $section) {
-                    if (strpos($main_content, $section) === false) {
-                        $sections_content .= $section;
-                    }
-                }
-                error_log('KLSD: Found additional sections length: ' . strlen($sections_content));
-            }
+        // Remove footer elements (WordPress will add its own)
+        $html = preg_replace('/<footer[^>]*>.*?<\/footer>/is', '', $html);
 
-            $html = $sections_content . $main_content;
-            $content_extracted = true;
-            error_log('KLSD: Extracted main + sections, final length: ' . strlen($html));
-        }
-        // Fallback - just remove nav and use everything
-        else {
-            error_log('KLSD: No main or min-h-screen found, using fallback extraction');
-            $original_length = strlen($html);
-            $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
-            $html = preg_replace('/<footer[^>]*>.*?<\/footer>/is', '', $html);
-            error_log('KLSD: Fallback extraction - original: ' . $original_length . ', final: ' . strlen($html));
-        }
+        error_log('KLSD: After removing nav/footer, content length: ' . strlen($html));
 
-        // Safety check - if content is too short, something went wrong
-        if (strlen($html) < 100) {
-            error_log('KLSD: WARNING - Extracted content is too short (' . strlen($html) . ' chars), reverting to body content');
-            // Get everything and just remove problematic tags
+        // Safety check - if content is too short, use original
+        if (strlen($html) < 500) {
+            error_log('KLSD: Content too short, using original body content');
             $html = $original_html;
             $html = preg_replace('/<\!DOCTYPE[^>]*>/i', '', $html);
             $html = preg_replace('/<html[^>]*>/i', '', $html);
@@ -1327,8 +1293,8 @@ get_header(); ?>
             $html = preg_replace('/<head[^>]*>.*?<\/head>/is', '', $html);
             $html = preg_replace('/<body[^>]*>/i', '', $html);
             $html = preg_replace('/<\/body>/i', '', $html);
+            // Only remove nav, keep everything else
             $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
-            $html = preg_replace('/<footer[^>]*>.*?<\/footer>/is', '', $html);
         }
 
         error_log('KLSD: Final processed content length: ' . strlen($html));
