@@ -902,6 +902,48 @@ get_header(); ?>
         error_log('KLSD: Force override returning: ' . $test_template_path);
         return $test_template_path;
     }
+
+    /**
+     * Create emergency template for testing - minimal viable override
+     */
+    private function create_emergency_template() {
+        $emergency_content = '<?php
+/* Emergency KLSD Template Override Test */
+get_header(); ?>
+
+<div style="background: linear-gradient(45deg, #ff6b6b, #ff8e53); color: white; padding: 60px 20px; text-align: center; margin: 0;">
+    <h1 style="font-size: 3em; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🚨 EMERGENCY OVERRIDE ACTIVE</h1>
+    <p style="font-size: 1.5em; margin: 20px 0; opacity: 0.9;">Template override system is working!</p>
+    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 600px;">
+        <h2 style="margin: 0 0 15px 0;">Diagnostic Information</h2>
+        <div style="text-align: left; font-family: monospace; line-height: 1.8;">
+            <strong>Post ID:</strong> <?php echo get_the_ID(); ?><br>
+            <strong>Post Type:</strong> <?php echo get_post_type(); ?><br>
+            <strong>URL:</strong> <?php echo $_SERVER["REQUEST_URI"]; ?><br>
+            <strong>Time:</strong> <?php echo date("Y-m-d H:i:s"); ?><br>
+            <strong>is_product():</strong> <?php echo is_product() ? "YES" : "NO"; ?><br>
+            <strong>WooCommerce Active:</strong> <?php echo class_exists("WooCommerce") ? "YES" : "NO"; ?>
+        </div>
+    </div>
+    <p style="margin: 30px 0 0 0; opacity: 0.8;">✅ If you see this, WordPress template override is functional!</p>
+</div>
+
+<?php get_footer(); ?>';
+
+        $emergency_path = KLSD_TOUR_PLUGIN_PATH . 'templates/emergency-override.php';
+
+        // Ensure directory exists
+        $template_dir = dirname($emergency_path);
+        if (!file_exists($template_dir)) {
+            wp_mkdir_p($template_dir);
+        }
+
+        // Write emergency template
+        file_put_contents($emergency_path, $emergency_content);
+
+        error_log('KLSD: Emergency template created at: ' . $emergency_path);
+        return $emergency_path;
+    }
     
     /**
      * Create the Next.js template file
