@@ -42,7 +42,7 @@ async function getProductData(searchParams: {
     name: searchParams.product_name
       ? decodeURIComponent(searchParams.product_name as string)
       : defaultProduct.name,
-    price: searchParams.product_price || defaultProduct.price,
+    price: (searchParams.product_price as string) || defaultProduct.price,
     categories: searchParams.product_categories
       ? JSON.parse(
           decodeURIComponent(searchParams.product_categories as string),
