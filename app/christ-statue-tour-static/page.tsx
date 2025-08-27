@@ -1,3 +1,5 @@
+"use client";
+
 import Navigation from "../../client/components/Navigation";
 import StaticHero from "../../client/components/StaticHero";
 import SimpleBookingSection from "../../client/components/SimpleBookingSection";
