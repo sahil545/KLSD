@@ -89,41 +89,31 @@ class KLSD_Tour_Template_Manager {
      */
     public function add_template_metaboxes() {
         global $post;
-        
+
         // Only add for products
         if (get_post_type($post) !== 'product') {
             return;
         }
-        
+
+        // Always add template management metabox (with toggle)
+        add_meta_box(
+            'klsd_template_manager',
+            '⚡ Template & Frontend Engine',
+            array($this, 'template_manager_metabox'),
+            'product',
+            'normal',
+            'high'
+        );
+
         // Get template assignment
         $template = $this->get_product_template($post->ID);
-        
+
         if ($template) {
-            // Add template management metabox
-            add_meta_box(
-                'klsd_template_manager',
-                '⚡ Template & Frontend Engine',
-                array($this, 'template_manager_metabox'),
-                'product',
-                'normal',
-                'high'
-            );
-            
-            // Add template-specific fields metabox
+            // Add template-specific fields metabox only if template is assigned
             add_meta_box(
                 'klsd_template_fields',
                 '📝 ' . $template['name'] . ' Fields',
                 array($this, 'template_fields_metabox'),
-                'product',
-                'normal',
-                'high'
-            );
-        } else {
-            // Add category assignment help metabox
-            add_meta_box(
-                'klsd_template_help',
-                '🎨 Template Assignment',
-                array($this, 'template_help_metabox'),
                 'product',
                 'normal',
                 'high'
