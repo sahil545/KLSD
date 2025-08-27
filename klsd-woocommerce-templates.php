@@ -86,6 +86,10 @@ class KLSD_WooCommerce_Templates {
         add_filter('template_include', array($this, 'override_product_template'));
         add_action('wp_head', array($this, 'add_nextjs_meta_tags'));
 
+        // Booking data hooks
+        add_action('woocommerce_add_to_cart', array($this, 'save_booking_data_to_cart'));
+        add_action('woocommerce_checkout_create_order', array($this, 'save_booking_data_to_order'));
+
         // Ajax handlers
         add_action('wp_ajax_klsd_get_template_fields', array($this, 'ajax_get_template_fields'));
         add_action('wp_ajax_klsd_save_template_data', array($this, 'ajax_save_template_data'));
