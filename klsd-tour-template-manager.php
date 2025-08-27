@@ -72,14 +72,21 @@ class KLSD_Tour_Template_Manager {
         add_action('add_meta_boxes', array($this, 'add_template_metaboxes'));
         add_action('save_post', array($this, 'save_template_fields'));
         
-        // Template override hooks for Next.js frontend (high priority to ensure it runs)
-        add_filter('template_include', array($this, 'override_product_template'), 99);
+        // Template override hooks - ULTRA HIGH PRIORITY to beat theme
+        add_filter('template_include', array($this, 'override_product_template'), 9999);
         add_action('wp_head', array($this, 'add_nextjs_meta_tags'));
 
-        // Add test mode - force override on any product page for debugging
+        // Early override hooks to bypass theme completely
+        add_action('template_redirect', array($this, 'early_template_override'), 1);
+        add_action('wp', array($this, 'wp_hook_override'), 1);
+
+        // Test mode - force override on any product page for debugging
         if (isset($_GET['klsd_test_override']) && $_GET['klsd_test_override'] === '1') {
-            add_filter('template_include', array($this, 'force_test_override'), 999);
+            add_filter('template_include', array($this, 'force_test_override'), 99999);
         }
+
+        // Add debugging to see what's interfering
+        add_action('init', array($this, 'debug_active_filters'), 999);
         
         // Booking data hooks
         add_action('woocommerce_add_to_cart', array($this, 'save_booking_data_to_cart'));
