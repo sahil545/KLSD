@@ -1,15 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-<<<<<<< HEAD
-  output: 'export',
-  trailingSlash: true,
-  images: {
-    unoptimized: true
-  }
-}
-
-module.exports = nextConfig
-=======
   // Fix cross-origin HMR issues
   allowedDevOrigins: ['dc167d03e0d948deb7929a3120e07975-2ecb0f6537f44a3b8351b24af.fly.dev'],
 
@@ -73,4 +63,3 @@ module.exports = nextConfig
 };
 
 module.exports = nextConfig;
->>>>>>> refs/remotes/origin/main
