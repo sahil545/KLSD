@@ -954,6 +954,143 @@ get_header(); ?>
         error_log('KLSD: Emergency template created at: ' . $emergency_path);
         return $emergency_path;
     }
+
+    /**
+     * Early template override using template_redirect hook
+     */
+    public function early_template_override() {
+        if (!is_product()) {
+            return;
+        }
+
+        global $post;
+        $use_nextjs = get_post_meta($post->ID, '_klsd_use_nextjs_frontend', true);
+
+        if ($use_nextjs === '1') {
+            error_log('KLSD: Early template override activated for post ' . $post->ID);
+
+            // Get template and check conditions
+            $template_info = $this->get_product_template($post->ID);
+            if ($template_info) {
+                // Bypass theme entirely - load our template directly
+                $this->load_nextjs_template_directly($post->ID, $template_info);
+                exit; // Stop WordPress from loading anything else
+            }
+        }
+    }
+
+    /**
+     * Even earlier override using wp hook
+     */
+    public function wp_hook_override() {
+        if (!is_product()) {
+            return;
+        }
+
+        // Check for emergency mode
+        if (isset($_GET['klsd_force_bypass']) && $_GET['klsd_force_bypass'] === '1') {
+            error_log('KLSD: FORCE BYPASS MODE - Completely bypassing theme');
+            $this->force_bypass_theme();
+            exit;
+        }
+    }
+
+    /**
+     * Debug what filters are active on template_include
+     */
+    public function debug_active_filters() {
+        global $wp_filter;
+
+        if (isset($wp_filter['template_include'])) {
+            error_log('KLSD: Active template_include filters:');
+            foreach ($wp_filter['template_include']->callbacks as $priority => $callbacks) {
+                foreach ($callbacks as $callback) {
+                    $callback_name = 'Unknown';
+                    if (is_array($callback['function'])) {
+                        if (is_object($callback['function'][0])) {
+                            $callback_name = get_class($callback['function'][0]) . '::' . $callback['function'][1];
+                        } else {
+                            $callback_name = $callback['function'][0] . '::' . $callback['function'][1];
+                        }
+                    } elseif (is_string($callback['function'])) {
+                        $callback_name = $callback['function'];
+                    }
+                    error_log('KLSD: Priority ' . $priority . ': ' . $callback_name);
+                }
+            }
+        }
+    }
+
+    /**
+     * Load Next.js template directly, bypassing WordPress template system
+     */
+    private function load_nextjs_template_directly($product_id, $template_info) {
+        error_log('KLSD: Loading Next.js template directly, bypassing theme');
+
+        // Get Next.js content
+        $nextjs_html = $this->fetch_nextjs_html($product_id, $template_info['template']);
+
+        if ($nextjs_html) {
+            // Output complete HTML page with WordPress head/footer
+            get_header();
+            echo '<div id="klsd-direct-template-load">';
+            echo $nextjs_html;
+            echo '</div>';
+            get_footer();
+        } else {
+            // Fallback if Next.js fails
+            get_header();
+            echo '<div style="background: #ffc107; padding: 40px; text-align: center;">';
+            echo '<h1>⚠️ Next.js Template Override Active</h1>';
+            echo '<p>Template override is working, but Next.js content failed to load.</p>';
+            echo '<p>Product ID: ' . $product_id . ' | Template: ' . $template_info['template'] . '</p>';
+            echo '</div>';
+            get_footer();
+        }
+    }
+
+    /**
+     * Force bypass theme completely - emergency mode
+     */
+    private function force_bypass_theme() {
+        // Output minimal HTML directly
+        ?>
+        <!DOCTYPE html>
+        <html <?php language_attributes(); ?>>
+        <head>
+            <meta charset="<?php bloginfo('charset'); ?>">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>KLSD Force Bypass Test</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background: #000; color: #fff; }
+                .success { background: #28a745; padding: 30px; border-radius: 10px; text-align: center; }
+                .info { background: #17a2b8; padding: 20px; margin: 20px 0; border-radius: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="success">
+                <h1>🎉 FORCE BYPASS SUCCESSFUL!</h1>
+                <p>This completely bypasses the WordPress theme system!</p>
+            </div>
+
+            <div class="info">
+                <h2>Diagnostic Information</h2>
+                <p><strong>Post ID:</strong> <?php echo get_the_ID(); ?></p>
+                <p><strong>Post Type:</strong> <?php echo get_post_type(); ?></p>
+                <p><strong>Active Theme:</strong> <?php echo wp_get_theme()->get('Name'); ?></p>
+                <p><strong>URL:</strong> <?php echo $_SERVER['REQUEST_URI']; ?></p>
+                <p><strong>Time:</strong> <?php echo date('Y-m-d H:i:s'); ?></p>
+            </div>
+
+            <div class="info">
+                <h2>✅ Success!</h2>
+                <p>If you can see this page, it means we can completely bypass your theme.</p>
+                <p>Now we can apply this technique to load Next.js content instead.</p>
+            </div>
+        </body>
+        </html>
+        <?php
+    }
     
     /**
      * Create the Next.js template file
