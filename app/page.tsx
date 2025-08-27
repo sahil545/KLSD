@@ -484,9 +484,16 @@ export default function Homepage() {
 
               {/* GREEN TESTING BOX */}
               <div className="bg-green-500 border-4 border-green-700 rounded-lg p-6 mb-8 shadow-xl">
-                <div className="text-white font-bold text-xl mb-2">🧪 TESTING BOX</div>
-                <div className="text-green-100 text-sm">This is a green testing box added to the hero section. It should be visible and prominent!</div>
-                <div className="mt-2 text-green-200 text-xs">Hero modification test successful ✅</div>
+                <div className="text-white font-bold text-xl mb-2">
+                  🧪 TESTING BOX
+                </div>
+                <div className="text-green-100 text-sm">
+                  This is a green testing box added to the hero section. It
+                  should be visible and prominent!
+                </div>
+                <div className="mt-2 text-green-200 text-xs">
+                  Hero modification test successful ✅
+                </div>
               </div>
 
               <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-tight drop-shadow-lg">
