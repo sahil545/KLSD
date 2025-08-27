@@ -105,6 +105,16 @@ class KLSD_Tour_Template_Manager {
             'high'
         );
 
+        // Add diagnostic metabox for debugging
+        add_meta_box(
+            'klsd_template_diagnostics',
+            '🔍 Template Override Diagnostics',
+            array($this, 'template_diagnostics_metabox'),
+            'product',
+            'normal',
+            'high'
+        );
+
         // Get template assignment
         $template = $this->get_product_template($post->ID);
 
