@@ -784,9 +784,11 @@ get_header(); ?>
     <?php
     global $post;
     $product_id = $post->ID;
-    $template_manager = new KLSD_Tour_Template_Manager();
+
+    // Use global instance to avoid re-initialization
+    $template_manager = $GLOBALS[\'klsd_tour_template_manager\'];
     $template_info = $template_manager->get_product_template($product_id);
-    
+
     if ($template_info) {
         echo $template_manager->render_nextjs_content($product_id, $template_info);
     } else {
