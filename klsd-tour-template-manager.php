@@ -1266,6 +1266,9 @@ get_header(); ?>
 
         error_log('KLSD: After basic cleanup - length: ' . strlen($html));
 
+        // Remove Next.js navigation to avoid duplicate headers
+        $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
+
         // Extract just the main content area, but preserve the full page if needed
         $content_extracted = false;
         if (preg_match('/<main[^>]*>(.*?)<\/main>/is', $html, $matches)) {
@@ -1273,7 +1276,11 @@ get_header(); ?>
             $content_extracted = true;
             error_log('KLSD: Extracted content from <main> tag');
         } elseif (preg_match('/<div[^>]*class="[^"]*min-h-screen[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
-            $html = $matches[1];
+            // If we have min-h-screen, extract everything inside it but skip navigation
+            $content = $matches[1];
+            // Remove any remaining navigation elements
+            $content = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $content);
+            $html = $content;
             $content_extracted = true;
             error_log('KLSD: Extracted content from min-h-screen div');
         } elseif (preg_match('/<div[^>]*class="[^"]*container[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
@@ -1281,8 +1288,9 @@ get_header(); ?>
             $content_extracted = true;
             error_log('KLSD: Extracted content from container div');
         } else {
-            // For complex pages, just use the body content as-is
-            error_log('KLSD: No main/container found, using body content as-is');
+            // For complex pages, remove navigation and use body content
+            $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
+            error_log('KLSD: No main/container found, using body content without nav');
         }
 
         error_log('KLSD: Final processed content length: ' . strlen($html));
