@@ -1228,6 +1228,8 @@ get_header(); ?>
      * Process and clean Next.js HTML for WordPress integration
      */
     private function process_nextjs_html($html, $product_id) {
+        error_log('KLSD: Processing HTML - original length: ' . strlen($html));
+
         // Remove doctype, html, head, and body tags to get just the content
         $html = preg_replace('/<\!DOCTYPE[^>]*>/i', '', $html);
         $html = preg_replace('/<html[^>]*>/i', '', $html);
@@ -1235,24 +1237,39 @@ get_header(); ?>
         $html = preg_replace('/<head[^>]*>.*?<\/head>/is', '', $html);
         $html = preg_replace('/<body[^>]*>/i', '', $html);
         $html = preg_replace('/<\/body>/i', '', $html);
-        
+
+        error_log('KLSD: After basic cleanup - length: ' . strlen($html));
+
         // Extract just the main content area
+        $content_extracted = false;
         if (preg_match('/<main[^>]*>(.*?)<\/main>/is', $html, $matches)) {
             $html = $matches[1];
+            $content_extracted = true;
+            error_log('KLSD: Extracted content from <main> tag');
         } elseif (preg_match('/<div[^>]*class="[^"]*container[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
             $html = $matches[1];
+            $content_extracted = true;
+            error_log('KLSD: Extracted content from container div');
+        } else {
+            // For debug endpoint, just use the body content as-is
+            error_log('KLSD: No main/container found, using body content as-is');
         }
-        
+
+        error_log('KLSD: Final processed content length: ' . strlen($html));
+
         // Clean up relative URLs and make them absolute
         $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
         $html = str_replace('href="/', 'href="' . $netlify_url . '/', $html);
         $html = str_replace('src="/', 'src="' . $netlify_url . '/', $html);
         $html = str_replace("href='/", "href='" . $netlify_url . "/", $html);
         $html = str_replace("src='/", "src='" . $netlify_url . "/", $html);
-        
+
         // Add wrapper with proper WordPress styling and booking handler
         $booking_script = $this->get_booking_handler_script($product_id);
-        return '<div class="klsd-nextjs-content" data-product-id="' . esc_attr($product_id) . '">' . $html . '</div>' . $booking_script;
+        $result = '<div class="klsd-nextjs-content" data-product-id="' . esc_attr($product_id) . '">' . $html . '</div>' . $booking_script;
+
+        error_log('KLSD: Final result length: ' . strlen($result));
+        return $result;
     }
     
     /**
