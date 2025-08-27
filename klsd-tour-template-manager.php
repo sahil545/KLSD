@@ -276,7 +276,7 @@ class KLSD_Tour_Template_Manager {
         $template = $this->get_product_template($post->ID);
         $use_nextjs = get_post_meta($post->ID, '_klsd_use_nextjs_frontend', true);
         $product_cats = wp_get_post_terms($post->ID, 'product_cat', array('fields' => 'names'));
-        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+        $netlify_url = "https://klsd-tour-templates.netlify.app";
 
         // Test connectivity to Next.js
         $test_url = $netlify_url . "/api/template-test?test=1";
@@ -1185,7 +1185,7 @@ get_header(); ?>
      * Fetch Next.js HTML server-side for SEO
      */
     private function fetch_nextjs_html($product_id, $template_path) {
-        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+        $netlify_url = "https://klsd-tour-templates.netlify.app";
 
         // Get product data to pass to static template
         $product = wc_get_product($product_id);
@@ -1240,7 +1240,7 @@ get_header(); ?>
 
         // Extract CSS and meta tags from head before removing it
         $head_content = '';
-        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+        $netlify_url = "https://klsd-tour-templates.netlify.app";
 
         if (preg_match('/<head[^>]*>(.*?)<\/head>/is', $html, $head_matches)) {
             $head_html = $head_matches[1];
@@ -1305,7 +1305,7 @@ get_header(); ?>
         error_log('KLSD: Final processed content length: ' . strlen($html));
 
         // Clean up relative URLs and make them absolute
-        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+        $netlify_url = "https://klsd-tour-templates.netlify.app";
         $html = str_replace('href="/', 'href="' . $netlify_url . '/', $html);
         $html = str_replace('src="/', 'src="' . $netlify_url . '/', $html);
         $html = str_replace("href='/", "href='" . $netlify_url . "/", $html);
