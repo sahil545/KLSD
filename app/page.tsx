@@ -457,20 +457,7 @@ export default function Homepage() {
         <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent"></div>
 
         {/* Floating Bubbles for Underwater Ambiance */}
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(25)].map((_, i) => (
-            <div
-              key={i}
-              className={`absolute w-2 h-2 bg-white/20 rounded-full animate-float opacity-60`}
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${3 + Math.random() * 4}s`,
-              }}
-            />
-          ))}
-        </div>
+        <FloatingBubbles />
 
         {/* Additional floating elements */}
         <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
