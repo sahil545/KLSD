@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://livewsnklsdlaucnh.netlify.app/sitemap.xml
+
+# Crawl-delay for better server performance
+Crawl-delay: 1
