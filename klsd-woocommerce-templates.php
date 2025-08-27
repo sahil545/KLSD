@@ -127,7 +127,6 @@ class KLSD_WooCommerce_Templates {
         .klsd-field input, .klsd-field textarea, .klsd-field select { width: 100%; padding: 6px 8px; border: 1px solid #8c8f94; border-radius: 4px; }
         .klsd-field-group { border: 1px solid #ddd; border-radius: 4px; margin-bottom: 12px; }
         .klsd-field-group h4 { margin: 0; padding: 8px 12px; background: #f6f7f7; border-bottom: 1px solid #ddd; font-size: 13px; }
-        .klsd-configure-template { background: #2271b1; color: #fff; padding: 6px 12px; border: none; border-radius: 3px; cursor: pointer; }
         ';
     }
     
