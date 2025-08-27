@@ -1524,6 +1524,84 @@ get_header(); ?>
     }
     
     /**
+     * Prepare product data for URL parameters
+     */
+    private function prepare_product_data_for_url($product, $product_id) {
+        if (!$product) {
+            return 'product=' . $product_id;
+        }
+
+        $params = array(
+            'product' => $product_id,
+            'product_id' => $product_id,
+            'product_name' => urlencode($product->get_name()),
+            'product_price' => $product->get_price(),
+        );
+
+        // Get custom field data from your WordPress fields
+        $tour_duration = get_post_meta($product_id, '_klsd_tour_duration', true);
+        $tour_group_size = get_post_meta($product_id, '_klsd_tour_group_size', true);
+        $tour_location = get_post_meta($product_id, '_klsd_tour_location', true);
+        $tour_difficulty = get_post_meta($product_id, '_klsd_tour_difficulty', true);
+        $tour_gear_included = get_post_meta($product_id, '_klsd_tour_gear_included', true);
+        $tour_highlights = get_post_meta($product_id, '_klsd_tour_highlights', true);
+
+        // Add tour data if available
+        if ($tour_duration) $params['tour_duration'] = urlencode($tour_duration);
+        if ($tour_group_size) $params['tour_group_size'] = urlencode($tour_group_size);
+        if ($tour_location) $params['tour_location'] = urlencode($tour_location);
+        if ($tour_difficulty) $params['tour_difficulty'] = urlencode($tour_difficulty);
+        if ($tour_gear_included) $params['tour_gear_included'] = $tour_gear_included === '1' ? '1' : '0';
+
+        // Handle highlights (could be array or string)
+        if ($tour_highlights) {
+            if (is_array($tour_highlights)) {
+                $params['tour_highlights'] = urlencode(json_encode($tour_highlights));
+            } else {
+                // Split by newlines if it's a string
+                $highlights_array = array_filter(explode("\n", $tour_highlights));
+                $params['tour_highlights'] = urlencode(json_encode($highlights_array));
+            }
+        }
+
+        // Get product categories
+        $categories = array();
+        $terms = wp_get_post_terms($product_id, 'product_cat');
+        foreach ($terms as $term) {
+            $categories[] = array(
+                'id' => $term->term_id,
+                'name' => $term->name,
+                'slug' => $term->slug
+            );
+        }
+        if (!empty($categories)) {
+            $params['product_categories'] = urlencode(json_encode($categories));
+        }
+
+        // Get product images
+        $images = array();
+        $image_ids = $product->get_gallery_image_ids();
+        if ($product->get_image_id()) {
+            array_unshift($image_ids, $product->get_image_id());
+        }
+        foreach ($image_ids as $image_id) {
+            $image_url = wp_get_attachment_image_url($image_id, 'full');
+            if ($image_url) {
+                $images[] = array(
+                    'src' => $image_url,
+                    'alt' => get_post_meta($image_id, '_wp_attachment_image_alt', true)
+                );
+                break; // Just get the first image for hero
+            }
+        }
+        if (!empty($images)) {
+            $params['product_images'] = urlencode(json_encode($images));
+        }
+
+        return http_build_query($params);
+    }
+
+    /**
      * Helper function to get tour data for frontend use (for backward compatibility)
      */
     public function get_tour_data($product_id) {
