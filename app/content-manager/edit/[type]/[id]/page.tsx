@@ -25,7 +25,7 @@ import {
   isTourProduct,
   isScubaGearProduct,
   isCertificationProduct,
-} from "../../../../client/lib/template-mapper";
+} from "@/lib/template-mapper";
 
 interface ContentData {
   id: number;
