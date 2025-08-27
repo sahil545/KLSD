@@ -20,6 +20,12 @@ import {
   Tag,
   DollarSign,
 } from "lucide-react";
+import {
+  getTemplateForProduct,
+  isTourProduct,
+  isScubaGearProduct,
+  isCertificationProduct,
+} from "../../../../client/lib/template-mapper";
 
 interface ContentData {
   id: number;
@@ -58,14 +64,6 @@ export default function EditContent() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   const [isDemoData, setIsDemoData] = useState(false);
-
-  // Import template mapping functions
-  const {
-    getTemplateForProduct,
-    isTourProduct,
-    isScubaGearProduct,
-    isCertificationProduct,
-  } = await import("../../../../client/lib/template-mapper");
 
   // Get template assignment for product
   const getProductTemplate = (
