@@ -530,7 +530,7 @@ get_header(); ?>
      * Fetch Next.js HTML server-side for SEO
      */
     private function fetch_nextjs_html($product_id, $template_path) {
-        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+        $netlify_url = "https://klsd-tour-templates.netlify.app";
         $fetch_url = $netlify_url . "/" . $template_path . "?product=" . $product_id . "&ssr=1&wordpress=1&static_hero=1";
 
         // Set up HTTP request with timeout
@@ -583,7 +583,7 @@ get_header(); ?>
         }
 
         // Clean up relative URLs and make them absolute
-        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+        $netlify_url = "https://klsd-tour-templates.netlify.app";
         $html = str_replace('href="/', 'href="' . $netlify_url . '/', $html);
         $html = str_replace('src="/', 'src="' . $netlify_url . '/', $html);
         $html = str_replace("href='/", "href='" . $netlify_url . "/", $html);
@@ -663,7 +663,7 @@ get_header(); ?>
         // Also listen for iframe messages
         window.addEventListener('message', function(event) {
             // Handle messages from iframe if needed
-            if (event.origin === 'https://livewsnklsdlaucnh.netlify.app') {
+            if (event.origin === 'https://klsd-tour-templates.netlify.app') {
                 if (event.data.type === 'KLSD_ADD_TO_CART') {
                     // Same handler as above
                     window.dispatchEvent(new CustomEvent('message', { data: event.data }));
