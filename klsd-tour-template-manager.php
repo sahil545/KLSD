@@ -843,10 +843,21 @@ class KLSD_Tour_Template_Manager {
 
         // Create the template file if it doesn't exist
         if (!file_exists($custom_template)) {
-            error_log('KLSD: Creating template file');
+            error_log('KLSD: Creating template file at: ' . $custom_template);
             $this->create_nextjs_template_file($custom_template);
+
+            // Verify it was created
+            if (file_exists($custom_template)) {
+                error_log('KLSD: Template file created successfully');
+                error_log('KLSD: Template file size: ' . filesize($custom_template) . ' bytes');
+            } else {
+                error_log('KLSD: FAILED to create template file!');
+                error_log('KLSD: Directory exists: ' . (file_exists(dirname($custom_template)) ? 'YES' : 'NO'));
+                error_log('KLSD: Directory writable: ' . (is_writable(dirname($custom_template)) ? 'YES' : 'NO'));
+            }
         } else {
             error_log('KLSD: Template file already exists');
+            error_log('KLSD: Template file size: ' . filesize($custom_template) . ' bytes');
         }
 
         error_log('KLSD: Returning custom template: ' . $custom_template);
