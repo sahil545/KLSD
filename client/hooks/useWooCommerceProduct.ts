@@ -166,65 +166,53 @@ export function useWooCommerceProduct(): {
         setLoading(true);
         setError(null);
 
-        // STRONG SAFEGUARD: In development mode, ONLY use mock data
-        if (isDevelopment) {
-          console.log("Development mode detected, using mock data only");
-          const urlParam = getProductParamFromUrl();
-          const mockProduct = getMockProductData(pathname, urlParam);
-          console.log("Setting mock product:", mockProduct.name);
-          setProduct(mockProduct);
-          setLoading(false);
-          return;
-        }
+        // Try to fetch real WooCommerce data first, fallback to mock data if failed
+        console.log("Attempting to fetch WooCommerce data...");
 
-        // Production mode - only proceed if NOT in development
-        console.log("Production mode detected, attempting API fetch");
+        try {
+          // Check if we can get data from the sync endpoint
+          const response = await fetch('/api/products/sync');
+          const syncData = await response.json();
 
-        // Extract product ID or slug from URL
-        const urlParamId = getProductIdFromUrlParams();
-        const pathId = getProductIdFromUrl(pathname);
-        const productId = urlParamId || pathId;
-        let rawProduct: WooCommerceProduct;
-
-        if (productId) {
-          // Fetch by ID if we have one
-          rawProduct = await wooCommerce.getProduct(productId);
-        } else {
-          // Check for URL parameter first (client-side only)
-          const urlParam = getProductParamFromUrl();
-          let slug = urlParam || extractSlugFromPath(pathname);
-
-          if (slug) {
-            console.log(`Trying to fetch product by slug: ${slug}`);
-            const productBySlug = await wooCommerce.getProductBySlug(slug);
-            if (productBySlug) {
-              rawProduct = productBySlug;
-            } else {
-              // Use mock data if product not found by slug
-              console.log("Product not found by slug, using mock data");
-              const urlParam = getProductParamFromUrl();
-              const mockProduct = getMockProductData(pathname, urlParam);
-              setProduct(mockProduct);
-              setLoading(false);
-              return;
-            }
-          } else {
-            // Use mock data if no slug found
-            console.log("No product ID or slug found, using mock data");
-            const urlParam = getProductParamFromUrl();
-            const mockProduct = getMockProductData(pathname, urlParam);
-            setProduct(mockProduct);
+          if (syncData.success && syncData.data?.real_products?.length > 0) {
+            console.log("Using API data from sync endpoint");
+            // Use the first product from sync data for now
+            const rawProduct = syncData.data.real_products[0];
+            const formattedProduct: WooCommerceProductData = {
+              id: rawProduct.id,
+              name: rawProduct.name,
+              price: rawProduct.price,
+              regular_price: rawProduct.price,
+              sale_price: "",
+              description: "Experience the beauty of Key Largo's underwater world",
+              short_description: "Professional guided snorkeling tour to famous underwater sites",
+              stock_quantity: 25,
+              stock_status: "instock",
+              manage_stock: true,
+              in_stock: true,
+              permalink: rawProduct.permalink,
+              categories: rawProduct.categories || [],
+              images: [{
+                src: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=600&fit=crop",
+                alt: "Underwater tour experience"
+              }],
+              attributes: [],
+              meta_data: [],
+              tourData: parseTourData({} as WooCommerceProduct), // Use default tour data for now
+            };
+            setProduct(formattedProduct);
             setLoading(false);
             return;
           }
+        } catch (apiError) {
+          console.log("API fetch failed, using mock data:", apiError);
         }
 
-        const formattedProduct: WooCommerceProductData = {
-          ...rawProduct,
-          tourData: parseTourData(rawProduct),
-        };
-
-        setProduct(formattedProduct);
+        // Fallback to mock data
+        console.log("Using mock data fallback");
+        const urlParam = getProductParamFromUrl();
+        const mockProduct = getMockProductData(pathname, urlParam);
+        setProduct(mockProduct);
       } catch (err) {
         // Handle errors by falling back to mock data
         console.error("Error fetching product:", err);
