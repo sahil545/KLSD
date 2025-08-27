@@ -531,7 +531,7 @@ get_header(); ?>
      */
     private function fetch_nextjs_html($product_id, $template_path) {
         $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
-        $fetch_url = $netlify_url . $template_path . "?product=" . $product_id . "&ssr=1&wordpress=1&static_hero=1";
+        $fetch_url = $netlify_url . "/" . $template_path . "?product=" . $product_id . "&ssr=1&wordpress=1&static_hero=1";
 
         // Set up HTTP request with timeout
         $args = array(
