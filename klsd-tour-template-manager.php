@@ -75,6 +75,11 @@ class KLSD_Tour_Template_Manager {
         // Template override hooks for Next.js frontend (high priority to ensure it runs)
         add_filter('template_include', array($this, 'override_product_template'), 99);
         add_action('wp_head', array($this, 'add_nextjs_meta_tags'));
+
+        // Add test mode - force override on any product page for debugging
+        if (isset($_GET['klsd_test_override']) && $_GET['klsd_test_override'] === '1') {
+            add_filter('template_include', array($this, 'force_test_override'), 999);
+        }
         
         // Booking data hooks
         add_action('woocommerce_add_to_cart', array($this, 'save_booking_data_to_cart'));
@@ -315,7 +320,7 @@ class KLSD_Tour_Template_Manager {
                 <?php if ($use_nextjs === '1' && $template): ?>
                     <span style="color: #00a32a;">READY - Override should work on frontend ✓</span>
                 <?php else: ?>
-                    <span style="color: #d63638;">NOT READY ❌</span>
+                    <span style="color: #d63638;">NOT READY ��</span>
                     <ul style="margin: 5px 0 0 20px;">
                         <?php if ($use_nextjs !== '1'): ?><li>Next.js toggle must be enabled</li><?php endif; ?>
                         <?php if (!$template): ?><li>Product must be in a supported category</li><?php endif; ?>
