@@ -1269,26 +1269,42 @@ get_header(); ?>
         // Remove Next.js navigation to avoid duplicate headers
         $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
 
-        // Extract just the main content area, but preserve the full page if needed
+        // Extract content but preserve hero sections that might be outside main
         $content_extracted = false;
-        if (preg_match('/<main[^>]*>(.*?)<\/main>/is', $html, $matches)) {
-            $html = $matches[1];
-            $content_extracted = true;
-            error_log('KLSD: Extracted content from <main> tag');
-        } elseif (preg_match('/<div[^>]*class="[^"]*min-h-screen[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
-            // If we have min-h-screen, extract everything inside it but skip navigation
+
+        // First, try to get everything inside min-h-screen (full page layout)
+        if (preg_match('/<div[^>]*class="[^"]*min-h-screen[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
+            // Extract everything inside min-h-screen but remove navigation
             $content = $matches[1];
-            // Remove any remaining navigation elements
             $content = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $content);
             $html = $content;
             $content_extracted = true;
-            error_log('KLSD: Extracted content from min-h-screen div');
-        } elseif (preg_match('/<div[^>]*class="[^"]*container[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
+            error_log('KLSD: Extracted full content from min-h-screen div');
+        }
+        // If no min-h-screen, try to extract main + any hero sections that come before it
+        elseif (preg_match('/<main[^>]*>(.*?)<\/main>/is', $html, $main_matches)) {
+            $main_content = $main_matches[1];
+
+            // Look for hero sections that might be before the main tag
+            $hero_content = '';
+            if (preg_match_all('/<section[^>]*class="[^"]*hero[^"]*"[^>]*>.*?<\/section>/is', $html, $hero_matches)) {
+                $hero_content = implode('', $hero_matches[0]);
+            } elseif (preg_match_all('/<div[^>]*class="[^"]*hero[^"]*"[^>]*>.*?<\/div>/is', $html, $hero_div_matches)) {
+                $hero_content = implode('', $hero_div_matches[0]);
+            }
+
+            $html = $hero_content . $main_content;
+            $content_extracted = true;
+            error_log('KLSD: Extracted main content with hero sections');
+        }
+        // Fallback to container
+        elseif (preg_match('/<div[^>]*class="[^"]*container[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
             $html = $matches[1];
             $content_extracted = true;
             error_log('KLSD: Extracted content from container div');
-        } else {
-            // For complex pages, remove navigation and use body content
+        }
+        // Last resort - use body content but remove nav
+        else {
             $html = preg_replace('/<nav[^>]*>.*?<\/nav>/is', '', $html);
             error_log('KLSD: No main/container found, using body content without nav');
         }
