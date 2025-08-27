@@ -76,10 +76,9 @@ export default function WooCommerceHeroNoBooking() {
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/40" />
 
-      {/* Background Effects */}
+      {/* Background Effects - Simplified */}
       <div className="absolute inset-0">
-        <div className="absolute w-96 h-96 bg-white/5 rounded-full -top-48 -right-48"></div>
-        <div className="absolute w-64 h-64 bg-blue-500/10 rounded-full -bottom-32 -left-32"></div>
+        {/* Subtle gradient overlays only */}
       </div>
 
       <div className="relative container mx-auto px-4 pt-24 pb-12">
