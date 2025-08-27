@@ -236,9 +236,13 @@ class KLSD_WooCommerce_Templates {
                 echo '<strong>Frontend Engine:</strong> <span style="color: #d63638;">WordPress (Classic)</span><br>';
                 echo '<small style="color: #646970;">This product will use the standard WordPress template when viewed.</small><br><br>';
             }
-            echo '<button type="button" class="klsd-configure-template" data-template="' . esc_attr($template['template']) . '">';
-            echo 'Configure Template Fields</button>';
             echo '</div>';
+
+            // Show template-specific custom fields directly here
+            echo '<div class="klsd-template-fields" style="margin-top: 20px;">';
+            $this->render_template_custom_fields($post->ID, $template);
+            echo '</div>';
+
         } else {
             echo '<div style="background: #fcf3cd; border: 1px solid #ddd; border-radius: 4px; padding: 12px;">';
             echo '<strong>No Template Assigned</strong><br>';
