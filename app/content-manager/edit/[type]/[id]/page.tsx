@@ -59,17 +59,19 @@ export default function EditContent() {
   const [activeTab, setActiveTab] = useState("basic");
   const [isDemoData, setIsDemoData] = useState(false);
 
-  // Check if product is in Tours & Trips category
-  const isTourProduct = (
+  // Import template mapping functions
+  const {
+    getTemplateForProduct,
+    isTourProduct,
+    isScubaGearProduct,
+    isCertificationProduct,
+  } = await import("../../../../client/lib/template-mapper");
+
+  // Get template assignment for product
+  const getProductTemplate = (
     categories: Array<{ id: number; name: string; slug: string }>,
   ) => {
-    return categories.some(
-      (cat) =>
-        cat.name.toLowerCase().includes("tour") ||
-        cat.name.toLowerCase().includes("trip") ||
-        cat.name.toLowerCase().includes("diving") ||
-        cat.name.toLowerCase().includes("snorkel"),
-    );
+    return getTemplateForProduct(categories);
   };
 
   // Load content data
@@ -515,6 +517,48 @@ export default function EditContent() {
                 {/* Custom Fields Tab - Category-Aware Forms */}
                 {activeTab === "meta" && (
                   <div className="space-y-8">
+                    {/* Template Assignment Info */}
+                    {contentData?.categories && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h3 className="text-lg font-medium text-blue-900 mb-2">
+                          🎨 Template Assignment
+                        </h3>
+                        {(() => {
+                          const template = getProductTemplate(contentData.categories);
+                          if (template) {
+                            return (
+                              <div className="space-y-2">
+                                <p className="text-blue-800">
+                                  <strong>Assigned Template:</strong> {template.templateName}
+                                </p>
+                                <p className="text-blue-700 text-sm">
+                                  {template.description}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <Badge className="bg-blue-100 text-blue-800">
+                                    {template.templatePath}
+                                  </Badge>
+                                  <Link
+                                    href={template.templatePath}
+                                    target="_blank"
+                                    className="text-blue-600 hover:text-blue-800 text-sm underline"
+                                  >
+                                    Preview Template →
+                                  </Link>
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <p className="text-blue-800">
+                                No template assigned. Add categories to assign a template automatically.
+                              </p>
+                            );
+                          }
+                        })()}
+                      </div>
+                    )}
+
                     {contentData && isTourProduct(contentData.categories) ? (
                       // Tours & Trips Product Form (Enhanced for Christ Statue Tour Template)
                       <>
