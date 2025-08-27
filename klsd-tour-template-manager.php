@@ -1230,6 +1230,9 @@ get_header(); ?>
     private function process_nextjs_html($html, $product_id) {
         error_log('KLSD: Processing HTML - original length: ' . strlen($html));
 
+        // Store original HTML for fallback
+        $original_html = $html;
+
         // Extract CSS and meta tags from head before removing it
         $head_content = '';
         $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
