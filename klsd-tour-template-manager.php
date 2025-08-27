@@ -820,7 +820,9 @@ get_header(); ?>
     private function fetch_nextjs_html($product_id, $template_path) {
         $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
         $fetch_url = $netlify_url . "/" . ltrim($template_path, '/') . "?product=" . $product_id . "&ssr=1&wordpress=1";
-        
+
+        error_log('KLSD: Attempting to fetch Next.js HTML from: ' . $fetch_url);
+
         // Set up HTTP request with timeout
         $args = array(
             'timeout' => 10,
@@ -829,24 +831,27 @@ get_header(); ?>
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             ),
         );
-        
+
         // Make the request
         $response = wp_remote_get($fetch_url, $args);
-        
+
         // Check for errors
         if (is_wp_error($response)) {
             error_log('KLSD: Failed to fetch Next.js HTML: ' . $response->get_error_message());
             return false;
         }
-        
+
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
-            error_log('KLSD: Next.js fetch returned HTTP ' . $response_code);
+            error_log('KLSD: Next.js fetch returned HTTP ' . $response_code . ' for URL: ' . $fetch_url);
+            $response_body = wp_remote_retrieve_body($response);
+            error_log('KLSD: Response body: ' . substr($response_body, 0, 500));
             return false;
         }
-        
+
         $html = wp_remote_retrieve_body($response);
-        
+        error_log('KLSD: Successfully fetched ' . strlen($html) . ' bytes of HTML');
+
         // Clean and process the HTML
         return $this->process_nextjs_html($html, $product_id);
     }
