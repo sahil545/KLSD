@@ -1230,6 +1230,21 @@ get_header(); ?>
     private function process_nextjs_html($html, $product_id) {
         error_log('KLSD: Processing HTML - original length: ' . strlen($html));
 
+        // Extract CSS and meta tags from head before removing it
+        $head_content = '';
+        if (preg_match('/<head[^>]*>(.*?)<\/head>/is', $html, $head_matches)) {
+            $head_html = $head_matches[1];
+
+            // Extract CSS links and inline styles
+            preg_match_all('/<link[^>]*rel=["\']stylesheet["\'][^>]*>/i', $head_html, $css_links);
+            preg_match_all('/<style[^>]*>.*?<\/style>/is', $head_html, $inline_styles);
+            preg_match_all('/<meta[^>]*>/i', $head_html, $meta_tags);
+
+            // Combine all head content we want to preserve
+            $head_content = implode("\n", $css_links[0]) . "\n" . implode("\n", $inline_styles[0]) . "\n" . implode("\n", $meta_tags[0]);
+            error_log('KLSD: Extracted head content length: ' . strlen($head_content));
+        }
+
         // Remove doctype, html, head, and body tags to get just the content
         $html = preg_replace('/<\!DOCTYPE[^>]*>/i', '', $html);
         $html = preg_replace('/<html[^>]*>/i', '', $html);
@@ -1240,18 +1255,22 @@ get_header(); ?>
 
         error_log('KLSD: After basic cleanup - length: ' . strlen($html));
 
-        // Extract just the main content area
+        // Extract just the main content area, but preserve the full page if needed
         $content_extracted = false;
         if (preg_match('/<main[^>]*>(.*?)<\/main>/is', $html, $matches)) {
             $html = $matches[1];
             $content_extracted = true;
             error_log('KLSD: Extracted content from <main> tag');
+        } elseif (preg_match('/<div[^>]*class="[^"]*min-h-screen[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
+            $html = $matches[1];
+            $content_extracted = true;
+            error_log('KLSD: Extracted content from min-h-screen div');
         } elseif (preg_match('/<div[^>]*class="[^"]*container[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
             $html = $matches[1];
             $content_extracted = true;
             error_log('KLSD: Extracted content from container div');
         } else {
-            // For debug endpoint, just use the body content as-is
+            // For complex pages, just use the body content as-is
             error_log('KLSD: No main/container found, using body content as-is');
         }
 
@@ -1266,7 +1285,9 @@ get_header(); ?>
 
         // Add wrapper with proper WordPress styling and booking handler
         $booking_script = $this->get_booking_handler_script($product_id);
-        $result = '<div class="klsd-nextjs-content" data-product-id="' . esc_attr($product_id) . '">' . $html . '</div>' . $booking_script;
+
+        // Include the head content for styling
+        $result = $head_content . '<div class="klsd-nextjs-content" data-product-id="' . esc_attr($product_id) . '">' . $html . '</div>' . $booking_script;
 
         error_log('KLSD: Final result length: ' . strlen($result));
         return $result;
