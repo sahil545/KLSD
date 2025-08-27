@@ -1047,8 +1047,242 @@ export default function EditContent() {
                           </div>
                         </div>
                       </>
+                    ) : contentData && isScubaGearProduct(contentData.categories) ? (
+                      // Scuba Gear Product Form
+                      <>
+                        <div className="border-b pb-6">
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">
+                            🤿 Scuba Gear Product Details
+                          </h3>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Brand
+                                </label>
+                                <Input placeholder="e.g., ScubaPro, Aqualung" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Model
+                                </label>
+                                <Input placeholder="e.g., MK25 EVO" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Color Options
+                                </label>
+                                <Input placeholder="e.g., Black, Blue, Red" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Size Range
+                                </label>
+                                <Input placeholder="e.g., XS-XXL, 5-12" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Material
+                                </label>
+                                <Input placeholder="e.g., Neoprene, Titanium" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border-b pb-6">
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">
+                            📦 Product Features
+                          </h3>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Key Features (one per line)
+                              </label>
+                              <Textarea
+                                rows={4}
+                                placeholder="Professional grade construction&#10;Environmentally sealed first stage&#10;Balanced second stage&#10;Cold water rated"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Skill Level
+                                </label>
+                                <Input placeholder="e.g., Beginner, Intermediate, Professional" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Warranty Period
+                                </label>
+                                <Input placeholder="e.g., 2 Years, Lifetime" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border-b pb-6">
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">
+                            🚚 Shipping & Service
+                          </h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Shipping Info
+                              </label>
+                              <Input placeholder="e.g., Free shipping over $99" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Service Available
+                              </label>
+                              <Input placeholder="e.g., Factory Authorized Service" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                <ShoppingCart className="w-4 h-4 text-purple-600" />
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-medium text-purple-900 mb-1">
+                                Scuba Gear Template (Product Template 1A)
+                              </h4>
+                              <p className="text-sm text-purple-800">
+                                This product will use the professional scuba gear template with product gallery, detailed specifications, and e-commerce features.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : contentData && isCertificationProduct(contentData.categories) ? (
+                      // Certification Course Form
+                      <>
+                        <div className="border-b pb-6">
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">
+                            🎓 Certification Course Details
+                          </h3>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Certification Agency
+                                </label>
+                                <Input placeholder="e.g., PADI, SSI, NAUI" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Course Level
+                                </label>
+                                <Input placeholder="e.g., Beginner, Advanced, Professional" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Course Duration
+                                </label>
+                                <Input placeholder="e.g., 3 Days, 1 Week" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Number of Dives
+                                </label>
+                                <Input placeholder="e.g., 4 Dives" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Max Depth
+                                </label>
+                                <Input placeholder="e.g., 60 feet, 100 feet" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border-b pb-6">
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">
+                            📚 Course Content
+                          </h3>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                What's Included (one per line)
+                              </label>
+                              <Textarea
+                                rows={4}
+                                placeholder="E-learning materials&#10;Pool training sessions&#10;Open water dives&#10;Digital certification card&#10;Equipment for training"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Prerequisites
+                                </label>
+                                <Input placeholder="e.g., Open Water Certified, None" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Age Minimum
+                                </label>
+                                <Input placeholder="e.g., 10 years, 15 years" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border-b pb-6">
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">
+                            🎯 Course Benefits
+                          </h3>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Skills You'll Learn (one per line)
+                              </label>
+                              <Textarea
+                                rows={3}
+                                placeholder="Underwater navigation&#10;Deep diving techniques&#10;Emergency procedures&#10;Equipment maintenance"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                After Certification
+                              </label>
+                              <Textarea
+                                rows={2}
+                                placeholder="Dive to 100 feet&#10;Plan your own dives&#10;Guide other divers"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <Globe className="w-4 h-4 text-green-600" />
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-medium text-green-900 mb-1">
+                                Certification Template
+                              </h4>
+                              <p className="text-sm text-green-800">
+                                This course will use the dedicated certification template with course details, instructor information, and booking system.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
                     ) : (
-                      // Other Product Categories - Blank for now
+                      // Other Product Categories - Default form
                       <div className="text-center py-12 text-gray-500">
                         <div className="text-gray-400 mb-4">
                           <Tag className="w-12 h-12 mx-auto" />
@@ -1057,31 +1291,18 @@ export default function EditContent() {
                           Custom Fields
                         </h3>
                         <p className="mb-2">
-                          Custom fields for this product category will be
-                          available soon.
+                          This product doesn't match any specific template categories yet.
                         </p>
                         {contentData && (
                           <div className="text-sm text-gray-600 mt-4">
                             <p>
-                              <strong>Product Category:</strong>{" "}
+                              <strong>Product Categories:</strong>{" "}
                               {contentData.categories
                                 .map((cat) => cat.name)
                                 .join(", ")}
                             </p>
-                            <p className="mt-1">
-                              <strong>Category Type:</strong>{" "}
-                              {contentData.categories.some(
-                                (cat) =>
-                                  cat.name.toLowerCase().includes("gear") ||
-                                  cat.name
-                                    .toLowerCase()
-                                    .includes("equipment") ||
-                                  cat.name.toLowerCase().includes("computer") ||
-                                  cat.name.toLowerCase().includes("mask") ||
-                                  cat.name.toLowerCase().includes("fin"),
-                              )
-                                ? "Scuba Gear"
-                                : "Other"}
+                            <p className="mt-1 text-blue-600">
+                              Add this product to "All Tours & Trips", "Scuba Gear", or "Certification Courses" categories to enable template-specific forms.
                             </p>
                           </div>
                         )}
