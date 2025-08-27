@@ -785,12 +785,17 @@ class KLSD_Tour_Template_Manager {
      * Override product template to use Next.js frontend when enabled
      */
     public function override_product_template($template) {
-        // Debug logging
-        error_log('KLSD: Template override function called for template: ' . $template);
+        // Always log that this function was called
+        error_log('KLSD: ===== TEMPLATE OVERRIDE FUNCTION CALLED =====');
+        error_log('KLSD: Original template: ' . $template);
+        error_log('KLSD: Current URL: ' . $_SERVER['REQUEST_URI']);
+        error_log('KLSD: is_product(): ' . (is_product() ? 'YES' : 'NO'));
+        error_log('KLSD: is_single(): ' . (is_single() ? 'YES' : 'NO'));
+        error_log('KLSD: Current post type: ' . get_post_type());
 
         // Only override on single product pages
         if (!is_product()) {
-            error_log('KLSD: Not a product page, skipping override');
+            error_log('KLSD: Not a product page, skipping override. Post type: ' . get_post_type());
             return $template;
         }
 
