@@ -1,8 +1,6 @@
 import Navigation from "../../client/components/Navigation";
 import StaticHero from "../../client/components/StaticHero";
-import SimpleBookingSection from "../../client/components/SimpleBookingSection";
-import TourPageNavigation from "../../client/components/TourPageNavigation";
-import ModernTourContent from "../../client/components/ModernTourContent";
+import ClientPageWrapper from "../../client/components/ClientPageWrapper";
 import Footer from "../../client/components/Footer";
 
 // Server-side function to get product data
@@ -72,11 +70,9 @@ export default async function ChristStatueTourStatic({
   return (
     <div className="min-h-screen">
       <Navigation />
-      <TourPageNavigation />
       <main>
         <StaticHero product={productData} />
-        <SimpleBookingSection />
-        <ModernTourContent />
+        <ClientPageWrapper productData={productData} />
       </main>
       <Footer />
     </div>
