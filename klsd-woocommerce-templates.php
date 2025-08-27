@@ -255,34 +255,27 @@ class KLSD_WooCommerce_Templates {
     }
     
     /**
-     * Add custom fields based on template type
+     * Render template-specific custom fields (called from template assignment section)
      */
-    public function add_custom_fields() {
-        global $post;
-        
-        $template = $this->get_product_template($post->ID);
-        
-        if (!$template) {
-            return;
-        }
-        
-        echo '<div class="klsd-custom-fields options_group" style="display: none;">';
-        echo '<h3>📝 Template Custom Fields</h3>';
-        echo '<div style="padding: 12px;">';
-        
+    private function render_template_custom_fields($product_id, $template) {
+        echo '<h4 style="margin: 20px 0 15px 0; color: #1d2327;">📝 Template-Specific Fields</h4>';
+        echo '<div style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 15px;">';
+
         switch ($template['template']) {
             case 'christ-statue-tour':
-                $this->render_tours_fields($post->ID);
+                $this->render_tours_fields($product_id);
                 break;
             case 'product-template-1a':
-                $this->render_gear_fields($post->ID);
+                $this->render_gear_fields($product_id);
                 break;
             case 'certification-template':
-                $this->render_certification_fields($post->ID);
+                $this->render_certification_fields($product_id);
+                break;
+            default:
+                echo '<p style="color: #646970; font-style: italic;">No custom fields configured for this template.</p>';
                 break;
         }
-        
-        echo '</div>';
+
         echo '</div>';
     }
     
