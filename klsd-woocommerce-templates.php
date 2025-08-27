@@ -519,57 +519,140 @@ get_header(); ?>
             return '<div class="error">Product not found.</div>';
         }
 
-        // Prepare product data for Next.js
-        $product_data = $this->prepare_product_data($product);
-
         // Get the template path
         $template_path = $template_info["template"];
 
-        // Start output buffering
+        // Fetch Next.js rendered HTML server-side
+        $nextjs_html = $this->fetch_nextjs_html($product_id, $template_path);
+
+        if ($nextjs_html) {
+            // Successfully fetched Next.js HTML - return it directly
+            return $nextjs_html;
+        } else {
+            // Fallback to basic product display if fetch fails
+            return $this->render_fallback_content($product, $template_info);
+        }
+    }
+
+    /**
+     * Fetch Next.js HTML server-side for SEO
+     */
+    private function fetch_nextjs_html($product_id, $template_path) {
+        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+        $fetch_url = $netlify_url . $template_path . "?product=" . $product_id . "&ssr=1&wordpress=1";
+
+        // Set up HTTP request with timeout
+        $args = array(
+            'timeout' => 10,
+            'headers' => array(
+                'User-Agent' => 'WordPress/KLSD-Templates ' . KLSD_PLUGIN_VERSION,
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            ),
+        );
+
+        // Make the request
+        $response = wp_remote_get($fetch_url, $args);
+
+        // Check for errors
+        if (is_wp_error($response)) {
+            error_log('KLSD: Failed to fetch Next.js HTML: ' . $response->get_error_message());
+            return false;
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
+            error_log('KLSD: Next.js fetch returned HTTP ' . $response_code);
+            return false;
+        }
+
+        $html = wp_remote_retrieve_body($response);
+
+        // Clean and process the HTML
+        return $this->process_nextjs_html($html, $product_id);
+    }
+
+    /**
+     * Process and clean Next.js HTML for WordPress integration
+     */
+    private function process_nextjs_html($html, $product_id) {
+        // Remove doctype, html, head, and body tags to get just the content
+        $html = preg_replace('/<\!DOCTYPE[^>]*>/i', '', $html);
+        $html = preg_replace('/<html[^>]*>/i', '', $html);
+        $html = preg_replace('/<\/html>/i', '', $html);
+        $html = preg_replace('/<head[^>]*>.*?<\/head>/is', '', $html);
+        $html = preg_replace('/<body[^>]*>/i', '', $html);
+        $html = preg_replace('/<\/body>/i', '', $html);
+
+        // Extract just the main content area
+        if (preg_match('/<main[^>]*>(.*?)<\/main>/is', $html, $matches)) {
+            $html = $matches[1];
+        } elseif (preg_match('/<div[^>]*class="[^"]*container[^"]*"[^>]*>(.*?)<\/div>/is', $html, $matches)) {
+            $html = $matches[1];
+        }
+
+        // Clean up relative URLs and make them absolute
+        $netlify_url = "https://livewsnklsdlaucnh.netlify.app";
+        $html = str_replace('href="/', 'href="' . $netlify_url . '/', $html);
+        $html = str_replace('src="/', 'src="' . $netlify_url . '/', $html);
+        $html = str_replace("href='/", "href='" . $netlify_url . "/", $html);
+        $html = str_replace("src='/", "src='" . $netlify_url . "/", $html);
+
+        // Add wrapper with proper WordPress styling
+        return '<div class="klsd-nextjs-content" data-product-id="' . esc_attr($product_id) . '">' . $html . '</div>';
+    }
+
+    /**
+     * Render fallback content if Next.js fetch fails
+     */
+    private function render_fallback_content($product, $template_info) {
         ob_start();
         ?>
-
-        <script>
-        // Product data for Next.js components
-        window.klsdProductData = <?php echo json_encode($product_data); ?>;
-        window.klsdTemplatePath = "<?php echo esc_js($template_path); ?>";
-        </script>
-
-        <div id="nextjs-product-root" data-product-id="<?php echo esc_attr($product_id); ?>" data-template="<?php echo esc_attr($template_path); ?>">
-            <div class="loading-placeholder" style="text-align: center; padding: 40px;">
-                <h2><?php echo esc_html($product->get_name()); ?></h2>
-                <p>Loading enhanced product view...</p>
-                <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 2s linear infinite; margin: 20px auto;"></div>
+        <div class="klsd-fallback-content">
+            <div class="product-header">
+                <h1><?php echo esc_html($product->get_name()); ?></h1>
+                <div class="price">
+                    <?php echo $product->get_price_html(); ?>
+                </div>
             </div>
+
+            <div class="product-description">
+                <?php echo wp_kses_post($product->get_description()); ?>
+            </div>
+
+            <div class="product-meta">
+                <p><strong>Template:</strong> <?php echo esc_html($template_info['name']); ?></p>
+                <p><em>Enhanced view temporarily unavailable. Showing basic product information.</em></p>
+            </div>
+
+            <?php woocommerce_template_single_add_to_cart(); ?>
         </div>
 
         <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .klsd-fallback-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .product-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .price {
+            font-size: 1.5em;
+            color: #2ea44f;
+            margin-bottom: 20px;
+        }
+        .product-description {
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .product-meta {
+            background: #f6f8fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
         }
         </style>
-
-        <script>
-        // Load Next.js component
-        (function() {
-            const netlifyUrl = "https://livewsnklsdlaucnh.netlify.app";
-            const templatePath = window.klsdTemplatePath;
-            const productData = window.klsdProductData;
-
-            // Create iframe to load Next.js content
-            const iframe = document.createElement("iframe");
-            iframe.src = netlifyUrl + templatePath + "?product=" + <?php echo $product_id; ?> + "&wordpress=1";
-            iframe.style.width = "100%";
-            iframe.style.border = "none";
-            iframe.style.minHeight = "800px";
-            iframe.onload = function() {
-                document.querySelector(".loading-placeholder").style.display = "none";
-            };
-
-            document.getElementById("nextjs-product-root").appendChild(iframe);
-        })();
-        </script>
 
         <?php
         return ob_get_clean();
