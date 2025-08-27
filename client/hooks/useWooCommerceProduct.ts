@@ -161,32 +161,25 @@ export function useWooCommerceProduct(): {
         setLoading(true);
         setError(null);
 
-        // Always try API first for development and Netlify deployments
-        // Only skip API for true WordPress context (with WordPress-specific DOM elements)
-        const hasWordPressElements =
-          document.querySelector(
-            'meta[name="generator"][content*="WordPress"]',
-          ) ||
-          document.querySelector('link[href*="/wp-content/"]') ||
-          document.querySelector('script[src*="/wp-includes/"]') ||
-          window.location.pathname.includes("/wp-");
-
-        const isWordPressContext =
-          window.location.hostname !== "localhost" &&
-          !window.location.hostname.includes("netlify") &&
-          !window.location.hostname.includes("127.0.0.1") &&
-          hasWordPressElements;
+        // Check if we're embedded in WordPress (Next.js content loaded inside WordPress)
+        const isEmbeddedInWordPress =
+          document.querySelector('meta[name="klsd-frontend"][content="nextjs"]') ||
+          document.querySelector('.klsd-nextjs-content') ||
+          document.querySelector('meta[name="generator"][content*="WordPress"]');
 
         console.log("Context detection:", {
           hostname: window.location.hostname,
           pathname: window.location.pathname,
-          hasWordPressElements,
-          isWordPressContext,
-          willTryAPI: !isWordPressContext,
+          isEmbeddedInWordPress,
+          hasKLSDMeta: !!document.querySelector('meta[name="klsd-frontend"]'),
+          hasKLSDContent: !!document.querySelector('.klsd-nextjs-content'),
+          hasWordPress: !!document.querySelector('meta[name="generator"][content*="WordPress"]'),
+          willUseMockData: isEmbeddedInWordPress
         });
 
-        if (isWordPressContext) {
-          console.log("Running in WordPress context, using mock data directly");
+        // When embedded in WordPress, use mock data directly since API routes aren't available
+        if (isEmbeddedInWordPress) {
+          console.log("Running embedded in WordPress, using mock data directly");
           const urlParam = getProductParamFromUrl();
           const mockProduct = getMockProductData(pathname, urlParam);
           setProduct(mockProduct);
