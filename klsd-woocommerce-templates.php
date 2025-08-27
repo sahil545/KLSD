@@ -137,13 +137,7 @@ class KLSD_WooCommerce_Templates {
     private function get_admin_js() {
         return '
         jQuery(document).ready(function($) {
-            $(document).on("click", ".klsd-configure-template", function(e) {
-                e.preventDefault();
-                $(".klsd-custom-fields").show();
-                $("html, body").animate({ scrollTop: $(".klsd-custom-fields").offset().top - 100 }, 500);
-            });
-            
-            // Auto-save fields
+            // Auto-save indicator for template fields
             $(document).on("change input", ".klsd-field input, .klsd-field textarea, .klsd-field select", function() {
                 $(this).css("background-color", "#fff2cd");
                 setTimeout(function() {
