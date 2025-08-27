@@ -25,20 +25,40 @@ import {
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState<{[key: string]: boolean}>({});
+
+  const toggleDropdown = (label: string) => {
+    setOpenDropdowns(prev => ({
+      ...prev,
+      [label]: !prev[label]
+    }));
+  };
 
   const navItems = [
     { label: "Certification", href: "/certification" },
     { label: "Dive Sites", href: "/dive-sites" },
     { label: "Scuba Gear", href: "/scuba-gear" },
-    { label: "Template", href: "/christ-statue-tour" },
-    { label: "Bookings", href: "/booking-calendar" },
     { label: "Contact", href: "/contact" },
-    { label: "Image Test", href: "/image-test" },
   ];
 
-  // Development-only navigation items
-  const devNavItems = [
-    { label: "Content Manager", href: "/content-manager", isDev: true },
+  // Parent navigation items with children
+  const parentNavItems = [
+    {
+      label: "Dev Links",
+      children: [
+        { label: "Content Manager", href: "/content-manager" },
+        { label: "Bookings", href: "/booking-calendar" },
+        { label: "Image Test", href: "/image-test" },
+      ]
+    },
+    {
+      label: "Template",
+      children: [
+        { label: "Certification Template", href: "/certification-template" },
+        { label: "Christ Statue Template", href: "/christ-statue-tour" },
+        { label: "Product Template 1A", href: "/product-template-1a" },
+      ]
+    }
   ];
 
   const tripsMenuItems = [
@@ -211,21 +231,37 @@ export function Navigation() {
               )}
             </div>
 
-            {/* Development Navigation Items */}
-            {devNavItems.map((item, index) => (
-              <Link
-                key={`dev-${index}`}
-                href={item.href}
-                className="flex items-center gap-2 text-foreground hover:text-ocean transition-colors font-medium"
+            {/* Parent Navigation Items with Dropdowns */}
+            {parentNavItems.map((parentItem, index) => (
+              <div
+                key={`parent-${index}`}
+                className="relative"
+                onMouseEnter={() => setOpenDropdowns(prev => ({ ...prev, [parentItem.label]: true }))}
+                onMouseLeave={() => setOpenDropdowns(prev => ({ ...prev, [parentItem.label]: false }))}
               >
-                {item.label}
-                <Badge
-                  variant="secondary"
-                  className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5"
-                >
-                  DEV
-                </Badge>
-              </Link>
+                <button className="flex items-center gap-1 text-foreground hover:text-ocean transition-colors font-medium">
+                  {parentItem.label}
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {openDropdowns[parentItem.label] && (
+                  <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50">
+                    {/* Invisible bridge to prevent menu from closing */}
+                    <div className="absolute -top-2 left-0 right-0 h-2 bg-transparent"></div>
+
+                    {parentItem.children.map((child, childIndex) => (
+                      <Link
+                        key={childIndex}
+                        href={child.href}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-ocean/5 hover:text-ocean transition-colors"
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
 
             {/* Other Navigation Items */}
@@ -332,22 +368,33 @@ export function Navigation() {
                       </div>
                     </div>
 
-                    {/* Development Navigation Items */}
-                    {devNavItems.map((item, index) => (
-                      <Link
-                        key={`dev-mobile-${index}`}
-                        href={item.href}
-                        className="flex items-center justify-between py-3 text-lg font-medium text-foreground hover:text-ocean transition-colors border-b border-gray-100"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <span>{item.label}</span>
-                        <Badge
-                          variant="secondary"
-                          className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5"
+                    {/* Parent Navigation Items for Mobile */}
+                    {parentNavItems.map((parentItem, index) => (
+                      <div key={`mobile-parent-${index}`}>
+                        <button
+                          onClick={() => toggleDropdown(`mobile-${parentItem.label}`)}
+                          className="flex items-center justify-between w-full py-3 text-lg font-medium text-foreground hover:text-ocean transition-colors border-b border-gray-100"
                         >
-                          DEV
-                        </Badge>
-                      </Link>
+                          <span>{parentItem.label}</span>
+                          <ChevronDown className={`w-4 h-4 transition-transform ${
+                            openDropdowns[`mobile-${parentItem.label}`] ? 'rotate-180' : ''
+                          }`} />
+                        </button>
+                        {openDropdowns[`mobile-${parentItem.label}`] && (
+                          <div className="pl-4 pb-2 space-y-1">
+                            {parentItem.children.map((child, childIndex) => (
+                              <Link
+                                key={childIndex}
+                                href={child.href}
+                                className="block py-2 text-base text-gray-600 hover:text-ocean transition-colors"
+                                onClick={() => setIsOpen(false)}
+                              >
+                                {child.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
 
                     {/* Other Navigation Items */}
