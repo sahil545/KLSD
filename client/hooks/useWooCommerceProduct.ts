@@ -219,7 +219,6 @@ export function useWooCommerceProduct(): {
         // Fallback to mock data
         const urlParam = getProductParamFromUrl();
         setProduct(getMockProductData(pathname, urlParam));
-      } finally {
         setLoading(false);
       }
     };
