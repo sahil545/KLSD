@@ -843,6 +843,59 @@ get_header(); ?>
             echo "<meta name=\"klsd-version\" content=\"" . KLSD_PLUGIN_VERSION . "\" />\n";
         }
     }
+
+    /**
+     * Save booking data to cart session
+     */
+    public function save_booking_data_to_cart($cart_item_key) {
+        // Save custom booking data to WooCommerce session
+        if (isset($_POST['klsd_lead_guest_name'])) {
+            WC()->session->set('klsd_lead_guest_name', sanitize_text_field($_POST['klsd_lead_guest_name']));
+        }
+        if (isset($_POST['klsd_lead_guest_email'])) {
+            WC()->session->set('klsd_lead_guest_email', sanitize_email($_POST['klsd_lead_guest_email']));
+        }
+        if (isset($_POST['klsd_lead_guest_phone'])) {
+            WC()->session->set('klsd_lead_guest_phone', sanitize_text_field($_POST['klsd_lead_guest_phone']));
+        }
+        if (isset($_POST['klsd_lead_guest_location'])) {
+            WC()->session->set('klsd_lead_guest_location', sanitize_text_field($_POST['klsd_lead_guest_location']));
+        }
+        if (isset($_POST['klsd_special_requests'])) {
+            WC()->session->set('klsd_special_requests', sanitize_textarea_field($_POST['klsd_special_requests']));
+        }
+        if (isset($_POST['klsd_passengers'])) {
+            WC()->session->set('klsd_passengers', sanitize_text_field($_POST['klsd_passengers']));
+        }
+    }
+
+    /**
+     * Save booking data to order
+     */
+    public function save_booking_data_to_order($order) {
+        // Transfer session data to order meta
+        $booking_fields = array(
+            'klsd_lead_guest_name' => 'Lead Guest Name',
+            'klsd_lead_guest_email' => 'Lead Guest Email',
+            'klsd_lead_guest_phone' => 'Lead Guest Phone',
+            'klsd_lead_guest_location' => 'Guest Location/Hotel',
+            'klsd_special_requests' => 'Special Requests',
+            'klsd_passengers' => 'All Passengers'
+        );
+
+        foreach ($booking_fields as $field_key => $field_label) {
+            $field_value = WC()->session->get($field_key);
+            if ($field_value) {
+                $order->update_meta_data($field_key, $field_value);
+                $order->update_meta_data('_' . $field_key . '_label', $field_label);
+            }
+        }
+
+        // Clear session data after saving to order
+        foreach (array_keys($booking_fields) as $field_key) {
+            WC()->session->__unset($field_key);
+        }
+    }
 }
 
 // Initialize the plugin
