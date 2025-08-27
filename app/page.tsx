@@ -3,11 +3,21 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import FloatingBubbles from "@/components/FloatingBubbles";
+import { Navigation } from "../client/components/Navigation";
+import { Footer } from "../client/components/Footer";
+import { Button } from "../client/components/ui/button";
+import { Badge } from "../client/components/ui/badge";
+import { Card } from "../client/components/ui/card";
+import { Dialog, DialogContent } from "../client/components/ui/dialog";
+import Booking from "../client/components/Booking";
+
+import FloatingBubbles from "../client/components/FloatingBubbles";
+import EnhancedCard from "../client/components/EnhancedCard";
+import ScrollAnimation from "../client/components/ScrollAnimation";
+import {
+  AnimatedGradientText,
+  FloatingGradientOrbs,
+} from "../client/components/GlassmorphismCard";
 
 import {
   Star,
@@ -421,26 +431,7 @@ export default function Homepage() {
           </div>
         </div>
       </div>
-
-      {/* Navigation */}
-      <nav className="bg-white shadow-md fixed w-full top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center py-4">
-            <div className="text-2xl font-bold text-blue-900">
-              Key Largo Diving
-            </div>
-            <div className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-700 hover:text-blue-600">Tours</Link>
-              <Link href="/certification" className="text-gray-700 hover:text-blue-600">Certification</Link>
-              <Link href="/equipment" className="text-gray-700 hover:text-blue-600">Equipment</Link>
-              <Link href="/contact" className="text-gray-700 hover:text-blue-600">Contact</Link>
-            </div>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-              Book Now
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Enhanced Hero Section */}
       <section className="relative pt-20 overflow-hidden">
@@ -458,7 +449,10 @@ export default function Homepage() {
         <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent"></div>
 
         {/* Floating Bubbles for Underwater Ambiance */}
-        <FloatingBubbles />
+        <FloatingBubbles count={25} className="opacity-60" />
+
+        {/* Floating Gradient Orbs */}
+        <FloatingGradientOrbs />
 
         {/* Additional floating elements */}
         <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
@@ -477,13 +471,13 @@ export default function Homepage() {
             <div className="text-center lg:text-left">
               {/* Trust Badges */}
               <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-8">
-                <Badge className="bg-white/90 text-orange-600 border-orange-300 backdrop-blur-sm">
+                <Badge className="bg-white/90 text-coral border-coral/30 backdrop-blur-sm">
                   #1 Rated in Florida Keys
                 </Badge>
-                <Badge className="bg-white/90 text-blue-600 border-blue-300 backdrop-blur-sm">
+                <Badge className="bg-white/90 text-ocean border-ocean/30 backdrop-blur-sm">
                   4.9/5 Rating
                 </Badge>
-                <Badge className="bg-white/90 text-green-600 border-green-300 backdrop-blur-sm">
+                <Badge className="bg-white/90 text-sage border-sage/30 backdrop-blur-sm">
                   Platinum ScubaPro Dealer
                 </Badge>
               </div>
@@ -491,9 +485,9 @@ export default function Homepage() {
               <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-tight drop-shadow-lg">
                 <span className="text-white">Key Largo</span>
                 <br />
-                <span className="bg-gradient-to-r from-blue-400 via-teal-400 to-green-400 bg-clip-text text-transparent font-black">
+                <AnimatedGradientText className="font-black">
                   Scuba Diving
-                </span>
+                </AnimatedGradientText>
               </h1>
 
               {/* Hero Slider */}
@@ -508,7 +502,7 @@ export default function Homepage() {
                   </p>
                   <Button
                     size="lg"
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-lg px-8 py-4 drop-shadow-lg"
+                    className="bg-coral hover:bg-coral/90 text-white font-semibold text-lg px-8 py-4 drop-shadow-lg"
                     onClick={openBooking}
                   >
                     <Calendar className="w-5 h-5 mr-2" />
@@ -565,14 +559,14 @@ export default function Homepage() {
                     </span>
                     <Button
                       size="sm"
-                      className="bg-orange-500 hover:bg-orange-600 text-white"
+                      className="bg-coral hover:bg-coral/90 text-white"
                       onClick={openBooking}
                     >
                       Book Now
                     </Button>
                   </div>
                 </div>
-                <Badge className="absolute top-4 right-4 bg-orange-500 text-white">
+                <Badge className="absolute top-4 right-4 bg-coral text-white">
                   {heroSlides[currentSlide].featuredProduct.badge}
                 </Badge>
                 <Badge className="absolute top-4 left-4 bg-white/20 text-white backdrop-blur-sm">
@@ -601,7 +595,7 @@ export default function Homepage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-blue-600">
+                          <div className="font-bold text-ocean">
                             {product.price}
                           </div>
                           <div className="text-xs text-gray-500">
@@ -617,7 +611,7 @@ export default function Homepage() {
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <Button
                     variant="outline"
-                    className="w-full text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white text-sm"
+                    className="w-full text-ocean border-ocean hover:bg-ocean hover:text-white text-sm"
                   >
                     View All in Category
                   </Button>
@@ -630,12 +624,12 @@ export default function Homepage() {
 
       {/* Snorkeling Tours Section */}
       <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-blue-50"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-ocean/5"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-ocean/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-coral/5 rounded-full blur-3xl"></div>
         <div className="relative z-10 container mx-auto px-4">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-orange-100 text-orange-600 border-orange-200">
+            <Badge className="mb-4 bg-coral/10 text-coral border-coral/20">
               Adventures & Tours
             </Badge>
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
@@ -657,14 +651,14 @@ export default function Homepage() {
                   const isActive = activeAdventureFilter === filter.name;
                   const colorClasses = {
                     ocean: isActive
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white",
+                      ? "bg-ocean text-white border-ocean"
+                      : "border-ocean text-ocean hover:bg-ocean hover:text-white",
                     sage: isActive
-                      ? "bg-green-600 text-white border-green-600"
-                      : "border-green-600 text-green-600 hover:bg-green-600 hover:text-white",
+                      ? "bg-sage text-white border-sage"
+                      : "border-sage text-sage hover:bg-sage hover:text-white",
                     coral: isActive
-                      ? "bg-orange-500 text-white border-orange-500"
-                      : "border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white",
+                      ? "bg-coral text-white border-coral"
+                      : "border-coral text-coral hover:bg-coral hover:text-white",
                   };
 
                   return (
@@ -683,13 +677,19 @@ export default function Homepage() {
             </div>
           </div>
 
-          {/* Enhanced Adventure Cards */}
-          <div className="overflow-x-auto pb-4">
+          {/* Enhanced Adventure Cards with Scroll Animation */}
+          <ScrollAnimation
+            animation="fadeInUp"
+            className="overflow-x-auto pb-4"
+          >
             <div className="flex gap-6 w-max">
               {filteredAdventures.map((adventure) => (
-                <Card
+                <EnhancedCard
                   key={adventure.id}
-                  className="w-80 flex-shrink-0 hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  className="w-80 flex-shrink-0"
+                  hoverScale={1.08}
+                  glowColor="blue"
+                  tilting={true}
                 >
                   <div className="relative h-48 overflow-hidden">
                     <Image
@@ -739,7 +739,7 @@ export default function Homepage() {
 
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Clock className="w-4 h-4 text-blue-600" />
+                        <Clock className="w-4 h-4 text-ocean" />
                         <span>{adventure.duration}</span>
                       </div>
                       {adventure.features.slice(0, 2).map((feature, index) => (
@@ -753,19 +753,19 @@ export default function Homepage() {
                       ))}
                     </div>
 
-                    <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm transform hover:scale-105 transition-all duration-300">
+                    <Button className="w-full bg-coral hover:bg-coral/90 text-white font-semibold text-sm transform hover:scale-105 transition-all duration-300">
                       Book Adventure
                     </Button>
                   </div>
-                </Card>
+                </EnhancedCard>
               ))}
             </div>
-          </div>
+          </ScrollAnimation>
 
           <div className="text-center mt-12">
             <Button
               size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3"
+              className="bg-ocean hover:bg-ocean/90 text-white font-semibold px-8 py-3"
               onClick={openBooking}
             >
               View All Adventures
@@ -776,17 +776,17 @@ export default function Homepage() {
 
       {/* PADI Certifications Section */}
       <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50/30 to-blue-50"></div>
-        <div className="absolute top-1/4 left-0 w-72 h-72 bg-green-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50/30 to-ocean/5"></div>
+        <div className="absolute top-1/4 left-0 w-72 h-72 bg-sage/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-ocean/5 rounded-full blur-3xl"></div>
         <div className="relative z-10 container mx-auto px-4">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-blue-100 text-blue-600 border-blue-200">
+            <Badge className="mb-4 bg-ocean/10 text-ocean border-ocean/20">
               PADI Certifications
             </Badge>
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
               Learn to Dive in the{" "}
-              <span className="text-blue-600">Florida Keys</span>
+              <span className="text-ocean">Florida Keys</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Start your underwater journey with world-class PADI instruction
@@ -802,14 +802,14 @@ export default function Homepage() {
                 const isActive = activeFilter === filter.name;
                 const colorClasses = {
                   ocean: isActive
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white",
+                    ? "bg-ocean text-white border-ocean"
+                    : "border-ocean text-ocean hover:bg-ocean hover:text-white",
                   sage: isActive
-                    ? "bg-green-600 text-white border-green-600"
-                    : "border-green-600 text-green-600 hover:bg-green-600 hover:text-white",
+                    ? "bg-sage text-white border-sage"
+                    : "border-sage text-sage hover:bg-sage hover:text-white",
                   coral: isActive
-                    ? "bg-orange-500 text-white border-orange-500"
-                    : "border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white",
+                    ? "bg-coral text-white border-coral"
+                    : "border-coral text-coral hover:bg-coral hover:text-white",
                 };
 
                 return (
@@ -947,7 +947,7 @@ export default function Homepage() {
           <div className="text-center mt-12">
             <Button
               size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3"
+              className="bg-ocean hover:bg-ocean/90 text-white font-semibold px-8 py-3"
               onClick={openBooking}
             >
               View All Certifications
@@ -956,41 +956,597 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-teal-600 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to Dive In?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied divers who have experienced the magic of Key Largo's underwater world
-          </p>
-          <Button 
-            onClick={openBooking}
-            className="bg-white text-blue-600 font-semibold text-lg px-8 py-4 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            Start Your Adventure Today
-          </Button>
-        </div>
-      </section>
+      {/* Dive Shop Section */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-sage/5 to-gray-50/50"></div>
 
-      {/* Booking Dialog */}
-      <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
-        <DialogContent className="max-w-md">
-          <div className="text-center p-6">
-            <h3 className="text-2xl font-bold mb-4">Book Your Adventure</h3>
-            <p className="text-gray-600 mb-6">
-              Ready to experience the magic of Key Largo diving?
+        {/* Subtle Equipment Icons Pattern */}
+        <div className="absolute inset-0 opacity-[0.02]">
+          <svg className="w-full h-full" viewBox="0 0 1000 600" fill="none">
+            <g className="text-sage">
+              <rect
+                x="100"
+                y="100"
+                width="20"
+                height="40"
+                rx="2"
+                stroke="currentColor"
+                strokeWidth="1"
+                fill="none"
+              />
+              <rect
+                x="700"
+                y="200"
+                width="25"
+                height="35"
+                rx="2"
+                stroke="currentColor"
+                strokeWidth="1"
+                fill="none"
+              />
+              <rect
+                x="300"
+                y="350"
+                width="18"
+                height="45"
+                rx="2"
+                stroke="currentColor"
+                strokeWidth="1"
+                fill="none"
+              />
+              <rect
+                x="850"
+                y="450"
+                width="22"
+                height="38"
+                rx="2"
+                stroke="currentColor"
+                strokeWidth="1"
+                fill="none"
+              />
+            </g>
+            <g className="text-ocean">
+              <circle
+                cx="200"
+                cy="250"
+                r="15"
+                stroke="currentColor"
+                strokeWidth="1"
+                fill="none"
+              />
+              <circle
+                cx="600"
+                cy="150"
+                r="18"
+                stroke="currentColor"
+                strokeWidth="1"
+                fill="none"
+              />
+              <circle
+                cx="450"
+                cy="450"
+                r="12"
+                stroke="currentColor"
+                strokeWidth="1"
+                fill="none"
+              />
+              <circle
+                cx="800"
+                cy="350"
+                r="16"
+                stroke="currentColor"
+                strokeWidth="1"
+                fill="none"
+              />
+            </g>
+          </svg>
+        </div>
+
+        {/* Hexagonal Pattern */}
+        <div className="absolute inset-0 opacity-[0.008]">
+          <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
+            <defs>
+              <pattern
+                id="hexagons"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+              >
+                <polygon
+                  points="10,2 18,7 18,13 10,18 2,13 2,7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                  className="text-coral"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hexagons)" />
+          </svg>
+        </div>
+
+        <div className="absolute top-1/3 right-0 w-96 h-96 bg-ocean/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/3 left-0 w-80 h-80 bg-coral/5 rounded-full blur-3xl"></div>
+
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-sage/10 text-sage border-sage/20">
+              Professional Dive Shop
+            </Badge>
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Platinum Dealer & Full Service{" "}
+              <span className="text-sage">Dive Shop</span>
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Brick & mortar store with shipping warehouse. Platinum dealer
+              status for premium brands and professional equipment service.
             </p>
-            <div className="space-y-4">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                Call (305) 555-DIVE
+          </div>
+
+          {/* Featured Scuba Gear Products */}
+          <div className="mb-16">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Featured Scuba Gear
+              </h3>
+              <p className="text-gray-600">
+                Premium equipment from our platinum dealer partners
+              </p>
+            </div>
+
+            {/* Product Cards Grid */}
+            <div className="overflow-x-auto pb-4">
+              <div className="flex gap-4 w-max md:w-full md:grid md:grid-cols-6">
+                {/* ScubaPro MK25 Regulator */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
+                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
+                    <Image
+                      src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
+                      alt="ScubaPro MK25 Regulator"
+                      width={300}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                    <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
+                      ScubaPro
+                    </Badge>
+                  </div>
+                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
+                    MK25 EVO Regulator
+                  </h4>
+                  <p className="text-xs text-gray-600 mb-2">
+                    Professional Grade
+                  </p>
+                  <div className="text-lg font-bold text-ocean">$649</div>
+                </div>
+
+                {/* ScubaPro Hydros Pro BCD */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
+                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
+                    <Image
+                      src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
+                      alt="ScubaPro Hydros Pro BCD"
+                      width={300}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                    <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
+                      ScubaPro
+                    </Badge>
+                  </div>
+                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
+                    Hydros Pro BCD
+                  </h4>
+                  <p className="text-xs text-gray-600 mb-2">Modular Design</p>
+                  <div className="text-lg font-bold text-ocean">$459</div>
+                </div>
+
+                {/* Ocean Reef Neptune Space G.divers */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
+                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
+                    <Image
+                      src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
+                      alt="Ocean Reef Neptune Space"
+                      width={300}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                    <Badge className="absolute top-2 right-2 bg-teal-600 text-white text-xs">
+                      Ocean Reef
+                    </Badge>
+                  </div>
+                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
+                    Neptune Space G.divers
+                  </h4>
+                  <p className="text-xs text-gray-600 mb-2">Full Face Mask</p>
+                  <div className="text-lg font-bold text-ocean">$749</div>
+                </div>
+
+                {/* ScubaPro Seawing Nova Fins */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
+                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
+                    <Image
+                      src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
+                      alt="ScubaPro Seawing Nova Fins"
+                      width={300}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                    <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
+                      ScubaPro
+                    </Badge>
+                  </div>
+                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
+                    Seawing Nova Fins
+                  </h4>
+                  <p className="text-xs text-gray-600 mb-2">
+                    Advanced Propulsion
+                  </p>
+                  <div className="text-lg font-bold text-ocean">$179</div>
+                </div>
+
+                {/* Ocean Reef Diving Mask */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
+                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
+                    <Image
+                      src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
+                      alt="Ocean Reef Aria Classic"
+                      width={300}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                    <Badge className="absolute top-2 right-2 bg-teal-600 text-white text-xs">
+                      Ocean Reef
+                    </Badge>
+                  </div>
+                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
+                    Aria Classic Mask
+                  </h4>
+                  <p className="text-xs text-gray-600 mb-2">Low Volume</p>
+                  <div className="text-lg font-bold text-ocean">$89</div>
+                </div>
+
+                {/* ScubaPro Wetsuit */}
+                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
+                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
+                    <Image
+                      src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
+                      alt="ScubaPro Definition Wetsuit"
+                      width={300}
+                      height={200}
+                      className="w-full h-full object-cover"
+                    />
+                    <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
+                      ScubaPro
+                    </Badge>
+                  </div>
+                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
+                    Definition 3mm Wetsuit
+                  </h4>
+                  <p className="text-xs text-gray-600 mb-2">Tropical Diving</p>
+                  <div className="text-lg font-bold text-ocean">$299</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Dealer Status Badges */}
+            <div className="flex flex-wrap justify-center gap-4 mt-8">
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+                <Award className="w-5 h-5 text-blue-600" />
+                <span className="font-semibold text-blue-900">
+                  Platinum ScubaPro Dealer
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-lg px-4 py-2">
+                <Shield className="w-5 h-5 text-teal-600" />
+                <span className="font-semibold text-teal-900">
+                  Platinum Ocean Reef Dealer
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Shop Services */}
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center p-6 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-ocean/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Store className="w-8 h-8 text-ocean" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                Brick & Mortar Store
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Full retail dive shop with complete equipment selection, fitting
+                rooms, and expert staff
+              </p>
+              <ul className="text-sm text-gray-600 space-y-2">
+                <li>• Complete gear selection</li>
+                <li>• Professional fitting</li>
+                <li>• Expert recommendations</li>
+                <li>• Try before you buy</li>
+              </ul>
+            </div>
+
+            <div className="text-center p-6 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-coral/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Settings className="w-8 h-8 text-coral" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                Equipment Service
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Factory-certified technicians providing professional equipment
+                service and repairs
+              </p>
+              <ul className="text-sm text-gray-600 space-y-2">
+                <li>• Regulator service</li>
+                <li>• BCD repairs</li>
+                <li>• Tank inspections</li>
+                <li>• Warranty work</li>
+              </ul>
+            </div>
+
+            <div className="text-center p-6 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-sage/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Truck className="w-8 h-8 text-sage" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                Shipping Warehouse
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Full shipping capabilities with fast delivery anywhere in the
+                United States
+              </p>
+              <ul className="text-sm text-gray-600 space-y-2">
+                <li>• Nationwide shipping</li>
+                <li>• Same-day processing</li>
+                <li>• Secure packaging</li>
+                <li>• Order tracking</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* CTA Section */}
+          <div className="text-center mt-16 bg-gradient-to-r from-ocean/5 to-sage/5 rounded-2xl p-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              Visit Our Pro Shop
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              Stop by our retail location or browse our online store. Our expert
+              staff can help you find the perfect equipment for your diving
+              adventures.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                className="bg-ocean hover:bg-ocean/90 text-white font-semibold px-8 py-3"
+              >
+                <Store className="w-5 h-5 mr-2" />
+                Visit Store
               </Button>
-              <Button variant="outline" className="w-full">
-                Email Us
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-sage text-sage hover:bg-sage hover:text-white font-semibold px-8 py-3"
+              >
+                <Package className="w-5 h-5 mr-2" />
+                Shop Online
               </Button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Private Charters Section */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-sage/10"></div>
+
+        {/* Luxury Yacht Pattern */}
+        <div className="absolute inset-0 opacity-[0.015]">
+          <svg className="w-full h-full" viewBox="0 0 1000 600" fill="none">
+            <path
+              d="M100,300 Q200,280 300,300 Q400,320 500,300"
+              stroke="currentColor"
+              strokeWidth="1"
+              className="text-sage"
+              fill="none"
+            />
+            <path
+              d="M600,200 Q700,180 800,200 Q900,220 1000,200"
+              stroke="currentColor"
+              strokeWidth="1"
+              className="text-coral"
+              fill="none"
+            />
+            <path
+              d="M50,450 Q150,430 250,450 Q350,470 450,450"
+              stroke="currentColor"
+              strokeWidth="1"
+              className="text-ocean"
+              fill="none"
+            />
+            <circle
+              cx="150"
+              cy="200"
+              r="3"
+              fill="currentColor"
+              className="text-sage"
+            />
+            <circle
+              cx="750"
+              cy="350"
+              r="3"
+              fill="currentColor"
+              className="text-coral"
+            />
+            <circle
+              cx="350"
+              cy="500"
+              r="3"
+              fill="currentColor"
+              className="text-ocean"
+            />
+          </svg>
+        </div>
+
+        {/* Diamond Pattern */}
+        <div className="absolute inset-0 opacity-[0.01]">
+          <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
+            <defs>
+              <pattern
+                id="diamonds"
+                width="15"
+                height="15"
+                patternUnits="userSpaceOnUse"
+              >
+                <polygon
+                  points="7.5,2 12,7.5 7.5,13 3,7.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="0.3"
+                  className="text-sage"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#diamonds)" />
+          </svg>
+        </div>
+
+        <div className="absolute top-0 left-1/3 w-64 h-64 bg-coral/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/3 w-72 h-72 bg-sage/10 rounded-full blur-3xl"></div>
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-sage/10 text-sage border-sage/20">
+              Luxury Charters
+            </Badge>
+            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              Private Charter Experiences
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Create unforgettable memories with our exclusive private charter
+              experiences tailored to your group.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Family Charter */}
+            <Card className="overflow-hidden border border-gray-200 shadow-lg">
+              <div className="bg-sage p-8 text-white">
+                <Badge className="bg-white/20 text-white mb-4">Family</Badge>
+                <h3 className="text-3xl font-bold mb-4">
+                  Family Adventure Charter
+                </h3>
+                <p className="text-white/90 text-lg mb-6">
+                  Perfect for families and groups up to 12
+                </p>
+                <div className="text-4xl font-bold">$1,200</div>
+                <div className="text-white/80">for 6 hours</div>
+              </div>
+              <div className="p-8">
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start gap-3">
+                    <span className="text-sage text-lg mt-1">✓</span>
+                    <span className="text-gray-700">
+                      Private yacht with captain & crew
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-sage text-lg mt-1">✓</span>
+                    <span className="text-gray-700">
+                      Snorkeling equipment for all ages
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-sage text-lg mt-1">✓</span>
+                    <span className="text-gray-700">
+                      Gourmet lunch & refreshments
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-sage text-lg mt-1">✓</span>
+                    <span className="text-gray-700">
+                      Professional photography
+                    </span>
+                  </li>
+                </ul>
+                <Button
+                  className="w-full bg-sage hover:bg-sage/90 text-white font-semibold py-3 text-lg"
+                  onClick={openBooking}
+                >
+                  Book Family Charter
+                </Button>
+              </div>
+            </Card>
+
+            {/* Luxury Charter */}
+            <Card className="overflow-hidden border border-gray-200 shadow-lg">
+              <div className="bg-coral p-8 text-white">
+                <Badge className="bg-white/20 text-white mb-4">VIP</Badge>
+                <h3 className="text-3xl font-bold mb-4">VIP Luxury Charter</h3>
+                <p className="text-white/90 text-lg mb-6">
+                  Ultimate luxury for up to 8 guests
+                </p>
+                <div className="text-4xl font-bold">$2,500</div>
+                <div className="text-white/80">for 8 hours</div>
+              </div>
+              <div className="p-8">
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start gap-3">
+                    <span className="text-coral text-lg mt-1">✓</span>
+                    <span className="text-gray-700">
+                      Luxury yacht with premium amenities
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-coral text-lg mt-1">✓</span>
+                    <span className="text-gray-700">
+                      Premium diving equipment & instruction
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-coral text-lg mt-1">✓</span>
+                    <span className="text-gray-700">
+                      Chef-prepared gourmet dining
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-coral text-lg mt-1">✓</span>
+                    <span className="text-gray-700">
+                      Underwater videography & photography
+                    </span>
+                  </li>
+                </ul>
+                <Button
+                  className="w-full bg-coral hover:bg-coral/90 text-white font-semibold py-3 text-lg"
+                  onClick={openBooking}
+                >
+                  Book VIP Charter
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Booking Modal */}
+      <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Book Your Adventure</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={closeBooking}
+              className="p-2"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+          <Booking />
         </DialogContent>
       </Dialog>
+
+      <Footer />
     </div>
   );
 }
