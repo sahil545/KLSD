@@ -49,10 +49,6 @@ export default function HeroSection({ data }: HeroSectionProps) {
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/40" />
 
-      {/* Background Effects - Simplified */}
-      <div className="absolute inset-0">
-        {/* Subtle gradient overlays only */}
-      </div>
 
       <div className="relative container mx-auto px-4 pt-24 pb-12">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
