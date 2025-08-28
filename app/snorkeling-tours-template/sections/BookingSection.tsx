@@ -53,7 +53,16 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
     const preloadCalendarData = async () => {
       setPreloadingCalendar(true);
       try {
-        const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`);
+        // Add timeout for preloading too
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for preload
+
+        const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
@@ -61,7 +70,11 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
           }
         }
       } catch (error) {
-        console.log('Calendar preload failed (non-critical):', error);
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('Calendar preload timeout - calendar will load on demand');
+        } else {
+          console.log('Calendar preload failed (non-critical):', error);
+        }
       } finally {
         setPreloadingCalendar(false);
       }
