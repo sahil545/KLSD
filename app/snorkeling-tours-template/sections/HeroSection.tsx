@@ -154,7 +154,6 @@ export default function HeroSection({ data }: HeroSectionProps) {
 
           {/* Right Column - Empty space */}
           <div className="hidden lg:block">
-            {/* This space intentionally left empty */}
           </div>
         </div>
       </div>
