@@ -202,9 +202,19 @@ function klsd_get_product_duration($product) {
 function klsd_duration_admin_notice() {
     $screen = get_current_screen();
     if ($screen && $screen->post_type === 'product' && $screen->base === 'post') {
-        echo '<div class="notice notice-info is-dismissible">';
-        echo '<p><strong>Duration Test Plugin Active:</strong> Look for the standalone "Product Duration Test" box below the main product editor.</p>';
-        echo '</div>';
+        global $post;
+        if ($post) {
+            $product_cats = wp_get_post_terms($post->ID, 'product_cat', array('fields' => 'names'));
+            if (in_array('Testing Category', $product_cats)) {
+                echo '<div class="notice notice-success is-dismissible">';
+                echo '<p><strong>Duration Test Plugin:</strong> This product is in "Testing Category" - Duration field is available below.</p>';
+                echo '</div>';
+            } else {
+                echo '<div class="notice notice-warning is-dismissible">';
+                echo '<p><strong>Duration Test Plugin:</strong> Add this product to "Testing Category" to see the Duration field.</p>';
+                echo '</div>';
+            }
+        }
     }
 }
 add_action('admin_notices', 'klsd_duration_admin_notice');
