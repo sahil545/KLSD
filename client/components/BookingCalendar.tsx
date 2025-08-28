@@ -80,10 +80,10 @@ export default function BookingCalendar({
       // Add timeout for frontend API call
       controller = new AbortController();
       timeoutId = setTimeout(() => {
-        if (controller) {
+        if (controller && !controller.signal.aborted) {
           controller.abort();
         }
-      }, 15000); // 15 second max
+      }, 20000); // 20 second max (increased)
 
       const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
         signal: controller.signal

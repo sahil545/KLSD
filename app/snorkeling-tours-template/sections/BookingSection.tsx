@@ -59,10 +59,10 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         // Create abort controller for this specific request
         controller = new AbortController();
         timeoutId = setTimeout(() => {
-          if (controller) {
+          if (controller && !controller.signal.aborted) {
             controller.abort();
           }
-        }, 10000); // 10 second timeout for preload
+        }, 15000); // 15 second timeout for preload (increased)
 
         const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
           signal: controller.signal
