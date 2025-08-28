@@ -57,35 +57,11 @@ export default function BookingCalendar({
   }, [selectedDate]);
 
   const fetchAvailability = async () => {
-    if (!isMountedRef.current) return;
-
     setLoading(true);
     setError(null);
 
-    // Clean up any existing operations
-    if (controllerRef.current) {
-      controllerRef.current.abort();
-    }
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
     try {
-      controllerRef.current = new AbortController();
-      timeoutRef.current = setTimeout(() => {
-        if (controllerRef.current && !controllerRef.current.signal.aborted) {
-          controllerRef.current.abort();
-        }
-      }, 25000);
-
-      const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
-        signal: controllerRef.current.signal
-      });
-
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
+      const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -93,31 +69,17 @@ export default function BookingCalendar({
 
       const data = await response.json();
 
-      if (data.success && isMountedRef.current) {
+      if (data.success) {
         setAvailability(data.data);
-        onDataLoad?.(data.data);
-      } else if (isMountedRef.current) {
+      } else {
         setError(data.error || 'Failed to fetch availability');
       }
     } catch (err) {
-      if (isMountedRef.current) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          setError('Loading taking too long. Please try again.');
-        } else {
-          const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
-          setError(errorMessage);
-        }
-        console.error('Booking availability error:', err);
-      }
+      const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
+      setError(errorMessage);
+      console.error('Booking availability error:', err);
     } finally {
-      if (isMountedRef.current) {
-        setLoading(false);
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      controllerRef.current = null;
+      setLoading(false);
     }
   };
 
