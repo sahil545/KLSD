@@ -228,7 +228,7 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
 
         // Add timeout for faster fallback
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5 second timeout
 
         const availabilityResponse = await fetch(endpoint, {
           method: 'GET',
