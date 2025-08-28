@@ -122,13 +122,32 @@ function klsd_duration_field_callback($post) {
 }
 
 /**
- * Save the Duration field using WooCommerce methods
+ * Save the Duration field from standalone meta box
  */
-
 function klsd_save_duration_field($post_id) {
-    // Save the duration field - WooCommerce handles security and validation
-    if (isset($_POST['_klsd_test_duration'])) {
-        $duration = sanitize_text_field($_POST['_klsd_test_duration']);
+    // Check nonce for security
+    if (!isset($_POST['klsd_duration_nonce']) || !wp_verify_nonce($_POST['klsd_duration_nonce'], 'klsd_duration_save')) {
+        return;
+    }
+
+    // Check if autosave
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // Check permissions
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    // Only save for products
+    if (get_post_type($post_id) !== 'product') {
+        return;
+    }
+
+    // Save the duration field
+    if (isset($_POST['klsd_test_duration'])) {
+        $duration = sanitize_text_field($_POST['klsd_test_duration']);
         // Set default if empty
         if (empty($duration)) {
             $duration = '99 hours';
@@ -136,7 +155,7 @@ function klsd_save_duration_field($post_id) {
         update_post_meta($post_id, '_klsd_test_duration', $duration);
     }
 }
-add_action('woocommerce_process_product_meta', 'klsd_save_duration_field');
+add_action('save_post', 'klsd_save_duration_field');
 
 /**
  * Helper function to get duration value (for future frontend use)
