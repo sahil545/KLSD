@@ -50,18 +50,29 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
 
   // Preload calendar data when component mounts
   useEffect(() => {
+    let controller: AbortController | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+
     const preloadCalendarData = async () => {
       setPreloadingCalendar(true);
       try {
-        // Add timeout for preloading too
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for preload
+        // Create abort controller for this specific request
+        controller = new AbortController();
+        timeoutId = setTimeout(() => {
+          if (controller) {
+            controller.abort();
+          }
+        }, 10000); // 10 second timeout for preload
 
         const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
           signal: controller.signal
         });
 
-        clearTimeout(timeoutId);
+        // Clear timeout if request completes successfully
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
 
         if (response.ok) {
           const data = await response.json();
@@ -71,7 +82,7 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         }
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
-          console.log('Calendar preload timeout - calendar will load on demand');
+          console.log('Calendar preload timeout or cancelled - calendar will load on demand');
         } else {
           console.log('Calendar preload failed (non-critical):', error);
         }
@@ -81,6 +92,16 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
     };
 
     preloadCalendarData();
+
+    // Cleanup function to prevent AbortError on unmount
+    return () => {
+      if (controller) {
+        controller.abort();
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [productId]);
 
   // Calculate pricing with proper error handling
