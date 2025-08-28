@@ -49,35 +49,43 @@ export default function BookingCalendar({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [localSelectedDate, setLocalSelectedDate] = useState(selectedDate || "");
 
+  // Use refs to track async operations
+  const controllerRef = useRef<AbortController | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+
   // Use preloaded data or fetch on first open
   useEffect(() => {
-    let controller: AbortController | null = null;
-    let timeoutId: NodeJS.Timeout | null = null;
-    let isMounted = true;
-
     if (isOpen && !availability && productId) {
       const fetchData = async () => {
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
 
         setLoading(true);
         setError(null);
 
         try {
-          controller = new AbortController();
-          timeoutId = setTimeout(() => {
-            if (controller && !controller.signal.aborted) {
-              controller.abort();
+          // Clean up any existing operations
+          if (controllerRef.current) {
+            controllerRef.current.abort();
+          }
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+
+          controllerRef.current = new AbortController();
+          timeoutRef.current = setTimeout(() => {
+            if (controllerRef.current && !controllerRef.current.signal.aborted) {
+              controllerRef.current.abort();
             }
-          }, 20000); // 20 second timeout
+          }, 20000);
 
           const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
-            signal: controller.signal
+            signal: controllerRef.current.signal
           });
 
-          // Clear timeout if request completes successfully
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
           }
 
           if (!response.ok) {
@@ -86,14 +94,14 @@ export default function BookingCalendar({
 
           const data = await response.json();
 
-          if (data.success && isMounted) {
+          if (data.success && isMountedRef.current) {
             setAvailability(data.data);
             onDataLoad?.(data.data);
-          } else if (isMounted) {
+          } else if (isMountedRef.current) {
             setError(data.error || 'Failed to fetch availability');
           }
         } catch (err) {
-          if (isMounted) {
+          if (isMountedRef.current) {
             if (err instanceof Error && err.name === 'AbortError') {
               setError('Loading taking too long. Please try again.');
             } else {
@@ -103,32 +111,38 @@ export default function BookingCalendar({
             console.error('Booking availability error:', err);
           }
         } finally {
-          if (isMounted) {
+          if (isMountedRef.current) {
             setLoading(false);
           }
-          // Clean up timeout if it still exists
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
           }
-          controller = null;
+          controllerRef.current = null;
         }
       };
 
       fetchData();
     }
 
-    // Cleanup function to abort requests on unmount
+    // Cleanup function
     return () => {
-      isMounted = false;
-      if (controller && !controller.signal.aborted) {
-        controller.abort();
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      // Don't abort controller to avoid AbortError
+      controllerRef.current = null;
     };
   }, [isOpen, productId, availability]);
+
+  // Track component mount state
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Update local state when props change
   useEffect(() => {
