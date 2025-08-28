@@ -792,7 +792,7 @@ class KLSD_Tour_Template_Manager {
         // Template mappings
         $template_mappings = array(
             'tours_trips' => array(
-                'template' => 'christ-statue-tour-static',
+                'template' => 'christ-statue-tour',
                 'name' => 'Tours & Trips Template',
                 'categories' => array('tours', 'trips', 'snorkeling', 'diving', 'all-tours-trips', 'all-tours-and-trips', 'snorkeling-tours')
             ),
