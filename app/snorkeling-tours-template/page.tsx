@@ -7,11 +7,19 @@ interface PageProps {
 
 async function fetchProductData(productId: string): Promise<{ tourData: TourData | null; isTestingCategory: boolean; productName?: string }> {
   try {
-    // Fetch from our product data API (use absolute URL for server-side fetching)
+    // Fetch from our product data API with timeout for fast SSR
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000');
+
+    // Create abort controller for fast timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second max for SSR
+
     const response = await fetch(`${baseUrl}/api/product-data/${productId}`, {
-      cache: 'no-store' // Ensure fresh data for SSR
+      cache: 'no-store', // Ensure fresh data for SSR
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error('Failed to fetch product data:', response.status);
