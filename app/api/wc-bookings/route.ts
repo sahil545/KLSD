@@ -110,10 +110,11 @@ function generateRealAvailability(productId: string, existingBookings: any[], st
   const availableDates: string[] = [];
   const timeSlots: BookingSlot[] = [];
   
-  // Business rules for Key Largo Scuba Diving
+  // Realistic snorkeling tour times for Key Largo
   const defaultTimeSlots = [
-    { time: '08:00', capacity: 25, price: 70 },
-    { time: '13:00', capacity: 25, price: 75 }, // Afternoon slightly higher
+    { time: '09:00', capacity: 25, price: 70 }, // Morning snorkeling tour
+    { time: '12:30', capacity: 25, price: 75 }, // Lunch time snorkeling tour
+    { time: '15:00', capacity: 25, price: 75 }, // Afternoon snorkeling tour
   ];
   
   const current = new Date(startDate);
