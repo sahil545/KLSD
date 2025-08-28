@@ -72,7 +72,15 @@ export default function BookingCalendar({
     setError(null);
 
     try {
-      const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`);
+      // Add timeout for frontend API call
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second max
+
+      const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -87,8 +95,12 @@ export default function BookingCalendar({
         setError(data.error || 'Failed to fetch availability');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
-      setError(errorMessage);
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Loading taking too long. Please try again.');
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
+        setError(errorMessage);
+      }
       console.error('Booking availability error:', err);
     } finally {
       setLoading(false);
@@ -238,16 +250,22 @@ export default function BookingCalendar({
           {loading && (
             <div className="text-center py-6">
               <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">Loading...</p>
+              <p className="text-sm text-gray-600">Loading real availability...</p>
+              <p className="text-xs text-gray-500 mt-1">This may take a few seconds</p>
             </div>
           )}
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded p-3">
               <p className="text-sm text-red-800">{error}</p>
-              <Button variant="outline" size="sm" onClick={fetchAvailability} className="mt-2">
-                Try Again
-              </Button>
+              <div className="flex gap-2 mt-2">
+                <Button variant="outline" size="sm" onClick={fetchAvailability}>
+                  Try Again
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onClose}>
+                  Close
+                </Button>
+              </div>
             </div>
           )}
 
