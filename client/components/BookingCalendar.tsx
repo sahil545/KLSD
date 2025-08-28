@@ -235,10 +235,9 @@ export default function BookingCalendar({
         
         <CardContent className="space-y-4">
           {loading && (
-            <div className="text-center py-6">
-              <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">Loading real availability...</p>
-              <p className="text-xs text-gray-500 mt-1">This may take a few seconds</p>
+            <div className="text-center py-4">
+              <div className="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600">Loading availability...</p>
             </div>
           )}
 
