@@ -23,8 +23,22 @@ if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get
 
 /**
  * Add Duration field as standalone meta box on product admin page
+ * Only for products in "Testing Category"
  */
 function klsd_add_duration_field() {
+    global $post;
+
+    // Only add meta box for products
+    if (!$post || get_post_type($post) !== 'product') {
+        return;
+    }
+
+    // Check if product is in "Testing Category"
+    $product_cats = wp_get_post_terms($post->ID, 'product_cat', array('fields' => 'names'));
+    if (!in_array('Testing Category', $product_cats)) {
+        return;
+    }
+
     add_meta_box(
         'klsd_duration_test',
         'Product Duration Test',
