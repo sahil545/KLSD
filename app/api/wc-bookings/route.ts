@@ -54,6 +54,7 @@ function isWithinBookingDateRange(date: Date, restrictions: any): boolean {
 
   if (year === 2025) {
     if ((month === 7 && day >= 29) || (month === 8 && day <= 5)) {
+      console.log(`📅 Date ${date.toISOString().split('T')[0]} blocked - testing closure period`);
       return false; // Closed for testing
     }
   }
