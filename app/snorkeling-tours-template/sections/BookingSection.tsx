@@ -95,6 +95,10 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         body: JSON.stringify(bookingData),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const result = await response.json();
 
       if (result.success) {
