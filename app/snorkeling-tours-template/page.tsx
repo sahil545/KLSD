@@ -136,9 +136,9 @@ const createFallbackTourData = (productId: string): TourData => ({
   }
 });
 
-export default async function SnorkelingToursTemplatePage({ searchParams }: PageProps) {
-  // Get product ID from search params (e.g., ?product_id=123)
-  const productId = searchParams.product_id as string || searchParams.id as string || '999'; // Default for testing
+export default async function SnorkelingToursTemplatePage({ searchParams }: PageParams) {
+  // Use WooCommerce product ID 34592 for this template
+  const productId = '34592';
 
   // Fetch dynamic product data
   const { tourData, isTestingCategory, productName } = await fetchProductData(productId);
