@@ -46,21 +46,32 @@ function isHoliday(date: Date): boolean {
 function isWithinBookingDateRange(date: Date, restrictions: any): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
+  // Check for testing closure period (Aug 29 - Sept 5, 2025)
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-based (Aug = 7, Sept = 8)
+  const day = date.getDate();
+
+  if (year === 2025) {
+    if ((month === 7 && day >= 29) || (month === 8 && day <= 5)) {
+      return false; // Closed for testing
+    }
+  }
+
   // Apply minimum date restriction
   if (restrictions.minDate) {
     const minDate = new Date(today);
     minDate.setDate(today.getDate() + parseInt(restrictions.minDate));
     if (date < minDate) return false;
   }
-  
+
   // Apply maximum date restriction
   if (restrictions.maxDate) {
     const maxDate = new Date(today);
     maxDate.setDate(today.getDate() + parseInt(restrictions.maxDate));
     if (date > maxDate) return false;
   }
-  
+
   return true;
 }
 
