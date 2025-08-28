@@ -39,28 +39,8 @@ function klsd_add_duration_field() {
 add_action('woocommerce_product_options_general_product_data', 'klsd_add_duration_field');
 
 /**
- * Display the Duration field
+ * Save the Duration field using WooCommerce methods
  */
-function klsd_duration_field_callback($post) {
-    // Add nonce for security
-    wp_nonce_field('klsd_duration_save', 'klsd_duration_nonce');
-    
-    // Get current value or use default
-    $duration = get_post_meta($post->ID, '_klsd_test_duration', true);
-    if (empty($duration)) {
-        $duration = '99 hours';
-    }
-    
-    echo '<table class="form-table">';
-    echo '<tr>';
-    echo '<th><label for="klsd_test_duration">Duration:</label></th>';
-    echo '<td>';
-    echo '<input type="text" id="klsd_test_duration" name="klsd_test_duration" value="' . esc_attr($duration) . '" style="width: 100%;" />';
-    echo '<p class="description">Testing duration field (default: 99 hours)</p>';
-    echo '</td>';
-    echo '</tr>';
-    echo '</table>';
-}
 
 /**
  * Save the Duration field
