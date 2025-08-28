@@ -19,11 +19,13 @@ interface SnorkelingToursTemplateProps {
   // Optional props to override data for different tours
   data?: Partial<TourData>;
   loading?: boolean;
+  productId?: number;
 }
 
 export default function SnorkelingToursTemplate({
   data: customData,
-  loading: externalLoading = false
+  loading: externalLoading = false,
+  productId = 34592
 }: SnorkelingToursTemplateProps) {
   // Unified data state - no artificial loading since we have static data
   const [templateData, setTemplateData] = useState<TourData>(() => {
@@ -109,7 +111,7 @@ export default function SnorkelingToursTemplate({
       <main>
         {/* All sections use the same data and loading pattern */}
         <HeroSection data={templateData} />
-        <BookingSection data={templateData} />
+        <BookingSection data={templateData} productId={productId} />
         <ExperienceSection data={templateData} />
         <JourneySection data={templateData} />
         <MarineLifeSection data={templateData} />
