@@ -5,7 +5,7 @@ interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-async function fetchProductData(productId: string): Promise<TourData | null> {
+async function fetchProductData(productId: string): Promise<{ tourData: TourData | null; isTestingCategory: boolean; productName?: string }> {
   try {
     // Fetch from our product data API
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/product-data/${productId}`, {
@@ -14,22 +14,29 @@ async function fetchProductData(productId: string): Promise<TourData | null> {
 
     if (!response.ok) {
       console.error('Failed to fetch product data:', response.status);
-      return null;
+      return { tourData: null, isTestingCategory: false };
     }
 
     const data = await response.json();
 
     if (!data.success) {
       console.error('API returned error:', data.error);
-      return null;
+      return { tourData: null, isTestingCategory: false };
     }
 
-    // Convert API response to TourData format
-    return data.product.tourData;
+    // Check if product is in Testing Category
+    const isTestingCategory = data.product.isTestingCategory || false;
+
+    // Return both tour data and category status
+    return {
+      tourData: data.product.tourData,
+      isTestingCategory,
+      productName: data.product.name
+    };
 
   } catch (error) {
     console.error('Error fetching product data:', error);
-    return null;
+    return { tourData: null, isTestingCategory: false };
   }
 }
 
