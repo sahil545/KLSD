@@ -246,39 +246,71 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
   endDate.setDate(today.getDate() + 60); // Check next 60 days
 
   try {
-    // First, get existing bookings for this product
-    const bookingsResponse = await fetch(`${baseApiUrl}/bookings?product=${productId}&after=${today.toISOString()}&before=${endDate.toISOString()}&per_page=100`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    // Try multiple WooCommerce Bookings API endpoints
+    console.log('Trying WooCommerce Bookings APIs...');
 
+    // Method 1: Try WC Bookings API
     let existingBookings = [];
-    if (bookingsResponse.ok) {
-      existingBookings = await bookingsResponse.json();
-      console.log(`Found ${existingBookings.length} existing bookings for product ${productId}`);
-    } else {
-      console.log('No existing bookings found or bookings API not available');
+    const bookingEndpoints = [
+      `${baseApiUrl}/bookings?product_id=${productId}&status=confirmed&per_page=100`,
+      `${baseApiUrl}/bookings?product=${productId}&per_page=100`,
+      `${baseApiUrl}/orders?meta_key=_booking_product_id&meta_value=${productId}&per_page=100`
+    ];
+
+    for (const endpoint of bookingEndpoints) {
+      try {
+        console.log(`Trying booking endpoint: ${endpoint}`);
+        const bookingsResponse = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (bookingsResponse.ok) {
+          existingBookings = await bookingsResponse.json();
+          console.log(`✅ Found ${existingBookings.length} existing bookings for product ${productId}`);
+          break;
+        } else {
+          console.log(`❌ Endpoint failed: ${bookingsResponse.status}`);
+        }
+      } catch (err) {
+        console.log(`❌ Endpoint error: ${err}`);
+      }
     }
 
-    // Get booking resources/availability from WooCommerce Bookings API
-    const availabilityResponse = await fetch(`${baseApiUrl}/bookings/products/${productId}/slots?min_date=${today.toISOString().split('T')[0]}&max_date=${endDate.toISOString().split('T')[0]}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    // Method 2: Try WooCommerce Bookings slots API
+    const slotEndpoints = [
+      `${baseApiUrl}/bookings/products/${productId}/slots?min_date=${today.toISOString().split('T')[0]}&max_date=${endDate.toISOString().split('T')[0]}`,
+      `${baseApiUrl}/wc-bookings/v1/products/${productId}/slots`,
+      `${baseApiUrl}/bookings/${productId}/availability`
+    ];
 
-    if (availabilityResponse.ok) {
-      const slotsData = await availabilityResponse.json();
-      console.log('Real booking slots fetched from WooCommerce:', slotsData.length || 'No data');
-      return parseWooCommerceSlots(slotsData, existingBookings);
+    for (const endpoint of slotEndpoints) {
+      try {
+        console.log(`Trying slots endpoint: ${endpoint}`);
+        const availabilityResponse = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (availabilityResponse.ok) {
+          const slotsData = await availabilityResponse.json();
+          console.log(`✅ Real booking slots fetched: ${Array.isArray(slotsData) ? slotsData.length : 'Object data'}`);
+          return parseWooCommerceSlots(slotsData, existingBookings);
+        } else {
+          console.log(`❌ Slots endpoint failed: ${availabilityResponse.status}`);
+        }
+      } catch (err) {
+        console.log(`❌ Slots endpoint error: ${err}`);
+      }
     }
 
-    console.log('WooCommerce booking slots API not available, trying alternative approach...');
+    console.log('🔄 All booking APIs unavailable, using business logic with existing bookings...');
 
     // Fallback: Generate availability based on business rules and existing bookings
     return generateRealAvailability(productId, existingBookings, today, endDate);
