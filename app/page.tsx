@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Navigation } from "../client/components/Navigation";
@@ -151,110 +151,51 @@ export default function Homepage() {
     return () => clearInterval(timer);
   }, [heroSlides.length]);
 
-  const adventures = [
-    {
-      id: 1,
-      title: "Christ of the Abyss",
-      category: "Snorkeling Trips",
-      price: 89,
-      duration: "4 hours",
-      rating: 4.9,
-      reviews: 487,
-      description:
-        "Experience the world-famous 9-foot bronze Christ statue in crystal-clear waters",
-      image:
-        "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      features: [
-        "All equipment included",
-        "Small groups",
-        "Professional guides",
-      ],
-    },
-    {
-      id: 2,
-      title: "Coral Gardens Reef Dive",
-      category: "Reef Dive Trips",
-      price: 125,
-      duration: "6 hours",
-      rating: 4.8,
-      reviews: 324,
-      description:
-        "Explore pristine coral gardens with vibrant marine life at 40-60 feet",
-      image:
-        "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      features: ["2 tank dive", "Certified divers only", "Underwater photos"],
-    },
-    {
-      id: 3,
-      title: "Spiegel Grove Wreck",
-      category: "Wreck Dive Trips",
-      price: 145,
-      duration: "8 hours",
-      rating: 4.9,
-      reviews: 198,
-      description:
-        "Dive the massive 510-foot Navy ship wreck, one of the largest artificial reefs",
-      image:
-        "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      features: ["Advanced dive", "2 tank dive", "Wreck penetration"],
-    },
-    {
-      id: 4,
-      title: "Night Dive Adventure",
-      category: "Night Dives",
-      price: 95,
-      duration: "3 hours",
-      rating: 4.7,
-      reviews: 156,
-      description:
-        "Experience the underwater world after dark with unique marine life behavior",
-      image:
-        "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      features: ["Underwater lights", "Night creatures", "Small groups"],
-    },
-    {
-      id: 5,
-      title: "Spearfishing Expedition",
-      category: "Spearfishing Trips",
-      price: 175,
-      duration: "6 hours",
-      rating: 4.6,
-      reviews: 89,
-      description:
-        "Target hogfish, grouper, and snapper in pristine waters with expert guides",
-      image:
-        "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      features: ["Equipment included", "Cleaning service", "Licensed guides"],
-    },
-    {
-      id: 6,
-      title: "Lobster Hunting",
-      category: "Lobster Trips",
-      price: 155,
-      duration: "5 hours",
-      rating: 4.8,
-      reviews: 112,
-      description:
-        "Hunt for spiny lobsters in season with professional guides and equipment",
-      image:
-        "https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      features: ["Season: Aug-Mar", "Equipment provided", "Cleaning included"],
-    },
-    {
-      id: 7,
-      title: "Private Charter",
-      category: "Private Charters",
-      price: 1200,
-      duration: "8 hours",
-      rating: 5.0,
-      reviews: 67,
-      description:
-        "Customize your perfect day with private boat, captain, and diving guide",
-      image:
-        "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      features: ["Up to 12 guests", "Custom itinerary", "Gourmet lunch"],
-    },
-  ];
+  const [adventures, setAdventures] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/home-products');
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+        const data = await response.json();
+        console.log(data);
+        
+        // Simply use the products directly
+        setAdventures(data.products);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setError('Failed to load adventures. Please try again later.');
+        // Fallback to default adventures if API fails
+        setAdventures([
+          {
+            id: 1,
+            title: "Christ of the Abyss",
+            category: "Snorkeling Trips",
+            price: 89,
+            duration: "4 hours",
+            rating: 4.9,
+            reviews: 487,
+            description: "Experience the world-famous 9-foot bronze Christ statue in crystal-clear waters",
+            image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            features: ["All equipment included", "Small groups", "Professional guides"],
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+
 
   const filteredAdventures =
     activeAdventureFilter === "All"
@@ -683,75 +624,74 @@ export default function Homepage() {
             className="overflow-x-auto pb-4"
           >
             <div className="flex gap-6 w-max">
-              {filteredAdventures.map((adventure) => (
-                <EnhancedCard
-                  key={adventure.id}
-                  className="w-80 flex-shrink-0"
-                  hoverScale={1.08}
-                  glowColor="blue"
-                  tilting={true}
-                >
-                  <div className="relative h-48 overflow-hidden">
-                    <Image
-                      src={adventure.image}
-                      alt={adventure.title}
-                      width={1000}
-                      height={1000}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40"></div>
-                    <div className="absolute inset-0 p-4 text-white flex flex-col justify-end">
-                      <Badge className="bg-white/20 text-white mb-2 w-fit text-xs">
-                        {adventure.category}
-                      </Badge>
-                      <h3 className="text-lg font-bold text-white">
-                        {adventure.title}
-                      </h3>
-                    </div>
-                    <div className="absolute top-4 right-4 bg-black/50 rounded-lg px-3 py-1">
-                      <span className="text-white font-semibold">
-                        ${adventure.price}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${i < Math.floor(adventure.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
-                          />
-                        ))}
+                {adventures.map((product) => (
+                    <EnhancedCard
+                    key={product.id}
+                    className="w-80 flex-shrink-0"
+                    hoverScale={1.08}
+                    glowColor="blue"
+                    tilting={true}
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <Image
+                        src={product.images && product.images.length > 0 ? product.images[0].src : "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
+                        alt={product.name}
+                        width={1000}
+                        height={1000}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40"></div>
+                      <div className="absolute inset-0 p-4 text-white flex flex-col justify-end">
+                        <Badge className="bg-white/20 text-white mb-2 w-fit text-xs">
+                          {product.categories && product.categories.length > 0 ? product.categories[0].name : "Adventure"}
+                        </Badge>
+                        <h3 className="text-lg font-bold text-white">
+                          {product.name}
+                        </h3>
                       </div>
-                      <span className="font-semibold text-sm">
-                        {adventure.rating}
-                      </span>
-                      <span className="text-gray-500 text-xs">
-                        ({adventure.reviews} reviews)
-                      </span>
+                      <div className="absolute top-4 right-4 bg-black/50 rounded-lg px-3 py-1">
+                        <span className="text-white font-semibold">
+                          ${product.price}
+                        </span>
+                      </div>
                     </div>
 
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {adventure.description}
-                    </p>
-
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Clock className="w-4 h-4 text-ocean" />
-                        <span>{adventure.duration}</span>
-                      </div>
-                      {adventure.features.slice(0, 2).map((feature, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 text-sm text-gray-600"
-                        >
-                          <span className="text-green-600">✓</span>
-                          <span>{feature}</span>
+                                      <div className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < Math.floor(4.5) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                            />
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                        <span className="font-semibold text-sm">
+                          4.5
+                        </span>
+                        <span className="text-gray-500 text-xs">
+                          (100 reviews)
+                        </span>
+                      </div>
+
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {product.short_description || product.description || "Experience the adventure of a lifetime"}
+                      </p>
+
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Clock className="w-4 h-4 text-ocean" />
+                          <span>4 hours</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="text-green-600">✓</span>
+                          <span>Professional guides</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="text-green-600">✓</span>
+                          <span>Equipment included</span>
+                        </div>
+                      </div>
 
                     <Button className="w-full bg-coral hover:bg-coral/90 text-white font-semibold text-sm transform hover:scale-105 transition-all duration-300">
                       Book Adventure
