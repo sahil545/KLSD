@@ -103,9 +103,18 @@ export async function GET(request: NextRequest) {
 
       console.log(`Product booking settings: capacity=${maxCapacity}, duration=${duration}, price=${basePrice}`);
 
+      // Check for booking restrictions in product meta
+      const bookingRestrictions = {
+        minDate: product.meta_data?.find((meta: any) => meta.key === '_wc_booking_min_date_value')?.value,
+        maxDate: product.meta_data?.find((meta: any) => meta.key === '_wc_booking_max_date_value')?.value,
+        restrictedDays: product.meta_data?.find((meta: any) => meta.key === '_wc_booking_restricted_days')?.value,
+        availability: product.meta_data?.find((meta: any) => meta.key === '_wc_booking_availability')?.value
+      };
+      console.log('📅 Booking restrictions found:', JSON.stringify(bookingRestrictions, null, 2));
+
       // Fetch real availability from WooCommerce Bookings
       console.log(`Fetching real booking availability for product ${productId}...`);
-      const realAvailability = await fetchRealBookingAvailability(productId, baseApiUrl, auth);
+      const realAvailability = await fetchRealBookingAvailability(productId, baseApiUrl, auth, bookingRestrictions);
       console.log(`✅ Real availability fetched: ${realAvailability.availableDates.length} dates, ${realAvailability.timeSlots.length} time slots`);
 
       const availability: BookingAvailability = {
@@ -240,7 +249,7 @@ export async function OPTIONS() {
 }
 
 // Real WooCommerce booking availability functions
-async function fetchRealBookingAvailability(productId: string, baseApiUrl: string, auth: string) {
+async function fetchRealBookingAvailability(productId: string, baseApiUrl: string, auth: string, restrictions: any = {}) {
   const today = new Date();
   const endDate = new Date();
   endDate.setDate(today.getDate() + 60); // Check next 60 days
@@ -312,13 +321,13 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
 
     console.log('🔄 All booking APIs unavailable, using business logic with existing bookings...');
 
-    // Fallback: Generate availability based on business rules and existing bookings
-    return generateRealAvailability(productId, existingBookings, today, endDate);
+    // Fallback: Generate availability based on business rules, existing bookings, and WooCommerce restrictions
+    return generateRealAvailability(productId, existingBookings, today, endDate, restrictions);
 
   } catch (error) {
     console.error('Error fetching real booking availability:', error);
-    // Final fallback with better business logic
-    return generateRealAvailability(productId, [], today, endDate);
+    // Final fallback with better business logic and restrictions
+    return generateRealAvailability(productId, [], today, endDate, restrictions);
   }
 }
 
@@ -352,7 +361,7 @@ function parseWooCommerceSlots(slotsData: any[], existingBookings: any[]) {
   };
 }
 
-function generateRealAvailability(productId: string, existingBookings: any[], startDate: Date, endDate: Date) {
+function generateRealAvailability(productId: string, existingBookings: any[], startDate: Date, endDate: Date, restrictions: any = {}) {
   const availableDates: string[] = [];
   const timeSlots: BookingSlot[] = [];
 
@@ -369,11 +378,13 @@ function generateRealAvailability(productId: string, existingBookings: any[], st
     const dateString = current.toISOString().split('T')[0];
     const dayOfWeek = current.getDay();
 
-    // Business rules: Skip Sundays and major holidays
-    const isBusinessDay = dayOfWeek !== 0; // No Sundays
+    // Apply WooCommerce booking restrictions
+    const isBusinessDay = dayOfWeek !== 0; // No Sundays (customize based on restrictions.restrictedDays)
     const isNotHoliday = !isHoliday(current);
+    const isWithinDateRange = isWithinBookingDateRange(current, restrictions);
+    const isNotRestrictedDay = !isRestrictedDay(current, restrictions);
 
-    if (isBusinessDay && isNotHoliday) {
+    if (isBusinessDay && isNotHoliday && isWithinDateRange && isNotRestrictedDay) {
       availableDates.push(dateString);
 
       // Check each time slot
