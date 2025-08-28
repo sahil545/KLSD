@@ -144,7 +144,7 @@ export default async function SnorkelingToursTemplatePage({ searchParams }: Page
   const { tourData, isTestingCategory, productName } = await fetchProductData(productId);
 
   // If product is not in Testing Category and not test/demo mode, show a message
-  const isTestMode = productId === '999' || productName?.includes('API Unavailable');
+  const isTestMode = productId === '34592' || productName?.includes('API Unavailable');
   if (!isTestingCategory && !isTestMode) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
