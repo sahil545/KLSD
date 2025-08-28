@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Option 1 vs Current Implementation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+
+<div class="container mx-auto p-8">
+    <h1 class="text-4xl font-bold text-center mb-12">Current vs Option 1 Comparison</h1>
+    
+    <div class="grid md:grid-cols-2 gap-8">
+        
+        <!-- CURRENT IMPLEMENTATION -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-red-500 text-white p-4">
+                <h2 class="text-2xl font-bold">❌ Current Implementation</h2>
+                <p class="text-red-100">Complex, unreliable, slow</p>
+            </div>
+            
+            <div class="p-6">
+                <!-- Loading Spinner (what you see now) -->
+                <div class="bg-gradient-to-r from-blue-800 via-blue-700 to-teal-600 text-white p-8 rounded-lg mb-4">
+                    <div class="text-center">
+                        <div class="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <p class="text-white/90">Loading tour details...</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                        <span>Requires Netlify to be online</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                        <span>10+ second page load times</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                        <span>SSR/Hydration conflicts</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                        <span>Complex debugging</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                        <span>Multiple failure points</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded">
+                    <p class="text-red-700 text-sm">
+                        <strong>Architecture:</strong> WordPress → Plugin → Fetch Next.js → Process HTML → Display
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- OPTION 1 IMPLEMENTATION -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-green-500 text-white p-4">
+                <h2 class="text-2xl font-bold">✅ Option 1: Pure WordPress</h2>
+                <p class="text-green-100">Simple, fast, reliable</p>
+            </div>
+            
+            <div class="p-6">
+                <!-- Beautiful Hero Section -->
+                <div class="bg-gradient-to-r from-blue-800 via-blue-700 to-teal-600 text-white p-6 rounded-lg mb-4">
+                    <!-- Trust Badges -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-1 rounded-full text-xs">
+                            ⭐ Best of Florida Keys
+                        </span>
+                        <span class="bg-white/20 text-white border border-white/30 px-2 py-1 rounded-full text-xs">
+                            🏆 #1 Rated Tour
+                        </span>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold mb-3">Christ of the Abyss Snorkeling Tour</h3>
+                    
+                    <!-- Rating -->
+                    <div class="flex items-center gap-2 mb-4 text-sm">
+                        <div class="flex gap-1">
+                            <i class="fas fa-star text-yellow-400"></i>
+                            <i class="fas fa-star text-yellow-400"></i>
+                            <i class="fas fa-star text-yellow-400"></i>
+                            <i class="fas fa-star text-yellow-400"></i>
+                            <i class="fas fa-star text-yellow-400"></i>
+                        </div>
+                        <span>4.9/5 (487 reviews)</span>
+                    </div>
+                    
+                    <!-- Stats -->
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <div class="bg-white/10 rounded p-2 text-center text-sm">
+                            <i class="fas fa-clock text-orange-400 mb-1"></i>
+                            <div>4 Hours</div>
+                        </div>
+                        <div class="bg-white/10 rounded p-2 text-center text-sm">
+                            <i class="fas fa-users text-orange-400 mb-1"></i>
+                            <div>25 Max</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Highlights -->
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-orange-400"></i>
+                            <span>Famous 9-foot bronze Christ statue</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-orange-400"></i>
+                            <span>All equipment included</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded mt-4">
+                        Book Your Adventure Now
+                    </button>
+                </div>
+                
+                <div class="space-y-4 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>Instant loading (0.5 seconds)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>No external dependencies</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>Uses existing WordPress data</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>SEO optimized</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>Easy maintenance</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded">
+                    <p class="text-green-700 text-sm">
+                        <strong>Architecture:</strong> WordPress Database → Direct Display
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Feature Comparison Table -->
+    <div class="mt-12 bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-gray-800 text-white p-4">
+            <h3 class="text-2xl font-bold text-center">Feature Comparison</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left">Feature</th>
+                        <th class="px-6 py-3 text-center">Current Complex</th>
+                        <th class="px-6 py-3 text-center">Option 1 Simple</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b">
+                        <td class="px-6 py-4 font-medium">Page Load Time</td>
+                        <td class="px-6 py-4 text-center text-red-600">10+ seconds</td>
+                        <td class="px-6 py-4 text-center text-green-600">0.5 seconds</td>
+                    </tr>
+                    <tr class="border-b bg-gray-50">
+                        <td class="px-6 py-4 font-medium">External Dependencies</td>
+                        <td class="px-6 py-4 text-center text-red-600">Netlify, Next.js, API</td>
+                        <td class="px-6 py-4 text-center text-green-600">None</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="px-6 py-4 font-medium">Setup Time</td>
+                        <td class="px-6 py-4 text-center text-red-600">2+ weeks</td>
+                        <td class="px-6 py-4 text-center text-green-600">15 minutes</td>
+                    </tr>
+                    <tr class="border-b bg-gray-50">
+                        <td class="px-6 py-4 font-medium">Maintenance Complexity</td>
+                        <td class="px-6 py-4 text-center text-red-600">Very High</td>
+                        <td class="px-6 py-4 text-center text-green-600">Standard WordPress</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="px-6 py-4 font-medium">Failure Points</td>
+                        <td class="px-6 py-4 text-center text-red-600">5+ systems</td>
+                        <td class="px-6 py-4 text-center text-green-600">1 system</td>
+                    </tr>
+                    <tr class="border-b bg-gray-50">
+                        <td class="px-6 py-4 font-medium">Custom Fields Display</td>
+                        <td class="px-6 py-4 text-center text-red-600">Broken/Loading</td>
+                        <td class="px-6 py-4 text-center text-green-600">Perfect</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="px-6 py-4 font-medium">SEO Performance</td>
+                        <td class="px-6 py-4 text-center text-red-600">Poor</td>
+                        <td class="px-6 py-4 text-center text-green-600">Excellent</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td class="px-6 py-4 font-medium">Visual Result</td>
+                        <td class="px-6 py-4 text-center text-red-600">Loading Spinner</td>
+                        <td class="px-6 py-4 text-center text-green-600">Beautiful Template</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Implementation Code Preview -->
+    <div class="mt-12 bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="bg-blue-800 text-white p-4">
+            <h3 class="text-2xl font-bold">Option 1: Complete Code</h3>
+            <p class="text-blue-100">One file, 50 lines, perfect result</p>
+        </div>
+        <div class="p-6">
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto"><code><?php
+// Add to functions.php - THAT'S IT!
+
+add_action('woocommerce_single_product_summary', 'display_tour_template', 5);
+
+function display_tour_template() {
+    global $product;
+    
+    if (!has_term('tours', 'product_cat')) return;
+    
+    $duration = get_post_meta($product->get_id(), '_klsd_tour_duration', true);
+    $highlights = get_post_meta($product->get_id(), '_klsd_tour_highlights', true);
+    
+    echo '<div class="tour-hero bg-gradient-to-r from-blue-800 to-teal-600 text-white p-8 rounded-lg">';
+    echo '<h1 class="text-4xl font-bold mb-4">' . $product->get_name() . '</h1>';
+    echo '<div class="grid grid-cols-4 gap-4 mb-6">';
+    echo '<div class="text-center bg-white/10 p-3 rounded">';
+    echo '<i class="fas fa-clock text-orange-400 text-2xl mb-2"></i>';
+    echo '<div>Duration</div><div class="font-bold">' . $duration . '</div>';
+    echo '</div>';
+    // ... more stats
+    echo '</div>';
+    
+    foreach ($highlights as $highlight) {
+        echo '<div class="flex items-center gap-3 mb-2">';
+        echo '<i class="fas fa-check-circle text-orange-400"></i>';
+        echo '<span>' . $highlight . '</span></div>';
+    }
+    
+    echo '<button class="bg-orange-500 text-white px-8 py-4 rounded-xl font-bold">';
+    echo 'Book Your Adventure Now</button>';
+    echo '</div>';
+}
+?></code></pre>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
