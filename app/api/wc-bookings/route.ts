@@ -104,7 +104,9 @@ export async function GET(request: NextRequest) {
       console.log(`Product booking settings: capacity=${maxCapacity}, duration=${duration}, price=${basePrice}`);
 
       // Fetch real availability from WooCommerce Bookings
+      console.log(`Fetching real booking availability for product ${productId}...`);
       const realAvailability = await fetchRealBookingAvailability(productId, baseApiUrl, auth);
+      console.log(`✅ Real availability fetched: ${realAvailability.availableDates.length} dates, ${realAvailability.timeSlots.length} time slots`);
 
       const availability: BookingAvailability = {
         product_id: parseInt(productId),
