@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import GuestDetailsModal from "@/components/GuestDetailsModal";
+import BookingCalendar from "@/client/components/BookingCalendar";
 import { type TourData } from "../data";
 import {
   Calendar,
@@ -14,22 +15,103 @@ import {
   CheckCircle,
   Users,
   DollarSign,
+  Clock,
 } from "lucide-react";
 
 interface BookingSectionProps {
   data: TourData;
+  productId?: number;
 }
 
-export default function BookingSection({ data }: BookingSectionProps) {
+export default function BookingSection({ data, productId = 34592 }: BookingSectionProps) {
   const [showGuestModal, setShowGuestModal] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [guestCount, setGuestCount] = useState(2);
   const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [selectedPrice, setSelectedPrice] = useState(data.pricing.basePrice);
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
 
-  const tax = guestCount * data.pricing.basePrice * data.pricing.taxRate;
-  const totalPrice = guestCount * data.pricing.basePrice + tax;
+  const tax = guestCount * selectedPrice * data.pricing.taxRate;
+  const totalPrice = guestCount * selectedPrice + tax;
 
-  const handleReserveClick = () => {
-    setShowGuestModal(true);
+  const handleDateTimeSelect = (date: string, time: string, price: number) => {
+    setSelectedDate(date);
+    setSelectedTime(time);
+    setSelectedPrice(price);
+    setShowCalendar(false);
+  };
+
+  const formatSelectedDateTime = () => {
+    if (!selectedDate || !selectedTime) return "";
+
+    const date = new Date(selectedDate);
+    const dateStr = date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+
+    const [hours, minutes] = selectedTime.split(':');
+    const timeDate = new Date();
+    timeDate.setHours(parseInt(hours), parseInt(minutes));
+    const timeStr = timeDate.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    return `${dateStr} at ${timeStr}`;
+  };
+
+  const handleReserveClick = async () => {
+    if (!selectedDate || !selectedTime) {
+      setShowCalendar(true);
+      return;
+    }
+
+    setIsCreatingBooking(true);
+
+    try {
+      // Create booking order via API
+      const bookingData = {
+        product_id: productId,
+        date: selectedDate,
+        time: selectedTime,
+        guests: guestCount,
+        customer: {
+          first_name: 'Guest', // Would get from form
+          last_name: 'Customer',
+          email: 'guest@example.com',
+          phone: '(555) 123-4567',
+        },
+      };
+
+      const response = await fetch('/api/wc-bookings?action=create_booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Redirect to WooCommerce checkout
+        window.location.href = result.checkout_url;
+      } else {
+        console.error('Booking creation failed:', result.error);
+        // Fallback: show guest modal for manual booking
+        setShowGuestModal(true);
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      // Fallback: show guest modal for manual booking
+      setShowGuestModal(true);
+    } finally {
+      setIsCreatingBooking(false);
+    }
   };
 
   return (
@@ -62,12 +144,23 @@ export default function BookingSection({ data }: BookingSectionProps) {
                   Select Date
                 </label>
                 <Button
-                  variant="outline"
-                  className="w-full justify-start border-2 border-gray-200 hover:border-blue-300 h-12"
-                >
-                  <Calendar className="w-5 h-5 mr-3 text-blue-600" />
-                  <span className="text-gray-700">Choose Date & Time</span>
-                </Button>
+                variant="outline"
+                onClick={() => setShowCalendar(true)}
+                className="w-full justify-start border-2 border-gray-200 hover:border-blue-300 h-12"
+              >
+                <Calendar className="w-5 h-5 mr-3 text-blue-600" />
+                <span className="text-gray-700">
+                  {selectedDate && selectedTime ? formatSelectedDateTime() : 'Choose Date & Time'}
+                </span>
+              </Button>
+              {selectedDate && selectedTime && (
+                <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                  <div className="flex items-center gap-2 text-sm text-green-800">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Date & time selected</span>
+                  </div>
+                </div>
+              )}
               </div>
 
               {/* Guest Count */}
@@ -134,16 +227,21 @@ export default function BookingSection({ data }: BookingSectionProps) {
                 <div className="text-gray-600">
                   for {guestCount} {guestCount === 1 ? "guest" : "guests"}
                 </div>
+                {selectedPrice !== data.pricing.basePrice && (
+                  <div className="text-sm text-blue-600 mt-1">
+                    Updated price: ${selectedPrice}/person
+                  </div>
+                )}
               </div>
 
               {/* Price Breakdown */}
               <div className="mb-6">
                 <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
-                  <span>
-                    ${data.pricing.basePrice} × {guestCount} guests
-                  </span>
-                  <span>${(guestCount * data.pricing.basePrice).toFixed(2)}</span>
-                </div>
+                <span>
+                  ${selectedPrice} × {guestCount} guests
+                </span>
+                <span>${(guestCount * selectedPrice).toFixed(2)}</span>
+              </div>
                 <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
                   <span>Tax</span>
                   <span>${tax.toFixed(2)}</span>
@@ -157,18 +255,42 @@ export default function BookingSection({ data }: BookingSectionProps) {
               {/* Reserve Button */}
               <Button
                 onClick={handleReserveClick}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 text-lg rounded-lg mb-4"
+                disabled={isCreatingBooking}
+                className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-bold py-4 text-lg rounded-lg mb-4"
               >
-                Reserve Your Spot Now
+                {isCreatingBooking ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    Creating Booking...
+                  </div>
+                ) : selectedDate && selectedTime ? (
+                  'Reserve Your Spot Now'
+                ) : (
+                  'Select Date & Time First'
+                )}
               </Button>
 
               <div className="text-center text-sm text-gray-500">
-                You won't be charged until your booking is confirmed
+                {selectedDate && selectedTime ? (
+                  "You'll be redirected to secure checkout"
+                ) : (
+                  "Select your preferred date and time above"
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Booking Calendar Modal */}
+      <BookingCalendar
+        isOpen={showCalendar}
+        onClose={() => setShowCalendar(false)}
+        productId={productId}
+        onDateTimeSelect={handleDateTimeSelect}
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+      />
 
       {/* Guest Details Modal */}
       <GuestDetailsModal
