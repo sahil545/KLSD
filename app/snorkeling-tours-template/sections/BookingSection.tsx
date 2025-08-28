@@ -87,7 +87,7 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         },
       };
 
-      const response = await fetch('/api/wc-bookings?action=create_booking', {
+      const response = await fetch('/api/wc-bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
