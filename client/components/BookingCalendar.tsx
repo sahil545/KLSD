@@ -59,6 +59,11 @@ export default function BookingCalendar({
 
     try {
       const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const data = await response.json();
 
       if (data.success) {
@@ -67,7 +72,8 @@ export default function BookingCalendar({
         setError(data.error || 'Failed to fetch availability');
       }
     } catch (err) {
-      setError('Network error while fetching availability');
+      const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
+      setError(errorMessage);
       console.error('Booking availability error:', err);
     } finally {
       setLoading(false);
