@@ -1,4 +1,4 @@
-import SnorkelingToursTemplate from "./SnorkelingToursTemplate";
+import SnorkelingToursTemplate from "./SnorkelingToursTemplate-minimal";
 import { TourData } from "./data";
 
 interface PageProps {
