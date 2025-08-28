@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Users, X } from "lucide-react";
+import { Calendar, Clock, Users, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface BookingSlot {
   date: string;
@@ -29,6 +29,8 @@ interface BookingCalendarProps {
   onDateTimeSelect: (date: string, time: string, price: number) => void;
   selectedDate?: string;
   selectedTime?: string;
+  preloadedAvailability?: BookingAvailability | null;
+  onDataLoad?: (data: BookingAvailability) => void;
 }
 
 export default function BookingCalendar({
@@ -38,20 +40,32 @@ export default function BookingCalendar({
   onDateTimeSelect,
   selectedDate,
   selectedTime,
+  preloadedAvailability,
+  onDataLoad,
 }: BookingCalendarProps) {
-  const [availability, setAvailability] = useState<BookingAvailability | null>(null);
+  const [availability, setAvailability] = useState<BookingAvailability | null>(preloadedAvailability || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [localSelectedDate, setLocalSelectedDate] = useState(selectedDate || "");
-  const [localSelectedTime, setLocalSelectedTime] = useState(selectedTime || "");
 
-  // Fetch availability when component opens
+  // Use preloaded data or fetch on first open
   useEffect(() => {
-    if (isOpen && productId) {
+    if (isOpen && !availability && productId) {
       fetchAvailability();
     }
-  }, [isOpen, productId]);
+  }, [isOpen, productId, availability]);
+
+  // Update local state when props change
+  useEffect(() => {
+    if (preloadedAvailability) {
+      setAvailability(preloadedAvailability);
+    }
+  }, [preloadedAvailability]);
+
+  useEffect(() => {
+    setLocalSelectedDate(selectedDate || "");
+  }, [selectedDate]);
 
   const fetchAvailability = async () => {
     setLoading(true);
@@ -68,6 +82,7 @@ export default function BookingCalendar({
 
       if (data.success) {
         setAvailability(data.data);
+        onDataLoad?.(data.data);
       } else {
         setError(data.error || 'Failed to fetch availability');
       }
@@ -78,16 +93,6 @@ export default function BookingCalendar({
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
   };
 
   const formatTime = (timeString: string): string => {
@@ -119,17 +124,11 @@ export default function BookingCalendar({
 
   const handleDateSelect = (date: string) => {
     setLocalSelectedDate(date);
-    setLocalSelectedTime(""); // Reset time when date changes
   };
 
-  const handleTimeSelect = (time: string) => {
-    setLocalSelectedTime(time);
-    
+  const handleTimeSelect = (time: string, price: number) => {
     if (localSelectedDate) {
-      const slot = getTimeSlotsForDate(localSelectedDate).find(s => s.time === time);
-      if (slot) {
-        onDateTimeSelect(localSelectedDate, time, slot.price);
-      }
+      onDateTimeSelect(localSelectedDate, time, price);
     }
   };
 
@@ -143,6 +142,8 @@ export default function BookingCalendar({
 
     const days = [];
     const availableDates = getAvailableDatesInMonth(currentMonth);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
@@ -151,18 +152,18 @@ export default function BookingCalendar({
       const isCurrentMonth = date.getMonth() === month;
       const isAvailable = availableDates.includes(dateString);
       const isSelected = localSelectedDate === dateString;
-      const isPast = date < new Date();
+      const isPast = date < today;
 
       days.push(
         <button
           key={dateString}
-          onClick={() => isAvailable && handleDateSelect(dateString)}
-          disabled={!isAvailable || isPast}
+          onClick={() => isAvailable && !isPast && handleDateSelect(dateString)}
+          disabled={!isAvailable || isPast || !isCurrentMonth}
           className={`
-            h-10 w-10 rounded-lg text-sm font-medium transition-colors
+            h-8 w-8 rounded text-sm font-medium transition-colors relative
             ${isSelected 
               ? 'bg-blue-600 text-white' 
-              : isAvailable 
+              : isAvailable && !isPast && isCurrentMonth
                 ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' 
                 : 'text-gray-300 cursor-not-allowed'
             }
@@ -170,48 +171,80 @@ export default function BookingCalendar({
           `}
         >
           {date.getDate()}
+          {isAvailable && !isPast && isCurrentMonth && (
+            <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></div>
+          )}
         </button>
       );
     }
 
     return (
-      <div className="grid grid-cols-7 gap-1">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="h-10 flex items-center justify-center text-sm font-medium text-gray-500">
-            {day}
-          </div>
-        ))}
-        {days}
+      <div className="space-y-2">
+        {/* Month header */}
+        <div className="flex items-center justify-between mb-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <h4 className="font-medium text-sm">
+            {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </h4>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Day headers */}
+        <div className="grid grid-cols-7 gap-1 mb-1">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+            <div key={index} className="h-6 flex items-center justify-center text-xs font-medium text-gray-500">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {days}
+        </div>
       </div>
     );
   };
 
   if (!isOpen) return null;
 
+  const selectedDateSlots = localSelectedDate ? getTimeSlotsForDate(localSelectedDate) : [];
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Select Date & Time
-          </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+      <Card className="w-full max-w-sm">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+          <CardTitle className="text-lg">Select Date & Time</CardTitle>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
             <X className="w-4 h-4" />
           </Button>
         </CardHeader>
         
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {loading && (
-            <div className="text-center py-8">
-              <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading availability...</p>
+            <div className="text-center py-6">
+              <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+              <p className="text-sm text-gray-600">Loading...</p>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded p-3">
+              <p className="text-sm text-red-800">{error}</p>
               <Button variant="outline" size="sm" onClick={fetchAvailability} className="mt-2">
                 Try Again
               </Button>
@@ -219,107 +252,66 @@ export default function BookingCalendar({
           )}
 
           {availability && !loading && (
-            <div className="grid lg:grid-cols-2 gap-6">
+            <>
               {/* Calendar */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-lg">Choose Date</h3>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                    >
-                      ←
-                    </Button>
-                    <span className="font-medium min-w-[140px] text-center">
-                      {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                    >
-                      →
-                    </Button>
-                  </div>
-                </div>
                 {renderCalendar()}
-                
                 {localSelectedDate && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm font-medium text-blue-900">
-                      Selected: {formatDate(localSelectedDate)}
-                    </p>
+                  <div className="mt-3 p-2 bg-blue-50 rounded text-sm text-blue-900">
+                    Selected: {new Date(localSelectedDate).toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
                   </div>
                 )}
               </div>
 
               {/* Time Slots */}
-              <div>
-                <h3 className="font-semibold text-lg mb-4">Choose Time</h3>
-                
-                {!localSelectedDate && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Please select a date first</p>
-                  </div>
-                )}
-
-                {localSelectedDate && (
-                  <div className="space-y-3">
-                    {getTimeSlotsForDate(localSelectedDate).map((slot) => (
-                      <button
-                        key={`${slot.date}-${slot.time}`}
-                        onClick={() => handleTimeSelect(slot.time)}
-                        className={`
-                          w-full p-4 rounded-lg border-2 text-left transition-all
-                          ${localSelectedTime === slot.time
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                          }
-                        `}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-lg">
-                              {formatTime(slot.time)}
+              {localSelectedDate && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium text-sm mb-3">Available Times</h4>
+                  
+                  {selectedDateSlots.length === 0 ? (
+                    <div className="text-center py-4 text-gray-500">
+                      <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No times available</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {selectedDateSlots.map((slot) => (
+                        <button
+                          key={`${slot.date}-${slot.time}`}
+                          onClick={() => handleTimeSelect(slot.time, slot.price)}
+                          className="w-full p-3 rounded border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-left transition-all"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium">{formatTime(slot.time)}</div>
+                              <div className="text-xs text-gray-600 flex items-center gap-1">
+                                <Users className="w-3 h-3" />
+                                {slot.available_spots} spots
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-600 flex items-center gap-2">
-                              <Users className="w-4 h-4" />
-                              {slot.available_spots} spots available
+                            <div className="text-right">
+                              <div className="font-bold">${slot.price}</div>
+                              <div className="text-xs text-gray-600">per person</div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-bold text-lg">${slot.price}</div>
-                            <div className="text-sm text-gray-600">per person</div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          {localSelectedDate && localSelectedTime && (
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">
-                    {formatDate(localSelectedDate)} at {formatTime(localSelectedTime)}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {availability?.duration} hour tour
-                  </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <Button onClick={onClose} className="bg-green-600 hover:bg-green-700">
-                  Confirm Selection
-                </Button>
-              </div>
-            </div>
+              )}
+
+              {!localSelectedDate && (
+                <div className="text-center py-4 text-gray-500 border-t">
+                  <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Select a date to see available times</p>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

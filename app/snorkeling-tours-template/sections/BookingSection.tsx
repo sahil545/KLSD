@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,20 @@ import {
   Clock,
 } from "lucide-react";
 
+interface BookingAvailability {
+  product_id: number;
+  available_dates: string[];
+  time_slots: Array<{
+    date: string;
+    time: string;
+    available_spots: number;
+    price: number;
+    booking_id?: string;
+  }>;
+  max_capacity: number;
+  duration: number;
+}
+
 interface BookingSectionProps {
   data: TourData;
   productId?: number;
@@ -31,14 +45,44 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedPrice, setSelectedPrice] = useState(data.pricing.basePrice);
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
+  const [availability, setAvailability] = useState<BookingAvailability | null>(null);
+  const [preloadingCalendar, setPreloadingCalendar] = useState(false);
 
-  const tax = guestCount * selectedPrice * data.pricing.taxRate;
-  const totalPrice = guestCount * selectedPrice + tax;
+  // Preload calendar data when component mounts
+  useEffect(() => {
+    const preloadCalendarData = async () => {
+      setPreloadingCalendar(true);
+      try {
+        const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setAvailability(data.data);
+          }
+        }
+      } catch (error) {
+        console.log('Calendar preload failed (non-critical):', error);
+      } finally {
+        setPreloadingCalendar(false);
+      }
+    };
+
+    preloadCalendarData();
+  }, [productId]);
+
+  // Calculate pricing with proper error handling
+  const currentPrice = selectedPrice || data.pricing.basePrice;
+  const tax = guestCount * currentPrice * data.pricing.taxRate;
+  const totalPrice = guestCount * currentPrice + tax;
 
   const handleDateTimeSelect = (date: string, time: string, price: number) => {
+    console.log('Date/Time selected:', { date, time, price }); // Debug log
     setSelectedDate(date);
     setSelectedTime(time);
-    setSelectedPrice(price);
+    // Ensure price is valid before setting
+    if (price && price > 0) {
+      setSelectedPrice(price);
+    }
     setShowCalendar(false);
   };
 
@@ -150,11 +194,13 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
                 <Button
                 variant="outline"
                 onClick={() => setShowCalendar(true)}
+                disabled={preloadingCalendar}
                 className="w-full justify-start border-2 border-gray-200 hover:border-blue-300 h-12"
               >
                 <Calendar className="w-5 h-5 mr-3 text-blue-600" />
                 <span className="text-gray-700">
-                  {selectedDate && selectedTime ? formatSelectedDateTime() : 'Choose Date & Time'}
+                  {preloadingCalendar ? 'Loading calendar...' :
+                   selectedDate && selectedTime ? formatSelectedDateTime() : 'Choose Date & Time'}
                 </span>
               </Button>
               {selectedDate && selectedTime && (
@@ -231,9 +277,9 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
                 <div className="text-gray-600">
                   for {guestCount} {guestCount === 1 ? "guest" : "guests"}
                 </div>
-                {selectedPrice !== data.pricing.basePrice && (
+                {currentPrice !== data.pricing.basePrice && (
                   <div className="text-sm text-blue-600 mt-1">
-                    Updated price: ${selectedPrice}/person
+                    Selected time: ${currentPrice}/person
                   </div>
                 )}
               </div>
@@ -242,9 +288,9 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
               <div className="mb-6">
                 <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
                 <span>
-                  ${selectedPrice} × {guestCount} guests
+                  ${currentPrice.toFixed(2)} × {guestCount} guests
                 </span>
-                <span>${(guestCount * selectedPrice).toFixed(2)}</span>
+                <span>${(guestCount * currentPrice).toFixed(2)}</span>
               </div>
                 <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
                   <span>Tax</span>
@@ -294,6 +340,8 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         onDateTimeSelect={handleDateTimeSelect}
         selectedDate={selectedDate}
         selectedTime={selectedTime}
+        preloadedAvailability={availability}
+        onDataLoad={(data) => setAvailability(data)}
       />
 
       {/* Guest Details Modal */}
