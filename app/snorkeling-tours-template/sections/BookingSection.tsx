@@ -37,7 +37,10 @@ interface BookingSectionProps {
   productId?: number;
 }
 
-export default function BookingSection({ data, productId = 34592 }: BookingSectionProps) {
+export default function BookingSection({
+  data,
+  productId = 34592,
+}: BookingSectionProps) {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [guestCount, setGuestCount] = useState(2);
@@ -45,7 +48,9 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedPrice, setSelectedPrice] = useState(data.pricing.basePrice);
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
-  const [availability, setAvailability] = useState<BookingAvailability | null>(null);
+  const [availability, setAvailability] = useState<BookingAvailability | null>(
+    null,
+  );
 
   // Calculate pricing with proper error handling
   const currentPrice = selectedPrice || data.pricing.basePrice;
@@ -53,7 +58,7 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
   const totalPrice = guestCount * currentPrice + tax;
 
   const handleDateTimeSelect = (date: string, time: string, price: number) => {
-    console.log('Date/Time selected:', { date, time, price }); // Debug log
+    console.log("Date/Time selected:", { date, time, price }); // Debug log
     setSelectedDate(date);
     setSelectedTime(time);
     // Ensure price is valid before setting
@@ -67,18 +72,18 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
     if (!selectedDate || !selectedTime) return "";
 
     const date = new Date(selectedDate);
-    const dateStr = date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
+    const dateStr = date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
     });
 
-    const [hours, minutes] = selectedTime.split(':');
+    const [hours, minutes] = selectedTime.split(":");
     const timeDate = new Date();
     timeDate.setHours(parseInt(hours), parseInt(minutes));
-    const timeStr = timeDate.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
+    const timeStr = timeDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     });
 
@@ -101,17 +106,17 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         time: selectedTime,
         guests: guestCount,
         customer: {
-          first_name: 'Guest', // Would get from form
-          last_name: 'Customer',
-          email: 'guest@example.com',
-          phone: '(555) 123-4567',
+          first_name: "Guest", // Would get from form
+          last_name: "Customer",
+          email: "guest@example.com",
+          phone: "(555) 123-4567",
         },
       };
 
-      const response = await fetch('/api/wc-bookings', {
-        method: 'POST',
+      const response = await fetch("/api/wc-bookings", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(bookingData),
       });
@@ -126,12 +131,12 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         // Redirect to WooCommerce checkout
         window.location.href = result.checkout_url;
       } else {
-        console.error('Booking creation failed:', result.error);
+        console.error("Booking creation failed:", result.error);
         // Fallback: show guest modal for manual booking
         setShowGuestModal(true);
       }
     } catch (error) {
-      console.error('Booking error:', error);
+      console.error("Booking error:", error);
       // Fallback: show guest modal for manual booking
       setShowGuestModal(true);
     } finally {
@@ -151,7 +156,8 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
             Book Your Experience
           </h2>
           <p className="text-gray-600">
-            Starting at ${data.pricing.basePrice} per person • Free cancellation up to 24 hours
+            Starting at ${data.pricing.basePrice} per person • Free cancellation
+            up to 24 hours
           </p>
         </div>
 
@@ -169,23 +175,25 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
                   Select Date
                 </label>
                 <Button
-                variant="outline"
-                onClick={() => setShowCalendar(true)}
-                className="w-full justify-start border-2 border-gray-200 hover:border-blue-300 h-12"
-              >
-                <Calendar className="w-5 h-5 mr-3 text-blue-600" />
-                <span className="text-gray-700">
-                  {selectedDate && selectedTime ? formatSelectedDateTime() : 'Choose Date & Time'}
-                </span>
-              </Button>
-              {selectedDate && selectedTime && (
-                <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
-                  <div className="flex items-center gap-2 text-sm text-green-800">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Date & time selected</span>
+                  variant="outline"
+                  onClick={() => setShowCalendar(true)}
+                  className="w-full justify-start border-2 border-gray-200 hover:border-blue-300 h-12"
+                >
+                  <Calendar className="w-5 h-5 mr-3 text-blue-600" />
+                  <span className="text-gray-700">
+                    {selectedDate && selectedTime
+                      ? formatSelectedDateTime()
+                      : "Choose Date & Time"}
+                  </span>
+                </Button>
+                {selectedDate && selectedTime && (
+                  <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
+                    <div className="flex items-center gap-2 text-sm text-green-800">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Date & time selected</span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
               </div>
 
               {/* Guest Count */}
@@ -227,7 +235,10 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <Star className="w-4 h-4 text-yellow-500" />
-                  <span>{data.details.rating}/5 rating from {data.details.reviewCount} reviews</span>
+                  <span>
+                    {data.details.rating}/5 rating from{" "}
+                    {data.details.reviewCount} reviews
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                   <DollarSign className="w-4 h-4 text-green-600" />
@@ -262,11 +273,11 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
               {/* Price Breakdown */}
               <div className="mb-6">
                 <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
-                <span>
-                  ${currentPrice.toFixed(2)} × {guestCount} guests
-                </span>
-                <span>${(guestCount * currentPrice).toFixed(2)}</span>
-              </div>
+                  <span>
+                    ${currentPrice.toFixed(2)} × {guestCount} guests
+                  </span>
+                  <span>${(guestCount * currentPrice).toFixed(2)}</span>
+                </div>
                 <div className="flex justify-between items-center text-sm text-gray-600 mb-3">
                   <span>Tax</span>
                   <span>${tax.toFixed(2)}</span>
@@ -289,18 +300,16 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
                     Creating Booking...
                   </div>
                 ) : selectedDate && selectedTime ? (
-                  'Reserve Your Spot Now'
+                  "Reserve Your Spot Now"
                 ) : (
-                  'Select Date & Time First'
+                  "Select Date & Time First"
                 )}
               </Button>
 
               <div className="text-center text-sm text-gray-500">
-                {selectedDate && selectedTime ? (
-                  "You'll be redirected to secure checkout"
-                ) : (
-                  "Select your preferred date and time above"
-                )}
+                {selectedDate && selectedTime
+                  ? "You'll be redirected to secure checkout"
+                  : "Select your preferred date and time above"}
               </div>
             </CardContent>
           </Card>

@@ -23,16 +23,18 @@ interface SnorkelingToursTemplateProps {
   productId?: number;
 }
 
-function ErrorFallback({error}: {error: Error}) {
+function ErrorFallback({ error }: { error: Error }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center p-8 max-w-md">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          Something went wrong
+        </h1>
         <p className="text-gray-600 mb-4">
           There was an error loading the page. Please refresh to try again.
         </p>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Refresh Page
@@ -45,7 +47,7 @@ function ErrorFallback({error}: {error: Error}) {
 export default function SnorkelingToursTemplate({
   data: customData,
   loading: externalLoading = false,
-  productId = 34592
+  productId = 34592,
 }: SnorkelingToursTemplateProps) {
   // Unified data state - no artificial loading since we have static data
   const [templateData, setTemplateData] = useState<TourData>(() => {
@@ -61,8 +63,11 @@ export default function SnorkelingToursTemplate({
         included: { ...tourData.included, ...customData.included },
         journey: { ...tourData.journey, ...customData.journey },
         marineLife: { ...tourData.marineLife, ...customData.marineLife },
-        trustIndicators: { ...tourData.trustIndicators, ...customData.trustIndicators },
-        finalCTA: { ...tourData.finalCTA, ...customData.finalCTA }
+        trustIndicators: {
+          ...tourData.trustIndicators,
+          ...customData.trustIndicators,
+        },
+        finalCTA: { ...tourData.finalCTA, ...customData.finalCTA },
       };
     }
     return tourData;
@@ -83,8 +88,11 @@ export default function SnorkelingToursTemplate({
         included: { ...tourData.included, ...customData.included },
         journey: { ...tourData.journey, ...customData.journey },
         marineLife: { ...tourData.marineLife, ...customData.marineLife },
-        trustIndicators: { ...tourData.trustIndicators, ...customData.trustIndicators },
-        finalCTA: { ...tourData.finalCTA, ...customData.finalCTA }
+        trustIndicators: {
+          ...tourData.trustIndicators,
+          ...customData.trustIndicators,
+        },
+        finalCTA: { ...tourData.finalCTA, ...customData.finalCTA },
       });
     }
   }, [customData]);
