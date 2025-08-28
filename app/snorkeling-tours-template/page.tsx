@@ -161,6 +161,7 @@ export default async function SnorkelingToursTemplatePage({ searchParams }: Page
     );
   }
 
-  // Pass dynamic data to template, or use default if fetch failed
-  return <SnorkelingToursTemplate data={tourData || undefined} />;
+  // Pass dynamic data to template, or use fast fallback with XX NO duration
+  const finalTourData = tourData || createFallbackTourData(productId);
+  return <SnorkelingToursTemplate data={finalTourData} />;
 }
