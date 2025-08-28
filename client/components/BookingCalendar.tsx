@@ -63,7 +63,7 @@ export default function BookingCalendar({
     try {
       // Add timeout for better user experience
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
         signal: controller.signal
