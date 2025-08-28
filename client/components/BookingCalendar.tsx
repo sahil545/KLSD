@@ -29,8 +29,6 @@ interface BookingCalendarProps {
   onDateTimeSelect: (date: string, time: string, price: number) => void;
   selectedDate?: string;
   selectedTime?: string;
-  preloadedAvailability?: BookingAvailability | null;
-  onDataLoad?: (data: BookingAvailability) => void;
 }
 
 export default function BookingCalendar({
