@@ -22,19 +22,21 @@ if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get
 }
 
 /**
- * Add Duration field to product admin page
+ * Add Duration field to WooCommerce product admin page
+ * Using WooCommerce-specific hook for better integration
  */
 function klsd_add_duration_field() {
-    add_meta_box(
-        'klsd_duration_test',
-        'Duration Test Field',
-        'klsd_duration_field_callback',
-        'product',
-        'side',
-        'default'
-    );
+    echo '<div class="options_group">';
+    woocommerce_wp_text_input(array(
+        'id' => '_klsd_test_duration',
+        'label' => 'Duration',
+        'placeholder' => '99 hours',
+        'desc_tip' => true,
+        'description' => 'Testing duration field for this product'
+    ));
+    echo '</div>';
 }
-add_action('add_meta_boxes', 'klsd_add_duration_field');
+add_action('woocommerce_product_options_general_product_data', 'klsd_add_duration_field');
 
 /**
  * Display the Duration field
