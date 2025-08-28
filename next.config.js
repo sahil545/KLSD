@@ -12,11 +12,6 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@woocommerce/api'],
   },
 
-  // 📦 Configure how dynamic pages are generated
-  generateBuildId: async () => {
-    // Use timestamp for cache busting when products change
-    return Date.now().toString();
-  },
 
   // Image optimization settings
   images: {
