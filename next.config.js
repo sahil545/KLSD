@@ -2,10 +2,24 @@
 const nextConfig = {
   // Essential settings for Netlify deployment
   trailingSlash: true,
-  
+
   // Allow cross-origin requests in development
   allowedDevOrigins: ['dc167d03e0d948deb7929a3120e07975-2ecb0f6537f44a3b8351b24af.fly.dev'],
-  
+
+  // 🚀 Performance optimizations for dynamic pages
+  experimental: {
+    // Improved server components performance
+    serverComponentsExternalPackages: ['@woocommerce/api'],
+    // Partial prerendering for better dynamic performance
+    ppr: true,
+  },
+
+  // 📦 Configure how dynamic pages are generated
+  generateBuildId: async () => {
+    // Use timestamp for cache busting when products change
+    return Date.now().toString();
+  },
+
   // Image optimization settings
   images: {
     remotePatterns: [
@@ -18,6 +32,12 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'cdn.builder.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'keylargoscubadiving.com',
         port: '',
         pathname: '/**',
       },
