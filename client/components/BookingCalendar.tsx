@@ -38,116 +38,19 @@ export default function BookingCalendar({
   onDateTimeSelect,
   selectedDate,
   selectedTime,
-  preloadedAvailability,
-  onDataLoad,
 }: BookingCalendarProps) {
-  const [availability, setAvailability] = useState<BookingAvailability | null>(preloadedAvailability || null);
+  const [availability, setAvailability] = useState<BookingAvailability | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [localSelectedDate, setLocalSelectedDate] = useState(selectedDate || "");
 
-  // Use refs to track async operations
-  const controllerRef = useRef<AbortController | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isMountedRef = useRef(true);
-
-  // Use preloaded data or fetch on first open
+  // Only fetch when calendar is opened for the first time
   useEffect(() => {
     if (isOpen && !availability && productId) {
-      const fetchData = async () => {
-        if (!isMountedRef.current) return;
-
-        setLoading(true);
-        setError(null);
-
-        try {
-          // Clean up any existing operations
-          if (controllerRef.current) {
-            controllerRef.current.abort();
-          }
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-          }
-
-          controllerRef.current = new AbortController();
-          timeoutRef.current = setTimeout(() => {
-            if (controllerRef.current && !controllerRef.current.signal.aborted) {
-              controllerRef.current.abort();
-            }
-          }, 25000);
-
-          const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
-            signal: controllerRef.current.signal
-          });
-
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-            timeoutRef.current = null;
-          }
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          const data = await response.json();
-
-          if (data.success && isMountedRef.current) {
-            setAvailability(data.data);
-            onDataLoad?.(data.data);
-          } else if (isMountedRef.current) {
-            setError(data.error || 'Failed to fetch availability');
-          }
-        } catch (err) {
-          if (isMountedRef.current) {
-            if (err instanceof Error && err.name === 'AbortError') {
-              setError('Loading taking too long. Please try again.');
-            } else {
-              const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
-              setError(errorMessage);
-            }
-            console.error('Booking availability error:', err);
-          }
-        } finally {
-          if (isMountedRef.current) {
-            setLoading(false);
-          }
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-            timeoutRef.current = null;
-          }
-          controllerRef.current = null;
-        }
-      };
-
-      fetchData();
+      fetchAvailability();
     }
-
-    // Cleanup function
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      // Don't abort controller to avoid AbortError
-      controllerRef.current = null;
-    };
   }, [isOpen, productId, availability]);
-
-  // Track component mount state
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // Update local state when props change
-  useEffect(() => {
-    if (preloadedAvailability) {
-      setAvailability(preloadedAvailability);
-    }
-  }, [preloadedAvailability]);
 
   useEffect(() => {
     setLocalSelectedDate(selectedDate || "");
