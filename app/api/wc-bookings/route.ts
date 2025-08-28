@@ -427,3 +427,36 @@ function isHoliday(date: Date): boolean {
          (month === 1 && day === 1) ||   // New Year's
          (month === 7 && day === 4);     // July 4th
 }
+
+function isWithinBookingDateRange(date: Date, restrictions: any): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Apply minimum date restriction
+  if (restrictions.minDate) {
+    const minDate = new Date(today);
+    minDate.setDate(today.getDate() + parseInt(restrictions.minDate));
+    if (date < minDate) return false;
+  }
+
+  // Apply maximum date restriction
+  if (restrictions.maxDate) {
+    const maxDate = new Date(today);
+    maxDate.setDate(today.getDate() + parseInt(restrictions.maxDate));
+    if (date > maxDate) return false;
+  }
+
+  return true;
+}
+
+function isRestrictedDay(date: Date, restrictions: any): boolean {
+  if (!restrictions.restrictedDays) return false;
+
+  // WooCommerce stores restricted days as array of day numbers (0=Sunday, 1=Monday, etc.)
+  const dayOfWeek = date.getDay();
+  const restrictedDays = Array.isArray(restrictions.restrictedDays)
+    ? restrictions.restrictedDays
+    : String(restrictions.restrictedDays).split(',').map(d => parseInt(d.trim()));
+
+  return restrictedDays.includes(dayOfWeek);
+}
