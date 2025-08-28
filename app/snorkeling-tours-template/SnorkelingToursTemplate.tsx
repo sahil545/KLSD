@@ -126,16 +126,7 @@ export default function SnorkelingToursTemplate({
     );
   }
 
-  // Show simplified version during hydration to prevent mismatches
-  if (!isHydrated) {
-    return (
-      <div className="min-h-screen">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 h-96 flex items-center justify-center">
-          <h1 className="text-4xl font-bold text-white">Christ of the Abyss Snorkeling Tour</h1>
-        </div>
-      </div>
-    );
-  }
+  // Removed simplified version to prevent layout shifts
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
