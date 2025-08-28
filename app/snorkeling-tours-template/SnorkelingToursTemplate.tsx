@@ -25,42 +25,48 @@ export default function SnorkelingToursTemplate({
   data: customData,
   loading: externalLoading = false
 }: SnorkelingToursTemplateProps) {
-  // Unified loading state
-  const [isLoading, setIsLoading] = useState(true);
-  const [templateData, setTemplateData] = useState<TourData>(tourData);
+  // Unified data state - no artificial loading since we have static data
+  const [templateData, setTemplateData] = useState<TourData>(() => {
+    // Merge custom data with default data if provided
+    if (customData) {
+      return {
+        ...tourData,
+        ...customData,
+        // Deep merge nested objects
+        details: { ...tourData.details, ...customData.details },
+        pricing: { ...tourData.pricing, ...customData.pricing },
+        experience: { ...tourData.experience, ...customData.experience },
+        included: { ...tourData.included, ...customData.included },
+        journey: { ...tourData.journey, ...customData.journey },
+        marineLife: { ...tourData.marineLife, ...customData.marineLife },
+        trustIndicators: { ...tourData.trustIndicators, ...customData.trustIndicators },
+        finalCTA: { ...tourData.finalCTA, ...customData.finalCTA }
+      };
+    }
+    return tourData;
+  });
 
-  // Simulate consistent loading pattern
+  // Update data when customData changes
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      
-      // Merge custom data with default data if provided
-      if (customData) {
-        setTemplateData({
-          ...tourData,
-          ...customData,
-          // Deep merge nested objects
-          details: { ...tourData.details, ...customData.details },
-          pricing: { ...tourData.pricing, ...customData.pricing },
-          experience: { ...tourData.experience, ...customData.experience },
-          included: { ...tourData.included, ...customData.included },
-          journey: { ...tourData.journey, ...customData.journey },
-          marineLife: { ...tourData.marineLife, ...customData.marineLife },
-          trustIndicators: { ...tourData.trustIndicators, ...customData.trustIndicators },
-          finalCTA: { ...tourData.finalCTA, ...customData.finalCTA }
-        });
-      }
-      
-      // Consistent loading time for all sections
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setIsLoading(false);
-    };
-
-    loadData();
+    if (customData) {
+      setTemplateData({
+        ...tourData,
+        ...customData,
+        // Deep merge nested objects
+        details: { ...tourData.details, ...customData.details },
+        pricing: { ...tourData.pricing, ...customData.pricing },
+        experience: { ...tourData.experience, ...customData.experience },
+        included: { ...tourData.included, ...customData.included },
+        journey: { ...tourData.journey, ...customData.journey },
+        marineLife: { ...tourData.marineLife, ...customData.marineLife },
+        trustIndicators: { ...tourData.trustIndicators, ...customData.trustIndicators },
+        finalCTA: { ...tourData.finalCTA, ...customData.finalCTA }
+      });
+    }
   }, [customData]);
 
-  // Combined loading state
-  const showLoading = isLoading || externalLoading;
+  // Only show loading if explicitly requested externally
+  const showLoading = externalLoading;
 
   // Loading component
   if (showLoading) {
