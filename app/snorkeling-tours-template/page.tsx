@@ -45,8 +45,25 @@ export default async function SnorkelingToursTemplatePage({ searchParams }: Page
   const productId = searchParams.product_id as string || searchParams.id as string || '999'; // Default for testing
 
   // Fetch dynamic product data
-  const dynamicData = await fetchProductData(productId);
+  const { tourData, isTestingCategory, productName } = await fetchProductData(productId);
+
+  // If product is not in Testing Category, show a message
+  if (!isTestingCategory && productId !== '999') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 max-w-md">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Template Not Available</h1>
+          <p className="text-gray-600 mb-4">
+            The product "{productName || 'Unknown Product'}" is not assigned to the "Testing Category" and cannot use this template.
+          </p>
+          <p className="text-sm text-gray-500">
+            Product ID: {productId}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Pass dynamic data to template, or use default if fetch failed
-  return <SnorkelingToursTemplate data={dynamicData || undefined} />;
+  return <SnorkelingToursTemplate data={tourData || undefined} />;
 }
