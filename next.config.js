@@ -10,8 +10,6 @@ const nextConfig = {
   experimental: {
     // Improved server components performance
     serverComponentsExternalPackages: ['@woocommerce/api'],
-    // Partial prerendering for better dynamic performance
-    ppr: true,
   },
 
   // 📦 Configure how dynamic pages are generated
