@@ -10,9 +10,9 @@ async function fetchProductData(productId: string): Promise<{ tourData: TourData
     // Fetch from our product data API with timeout for fast SSR
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://livewsnklsdlaucnh.netlify.app' : 'http://localhost:3000');
 
-    // Create abort controller for fast timeout
+    // Create abort controller for reasonable timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second max for SSR
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second max for SSR to allow WordPress API response
 
     const response = await fetch(`${baseUrl}/api/product-data/${productId}`, {
       cache: 'no-store', // Ensure fresh data for SSR
