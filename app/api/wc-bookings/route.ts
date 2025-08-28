@@ -110,11 +110,9 @@ function generateRealAvailability(productId: string, existingBookings: any[], st
   const availableDates: string[] = [];
   const timeSlots: BookingSlot[] = [];
   
-  // Realistic snorkeling tour times for Key Largo
+  // Actual WooCommerce booking configuration: 1:00 PM for 4 hours
   const defaultTimeSlots = [
-    { time: '09:00', capacity: 25, price: 70 }, // Morning snorkeling tour
-    { time: '12:30', capacity: 25, price: 75 }, // Lunch time snorkeling tour
-    { time: '15:00', capacity: 25, price: 75 }, // Afternoon snorkeling tour
+    { time: '13:00', capacity: 25, price: 70 }, // 1:00 PM snorkeling tour (4 hours)
   ];
   
   const current = new Date(startDate);
