@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { tourData } from "./data";
 
 const SnorkelingToursTemplate = dynamic(
-  () => import("./SnorkelingToursTemplate-minimal"),
+  () => import("./SnorkelingToursTemplate"),
   {
     ssr: false,
     loading: () => (
