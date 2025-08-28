@@ -8,7 +8,7 @@ interface PageProps {
 async function fetchProductData(productId: string): Promise<{ tourData: TourData | null; isTestingCategory: boolean; productName?: string }> {
   try {
     // Fetch from our product data API with timeout for fast SSR
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000');
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://livewsnklsdlaucnh.netlify.app' : 'http://localhost:3000');
 
     // Create abort controller for fast timeout
     const controller = new AbortController();
