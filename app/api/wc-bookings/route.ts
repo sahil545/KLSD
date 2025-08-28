@@ -252,10 +252,10 @@ function generateAvailableDates(): string[] {
   return dates;
 }
 
-function generateTimeSlots(): BookingSlot[] {
+function generateTimeSlots(basePrice: number = 70, maxCapacity: number = 25): BookingSlot[] {
   const timeSlots = [
-    { time: '08:00', capacity: 25 },
-    { time: '13:00', capacity: 25 },
+    { time: '08:00', capacity: maxCapacity },
+    { time: '13:00', capacity: maxCapacity },
   ];
 
   const dates = generateAvailableDates();
@@ -263,11 +263,15 @@ function generateTimeSlots(): BookingSlot[] {
 
   dates.forEach(date => {
     timeSlots.forEach(slot => {
+      // Calculate some realistic availability (mock for now)
+      const randomBookings = Math.floor(Math.random() * 5); // 0-4 already booked
+      const availableSpots = Math.max(1, slot.capacity - randomBookings);
+
       slots.push({
         date,
         time: slot.time,
-        available_spots: slot.capacity,
-        price: 70, // Base price - would fetch from product
+        available_spots: availableSpots,
+        price: basePrice, // Use actual product price
       });
     });
   });
