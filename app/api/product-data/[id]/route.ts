@@ -198,15 +198,15 @@ export async function GET(
         },
 
         meta_data: [
-          { key: "_klsd_test_duration", value: "99 hours" }
+          { key: "_klsd_test_duration", value: "XX NO" }
         ],
-        durationSource: 'mock_plugin'
+        durationSource: 'mock_fallback'
       };
 
       return NextResponse.json({
         success: true,
         product: mockTemplateData,
-        message: `Product data retrieved successfully (mock data - duration: 99 hours)`,
+        message: `Product data retrieved successfully (mock data - duration: XX NO)`,
         isDemoData: true,
       });
     }
