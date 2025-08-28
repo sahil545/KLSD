@@ -54,6 +54,8 @@ export default function BookingCalendar({
     if (isOpen && !availability && productId) {
       fetchAvailability();
     }
+
+    // No cleanup needed here since fetchAvailability handles its own cleanup
   }, [isOpen, productId, availability]);
 
   // Update local state when props change
@@ -71,16 +73,27 @@ export default function BookingCalendar({
     setLoading(true);
     setError(null);
 
+    let controller: AbortController | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+
     try {
       // Add timeout for frontend API call
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second max
+      controller = new AbortController();
+      timeoutId = setTimeout(() => {
+        if (controller) {
+          controller.abort();
+        }
+      }, 15000); // 15 second max
 
       const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
         signal: controller.signal
       });
 
-      clearTimeout(timeoutId);
+      // Clear timeout if request completes successfully
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -96,6 +109,7 @@ export default function BookingCalendar({
       }
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
+        // Only show error if it's not due to component unmounting
         setError('Loading taking too long. Please try again.');
       } else {
         const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
@@ -104,6 +118,10 @@ export default function BookingCalendar({
       console.error('Booking availability error:', err);
     } finally {
       setLoading(false);
+      // Clean up timeout if it still exists
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     }
   };
 
