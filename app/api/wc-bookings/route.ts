@@ -186,8 +186,9 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
     let existingBookings = [];
 
     // Try multiple WooCommerce Bookings endpoints
+    const baseUrl = baseApiUrl.replace('/wp-json/wc/v3', '');
     const bookingEndpoints = [
-      `${wooConfig.url}/wp-json/wc-bookings/v1/products/${productId}/slots`,
+      `${baseUrl}/wp-json/wc-bookings/v1/products/${productId}/slots`,
       `${baseApiUrl}/bookings?product=${productId}`,
       `${baseApiUrl}/bookings?per_page=50`,
       `${baseApiUrl}/orders?product=${productId}&per_page=50`,
