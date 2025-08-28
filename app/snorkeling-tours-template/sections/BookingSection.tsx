@@ -315,8 +315,6 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         onDateTimeSelect={handleDateTimeSelect}
         selectedDate={selectedDate}
         selectedTime={selectedTime}
-        preloadedAvailability={availability}
-        onDataLoad={(data) => setAvailability(data)}
       />
 
       {/* Guest Details Modal */}
