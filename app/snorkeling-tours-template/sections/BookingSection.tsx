@@ -272,7 +272,15 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
                    selectedDate && selectedTime ? formatSelectedDateTime() : 'Choose Date & Time'}
                 </span>
               </Button>
-              {selectedDate && selectedTime && (
+              {preloadingCalendar && (
+                <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                  <div className="flex items-center gap-2 text-sm text-blue-800">
+                    <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                    <span>Fetching real-time availability...</span>
+                  </div>
+                </div>
+              )}
+              {selectedDate && selectedTime && !preloadingCalendar && (
                 <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
                   <div className="flex items-center gap-2 text-sm text-green-800">
                     <CheckCircle className="w-4 h-4" />
