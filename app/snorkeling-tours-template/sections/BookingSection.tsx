@@ -268,7 +268,7 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
               >
                 <Calendar className="w-5 h-5 mr-3 text-blue-600" />
                 <span className="text-gray-700">
-                  {preloadingCalendar ? 'Loading calendar...' :
+                  {preloadingCalendar ? 'Loading availability data...' :
                    selectedDate && selectedTime ? formatSelectedDateTime() : 'Choose Date & Time'}
                 </span>
               </Button>
