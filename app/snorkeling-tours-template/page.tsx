@@ -1,19 +1,5 @@
-"use client";
-
-import dynamic from "next/dynamic";
 import { tourData } from "./data";
-
-const SnorkelingToursTemplate = dynamic(
-  () => import("./SnorkelingToursTemplate"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-        <h1 className="text-4xl font-bold text-white">Loading...</h1>
-      </div>
-    )
-  }
-);
+import SnorkelingToursTemplate from "./SnorkelingToursTemplate";
 
 interface PageProps {
   searchParams: { [key: string]: string | string[] | undefined };
