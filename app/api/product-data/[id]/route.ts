@@ -171,7 +171,7 @@ export async function GET(
             "Free parking"
           ],
           journey: {
-            title: "Your 99 hours Journey",
+            title: "Your XX NO Journey",
             sections: [
               {
                 time: "0:00",
