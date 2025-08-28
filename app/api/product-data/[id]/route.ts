@@ -116,12 +116,15 @@ export async function GET(
 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
-    // Fallback for development/testing
+    // Fallback for development/testing (fast fallback for any connection issue)
     const shouldUseMockData =
       errorMessage.includes("API_TIMEOUT") ||
       errorMessage.includes("Failed to fetch") ||
       errorMessage.includes("404") ||
-      errorMessage.includes("Invalid ID");
+      errorMessage.includes("Invalid ID") ||
+      errorMessage.includes("ECONNREFUSED") ||
+      errorMessage.includes("network") ||
+      errorMessage.includes("timeout");
 
     if (shouldUseMockData) {
       console.log(`Using fallback mock data for product ${id} due to: ${errorMessage}`);
