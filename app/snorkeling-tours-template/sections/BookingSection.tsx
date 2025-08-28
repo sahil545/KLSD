@@ -48,36 +48,48 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
   const [availability, setAvailability] = useState<BookingAvailability | null>(null);
   const [preloadingCalendar, setPreloadingCalendar] = useState(false);
 
+  // Use refs to track async operations
+  const controllerRef = useRef<AbortController | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
+
   // Preload calendar data when component mounts
   useEffect(() => {
-    let controller: AbortController | null = null;
-    let timeoutId: NodeJS.Timeout | null = null;
-    let isMounted = true;
-
     const preloadCalendarData = async () => {
-      if (!isMounted) return;
+      if (!isMountedRef.current) return;
 
       setPreloadingCalendar(true);
+
       try {
-        // Create abort controller for this specific request
-        controller = new AbortController();
-        timeoutId = setTimeout(() => {
-          if (controller && !controller.signal.aborted) {
-            controller.abort();
-          }
-        }, 15000); // 15 second timeout for preload
-
-        const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
-          signal: controller.signal
-        });
-
-        // Clear timeout if request completes successfully
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
+        // Clean up any existing controller/timeout
+        if (controllerRef.current) {
+          controllerRef.current.abort();
+        }
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
         }
 
-        if (response.ok && isMounted) {
+        // Create new abort controller
+        controllerRef.current = new AbortController();
+
+        // Set timeout to abort if request takes too long
+        timeoutRef.current = setTimeout(() => {
+          if (controllerRef.current && !controllerRef.current.signal.aborted) {
+            controllerRef.current.abort();
+          }
+        }, 15000);
+
+        const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
+          signal: controllerRef.current.signal
+        });
+
+        // Clear timeout on successful response
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+
+        if (response.ok && isMountedRef.current) {
           const data = await response.json();
           if (data.success) {
             setAvailability(data.data);
@@ -85,39 +97,47 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         }
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
-          // Only log if not due to component unmounting
-          if (isMounted) {
+          // Only log if component is still mounted
+          if (isMountedRef.current) {
             console.log('Calendar preload timeout or cancelled - calendar will load on demand');
           }
         } else {
           console.log('Calendar preload failed (non-critical):', error);
         }
       } finally {
-        if (isMounted) {
+        if (isMountedRef.current) {
           setPreloadingCalendar(false);
         }
-        // Clear references to prevent memory leaks
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
+
+        // Clean up refs
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
         }
-        controller = null;
+        controllerRef.current = null;
       }
     };
 
     preloadCalendarData();
 
-    // Cleanup function to prevent AbortError on unmount
+    // Cleanup function
     return () => {
-      isMounted = false;
-      if (controller && !controller.signal.aborted) {
-        controller.abort();
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      // Don't abort controller in cleanup to avoid AbortError
+      controllerRef.current = null;
     };
   }, [productId]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Calculate pricing with proper error handling
   const currentPrice = selectedPrice || data.pricing.basePrice;
