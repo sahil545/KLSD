@@ -22,7 +22,7 @@ export async function GET(
     // Extract duration from KLSD Duration Test plugin meta data
     const metaData = response.meta_data || [];
     const durationMeta = metaData.find((meta: any) => meta.key === '_klsd_test_duration');
-    const duration = durationMeta ? durationMeta.value : '99 hours'; // Default from plugin
+    const duration = durationMeta ? durationMeta.value : 'XX NO'; // Fallback when no plugin data
 
     // Check if product is in Testing Category
     const categories = response.categories || [];
