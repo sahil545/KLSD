@@ -149,7 +149,7 @@ export async function GET(
         
         tourData: {
           details: {
-            duration: "99 hours", // Default from KLSD Duration Test plugin
+            duration: "XX NO", // Fallback when no plugin data
             groupSize: "25 Max",
             location: "Key Largo", 
             gearIncluded: true,
