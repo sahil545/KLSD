@@ -51,11 +51,83 @@ export default function BookingCalendar({
 
   // Use preloaded data or fetch on first open
   useEffect(() => {
+    let controller: AbortController | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+    let isMounted = true;
+
     if (isOpen && !availability && productId) {
-      fetchAvailability();
+      const fetchData = async () => {
+        if (!isMounted) return;
+
+        setLoading(true);
+        setError(null);
+
+        try {
+          controller = new AbortController();
+          timeoutId = setTimeout(() => {
+            if (controller && !controller.signal.aborted) {
+              controller.abort();
+            }
+          }, 20000); // 20 second timeout
+
+          const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
+            signal: controller.signal
+          });
+
+          // Clear timeout if request completes successfully
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+
+          if (data.success && isMounted) {
+            setAvailability(data.data);
+            onDataLoad?.(data.data);
+          } else if (isMounted) {
+            setError(data.error || 'Failed to fetch availability');
+          }
+        } catch (err) {
+          if (isMounted) {
+            if (err instanceof Error && err.name === 'AbortError') {
+              setError('Loading taking too long. Please try again.');
+            } else {
+              const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
+              setError(errorMessage);
+            }
+            console.error('Booking availability error:', err);
+          }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+          // Clean up timeout if it still exists
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+          }
+          controller = null;
+        }
+      };
+
+      fetchData();
     }
 
-    // No cleanup needed here since fetchAvailability handles its own cleanup
+    // Cleanup function to abort requests on unmount
+    return () => {
+      isMounted = false;
+      if (controller && !controller.signal.aborted) {
+        controller.abort();
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [isOpen, productId, availability]);
 
   // Update local state when props change
@@ -77,13 +149,12 @@ export default function BookingCalendar({
     let timeoutId: NodeJS.Timeout | null = null;
 
     try {
-      // Add timeout for frontend API call
       controller = new AbortController();
       timeoutId = setTimeout(() => {
         if (controller && !controller.signal.aborted) {
           controller.abort();
         }
-      }, 20000); // 20 second max (increased)
+      }, 20000); // 20 second timeout
 
       const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
         signal: controller.signal
@@ -109,7 +180,6 @@ export default function BookingCalendar({
       }
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        // Only show error if it's not due to component unmounting
         setError('Loading taking too long. Please try again.');
       } else {
         const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
@@ -121,7 +191,9 @@ export default function BookingCalendar({
       // Clean up timeout if it still exists
       if (timeoutId) {
         clearTimeout(timeoutId);
+        timeoutId = null;
       }
+      controller = null;
     }
   };
 

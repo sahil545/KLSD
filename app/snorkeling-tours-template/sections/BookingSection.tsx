@@ -52,8 +52,11 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
   useEffect(() => {
     let controller: AbortController | null = null;
     let timeoutId: NodeJS.Timeout | null = null;
+    let isMounted = true;
 
     const preloadCalendarData = async () => {
+      if (!isMounted) return;
+
       setPreloadingCalendar(true);
       try {
         // Create abort controller for this specific request
@@ -62,7 +65,7 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
           if (controller && !controller.signal.aborted) {
             controller.abort();
           }
-        }, 15000); // 15 second timeout for preload (increased)
+        }, 15000); // 15 second timeout for preload
 
         const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
           signal: controller.signal
@@ -74,7 +77,7 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
           timeoutId = null;
         }
 
-        if (response.ok) {
+        if (response.ok && isMounted) {
           const data = await response.json();
           if (data.success) {
             setAvailability(data.data);
@@ -82,12 +85,23 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
         }
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
-          console.log('Calendar preload timeout or cancelled - calendar will load on demand');
+          // Only log if not due to component unmounting
+          if (isMounted) {
+            console.log('Calendar preload timeout or cancelled - calendar will load on demand');
+          }
         } else {
           console.log('Calendar preload failed (non-critical):', error);
         }
       } finally {
-        setPreloadingCalendar(false);
+        if (isMounted) {
+          setPreloadingCalendar(false);
+        }
+        // Clear references to prevent memory leaks
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        controller = null;
       }
     };
 
@@ -95,7 +109,8 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
 
     // Cleanup function to prevent AbortError on unmount
     return () => {
-      if (controller) {
+      isMounted = false;
+      if (controller && !controller.signal.aborted) {
         controller.abort();
       }
       if (timeoutId) {
