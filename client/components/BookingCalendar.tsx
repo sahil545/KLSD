@@ -61,10 +61,18 @@ export default function BookingCalendar({
     setError(null);
 
     try {
-      const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`);
+      // Add timeout for better user experience
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`Failed to load availability (${response.status})`);
       }
 
       const data = await response.json();
@@ -72,11 +80,14 @@ export default function BookingCalendar({
       if (data.success) {
         setAvailability(data.data);
       } else {
-        setError(data.error || 'Failed to fetch availability');
+        setError(data.error || 'No availability found');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Network error while fetching availability';
-      setError(errorMessage);
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Loading is taking too long. Please try again.');
+      } else {
+        setError('Unable to load availability. Please try again.');
+      }
       console.error('Booking availability error:', err);
     } finally {
       setLoading(false);
