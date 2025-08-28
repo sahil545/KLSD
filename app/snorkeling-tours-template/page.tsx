@@ -136,7 +136,7 @@ const createFallbackTourData = (productId: string): TourData => ({
   }
 });
 
-export default async function SnorkelingToursTemplatePage({ searchParams }: PageParams) {
+export default async function SnorkelingToursTemplatePage({ searchParams }: PageProps) {
   // Use WooCommerce product ID 34592 for this template
   const productId = '34592';
 
@@ -163,5 +163,5 @@ export default async function SnorkelingToursTemplatePage({ searchParams }: Page
 
   // Pass dynamic data to template, or use fast fallback with XX NO duration
   const finalTourData = tourData || createFallbackTourData(productId);
-  return <SnorkelingToursTemplate data={finalTourData} />;
+  return <SnorkelingToursTemplate data={finalTourData} productId={parseInt(productId)} />;
 }
