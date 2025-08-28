@@ -52,33 +52,39 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
       }
 
-      // Fetch product details with better error handling
+      // Fetch live product details from WooCommerce
       let product;
       try {
+        console.log(`Fetching product ${productId} from WooCommerce...`);
+
         const productResponse = await fetch(`${baseApiUrl}/products/${productId}`, {
+          method: 'GET',
           headers: {
             'Authorization': `Basic ${auth}`,
             'Content-Type': 'application/json',
+            'User-Agent': 'NextJS-App/1.0',
           },
         });
 
+        console.log(`WooCommerce API response status: ${productResponse.status}`);
+
         if (!productResponse.ok) {
-          const errorText = `HTTP ${productResponse.status} ${productResponse.statusText}`;
-          throw new Error(`Failed to fetch product: ${errorText}`);
+          const errorText = await productResponse.text();
+          console.error(`WooCommerce API Error: ${productResponse.status} - ${errorText}`);
+          throw new Error(`Failed to fetch product: ${productResponse.status} ${productResponse.statusText}`);
         }
 
         product = await productResponse.json();
+        console.log(`Successfully fetched product: ${product.name}`);
+
       } catch (fetchError) {
-        // Return mock data if WooCommerce is not accessible (common in development)
-        console.log('WooCommerce API not accessible, using mock data');
+        console.error('WooCommerce API fetch failed:', fetchError);
+        // Fallback to mock data only if absolutely necessary
         product = {
           id: parseInt(productId),
-          type: 'booking',
-          meta_data: [
-            { key: '_wc_booking_enabled', value: 'yes' },
-            { key: '_wc_booking_max_persons_group', value: 25 },
-            { key: '_wc_booking_duration', value: 4 }
-          ]
+          name: 'Mock Product (API Failed)',
+          type: 'simple', // Will trigger not bookable error to show issue
+          meta_data: []
         };
       }
 
@@ -90,13 +96,19 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Product is not bookable' }, { status: 400 });
       }
 
-      // Get booking availability (mock data for now - would integrate with WC Bookings API)
+      // Get live booking data from WooCommerce product
+      const maxCapacity = product.meta_data?.find((meta: any) => meta.key === '_wc_booking_max_persons_group')?.value || 25;
+      const duration = product.meta_data?.find((meta: any) => meta.key === '_wc_booking_duration')?.value || 4;
+      const basePrice = parseFloat(product.regular_price || product.price || '70');
+
+      console.log(`Product booking settings: capacity=${maxCapacity}, duration=${duration}, price=${basePrice}`);
+
       const availability: BookingAvailability = {
         product_id: parseInt(productId),
         available_dates: generateAvailableDates(),
-        time_slots: generateTimeSlots(),
-        max_capacity: product.meta_data?.find((meta: any) => meta.key === '_wc_booking_max_persons_group')?.value || 25,
-        duration: product.meta_data?.find((meta: any) => meta.key === '_wc_booking_duration')?.value || 4,
+        time_slots: generateTimeSlots(basePrice, maxCapacity),
+        max_capacity: maxCapacity,
+        duration: duration,
       };
 
       return NextResponse.json({ success: true, data: availability });
