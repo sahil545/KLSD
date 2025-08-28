@@ -31,6 +31,220 @@ interface CreateBookingRequest {
   };
 }
 
+// Helper functions for booking restrictions
+function isHoliday(date: Date): boolean {
+  // Add your specific holiday logic here
+  // For now, skip Christmas and New Year's
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  
+  return (month === 12 && day === 25) || // Christmas
+         (month === 1 && day === 1) ||   // New Year's
+         (month === 7 && day === 4);     // July 4th
+}
+
+function isWithinBookingDateRange(date: Date, restrictions: any): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Apply minimum date restriction
+  if (restrictions.minDate) {
+    const minDate = new Date(today);
+    minDate.setDate(today.getDate() + parseInt(restrictions.minDate));
+    if (date < minDate) return false;
+  }
+  
+  // Apply maximum date restriction
+  if (restrictions.maxDate) {
+    const maxDate = new Date(today);
+    maxDate.setDate(today.getDate() + parseInt(restrictions.maxDate));
+    if (date > maxDate) return false;
+  }
+  
+  return true;
+}
+
+function isRestrictedDay(date: Date, restrictions: any): boolean {
+  if (!restrictions.restrictedDays) return false;
+  
+  // WooCommerce stores restricted days as array of day numbers (0=Sunday, 1=Monday, etc.)
+  const dayOfWeek = date.getDay();
+  const restrictedDays = Array.isArray(restrictions.restrictedDays) 
+    ? restrictions.restrictedDays 
+    : String(restrictions.restrictedDays).split(',').map(d => parseInt(d.trim()));
+    
+  return restrictedDays.includes(dayOfWeek);
+}
+
+function parseWooCommerceSlots(slotsData: any[], existingBookings: any[]) {
+  const availableDates: string[] = [];
+  const timeSlots: BookingSlot[] = [];
+  
+  // Parse real WooCommerce booking slots
+  slotsData.forEach((slot: any) => {
+    const date = slot.date || slot.start?.split('T')[0];
+    const time = slot.start?.split('T')[1]?.substring(0, 5) || slot.time;
+    
+    if (date && time && slot.available > 0) {
+      if (!availableDates.includes(date)) {
+        availableDates.push(date);
+      }
+      
+      timeSlots.push({
+        date,
+        time,
+        available_spots: slot.available || slot.capacity || 25,
+        price: parseFloat(slot.price || slot.cost || '70'),
+        booking_id: slot.id
+      });
+    }
+  });
+  
+  return {
+    availableDates: availableDates.sort(),
+    timeSlots
+  };
+}
+
+function generateRealAvailability(productId: string, existingBookings: any[], startDate: Date, endDate: Date, restrictions: any = {}) {
+  const availableDates: string[] = [];
+  const timeSlots: BookingSlot[] = [];
+  
+  // Business rules for Key Largo Scuba Diving
+  const defaultTimeSlots = [
+    { time: '08:00', capacity: 25, price: 70 },
+    { time: '13:00', capacity: 25, price: 75 }, // Afternoon slightly higher
+  ];
+  
+  const current = new Date(startDate);
+  current.setDate(current.getDate() + 1); // Start tomorrow
+  
+  while (current <= endDate) {
+    const dateString = current.toISOString().split('T')[0];
+    const dayOfWeek = current.getDay();
+    
+    // Apply WooCommerce booking restrictions
+    const isBusinessDay = dayOfWeek !== 0; // No Sundays (customize based on restrictions.restrictedDays)
+    const isNotHoliday = !isHoliday(current);
+    const isWithinDateRange = isWithinBookingDateRange(current, restrictions);
+    const isNotRestrictedDay = !isRestrictedDay(current, restrictions);
+    
+    if (isBusinessDay && isNotHoliday && isWithinDateRange && isNotRestrictedDay) {
+      availableDates.push(dateString);
+      
+      // Check each time slot
+      defaultTimeSlots.forEach(slot => {
+        const bookedCount = existingBookings.filter((booking: any) => {
+          const bookingDate = booking.start?.split('T')[0] || booking.date;
+          const bookingTime = booking.start?.split('T')[1]?.substring(0, 5) || booking.time;
+          return bookingDate === dateString && bookingTime === slot.time && booking.status === 'confirmed';
+        }).reduce((sum: number, booking: any) => sum + (booking.persons || 1), 0);
+        
+        const availableSpots = Math.max(0, slot.capacity - bookedCount);
+        
+        if (availableSpots > 0) {
+          timeSlots.push({
+            date: dateString,
+            time: slot.time,
+            available_spots: availableSpots,
+            price: slot.price
+          });
+        }
+      });
+    }
+    
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return {
+    availableDates,
+    timeSlots
+  };
+}
+
+// Real WooCommerce booking availability functions
+async function fetchRealBookingAvailability(productId: string, baseApiUrl: string, auth: string, restrictions: any = {}) {
+  const today = new Date();
+  const endDate = new Date();
+  endDate.setDate(today.getDate() + 60); // Check next 60 days
+  
+  try {
+    // Try multiple WooCommerce Bookings API endpoints
+    console.log('Trying WooCommerce Bookings APIs...');
+    
+    // Method 1: Try WC Bookings API
+    let existingBookings = [];
+    const bookingEndpoints = [
+      `${baseApiUrl}/bookings?product_id=${productId}&status=confirmed&per_page=100`,
+      `${baseApiUrl}/bookings?product=${productId}&per_page=100`,
+      `${baseApiUrl}/orders?meta_key=_booking_product_id&meta_value=${productId}&per_page=100`
+    ];
+    
+    for (const endpoint of bookingEndpoints) {
+      try {
+        console.log(`Trying booking endpoint: ${endpoint}`);
+        const bookingsResponse = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (bookingsResponse.ok) {
+          existingBookings = await bookingsResponse.json();
+          console.log(`✅ Found ${existingBookings.length} existing bookings for product ${productId}`);
+          break;
+        } else {
+          console.log(`❌ Endpoint failed: ${bookingsResponse.status}`);
+        }
+      } catch (err) {
+        console.log(`❌ Endpoint error: ${err}`);
+      }
+    }
+
+    // Method 2: Try WooCommerce Bookings slots API
+    const slotEndpoints = [
+      `${baseApiUrl}/bookings/products/${productId}/slots?min_date=${today.toISOString().split('T')[0]}&max_date=${endDate.toISOString().split('T')[0]}`,
+      `${baseApiUrl}/wc-bookings/v1/products/${productId}/slots`,
+      `${baseApiUrl}/bookings/${productId}/availability`
+    ];
+    
+    for (const endpoint of slotEndpoints) {
+      try {
+        console.log(`Trying slots endpoint: ${endpoint}`);
+        const availabilityResponse = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (availabilityResponse.ok) {
+          const slotsData = await availabilityResponse.json();
+          console.log(`✅ Real booking slots fetched: ${Array.isArray(slotsData) ? slotsData.length : 'Object data'}`);
+          return parseWooCommerceSlots(slotsData, existingBookings);
+        } else {
+          console.log(`❌ Slots endpoint failed: ${availabilityResponse.status}`);
+        }
+      } catch (err) {
+        console.log(`❌ Slots endpoint error: ${err}`);
+      }
+    }
+
+    console.log('🔄 All booking APIs unavailable, using business logic with existing bookings...');
+    
+    // Fallback: Generate availability based on business rules, existing bookings, and WooCommerce restrictions
+    return generateRealAvailability(productId, existingBookings, today, endDate, restrictions);
+    
+  } catch (error) {
+    console.error('Error fetching real booking availability:', error);
+    // Final fallback with better business logic and restrictions
+    return generateRealAvailability(productId, [], today, endDate, restrictions);
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
@@ -116,7 +330,7 @@ export async function GET(request: NextRequest) {
       console.log(`Fetching real booking availability for product ${productId}...`);
       const realAvailability = await fetchRealBookingAvailability(productId, baseApiUrl, auth, bookingRestrictions);
       console.log(`✅ Real availability fetched: ${realAvailability.availableDates.length} dates, ${realAvailability.timeSlots.length} time slots`);
-
+      
       const availability: BookingAvailability = {
         product_id: parseInt(productId),
         available_dates: realAvailability.availableDates,
@@ -246,229 +460,4 @@ export async function OPTIONS() {
       'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
-}
-
-// Helper functions for booking restrictions
-function isWithinBookingDateRange(date: Date, restrictions: any): boolean {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Apply minimum date restriction
-  if (restrictions.minDate) {
-    const minDate = new Date(today);
-    minDate.setDate(today.getDate() + parseInt(restrictions.minDate));
-    if (date < minDate) return false;
-  }
-
-  // Apply maximum date restriction
-  if (restrictions.maxDate) {
-    const maxDate = new Date(today);
-    maxDate.setDate(today.getDate() + parseInt(restrictions.maxDate));
-    if (date > maxDate) return false;
-  }
-
-  return true;
-}
-
-function isRestrictedDay(date: Date, restrictions: any): boolean {
-  if (!restrictions.restrictedDays) return false;
-
-  // WooCommerce stores restricted days as array of day numbers (0=Sunday, 1=Monday, etc.)
-  const dayOfWeek = date.getDay();
-  const restrictedDays = Array.isArray(restrictions.restrictedDays)
-    ? restrictions.restrictedDays
-    : String(restrictions.restrictedDays).split(',').map(d => parseInt(d.trim()));
-
-  return restrictedDays.includes(dayOfWeek);
-}
-
-function isHoliday(date: Date): boolean {
-  // Add your specific holiday logic here
-  // For now, skip Christmas and New Year's
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-
-  return (month === 12 && day === 25) || // Christmas
-         (month === 1 && day === 1) ||   // New Year's
-         (month === 7 && day === 4);     // July 4th
-}
-
-// Real WooCommerce booking availability functions
-async function fetchRealBookingAvailability(productId: string, baseApiUrl: string, auth: string, restrictions: any = {}) {
-  const today = new Date();
-  const endDate = new Date();
-  endDate.setDate(today.getDate() + 60); // Check next 60 days
-
-  try {
-    // Try multiple WooCommerce Bookings API endpoints
-    console.log('Trying WooCommerce Bookings APIs...');
-
-    // Method 1: Try WC Bookings API
-    let existingBookings = [];
-    const bookingEndpoints = [
-      `${baseApiUrl}/bookings?product_id=${productId}&status=confirmed&per_page=100`,
-      `${baseApiUrl}/bookings?product=${productId}&per_page=100`,
-      `${baseApiUrl}/orders?meta_key=_booking_product_id&meta_value=${productId}&per_page=100`
-    ];
-
-    for (const endpoint of bookingEndpoints) {
-      try {
-        console.log(`Trying booking endpoint: ${endpoint}`);
-        const bookingsResponse = await fetch(endpoint, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (bookingsResponse.ok) {
-          existingBookings = await bookingsResponse.json();
-          console.log(`✅ Found ${existingBookings.length} existing bookings for product ${productId}`);
-          break;
-        } else {
-          console.log(`❌ Endpoint failed: ${bookingsResponse.status}`);
-        }
-      } catch (err) {
-        console.log(`❌ Endpoint error: ${err}`);
-      }
-    }
-
-    // Method 2: Try WooCommerce Bookings slots API
-    const slotEndpoints = [
-      `${baseApiUrl}/bookings/products/${productId}/slots?min_date=${today.toISOString().split('T')[0]}&max_date=${endDate.toISOString().split('T')[0]}`,
-      `${baseApiUrl}/wc-bookings/v1/products/${productId}/slots`,
-      `${baseApiUrl}/bookings/${productId}/availability`
-    ];
-
-    for (const endpoint of slotEndpoints) {
-      try {
-        console.log(`Trying slots endpoint: ${endpoint}`);
-        const availabilityResponse = await fetch(endpoint, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (availabilityResponse.ok) {
-          const slotsData = await availabilityResponse.json();
-          console.log(`✅ Real booking slots fetched: ${Array.isArray(slotsData) ? slotsData.length : 'Object data'}`);
-          return parseWooCommerceSlots(slotsData, existingBookings);
-        } else {
-          console.log(`❌ Slots endpoint failed: ${availabilityResponse.status}`);
-        }
-      } catch (err) {
-        console.log(`❌ Slots endpoint error: ${err}`);
-      }
-    }
-
-    console.log('🔄 All booking APIs unavailable, using business logic with existing bookings...');
-
-    // Fallback: Generate availability based on business rules, existing bookings, and WooCommerce restrictions
-    return generateRealAvailability(productId, existingBookings, today, endDate, restrictions);
-
-  } catch (error) {
-    console.error('Error fetching real booking availability:', error);
-    // Final fallback with better business logic and restrictions
-    return generateRealAvailability(productId, [], today, endDate, restrictions);
-  }
-}
-
-function parseWooCommerceSlots(slotsData: any[], existingBookings: any[]) {
-  const availableDates: string[] = [];
-  const timeSlots: BookingSlot[] = [];
-
-  // Parse real WooCommerce booking slots
-  slotsData.forEach((slot: any) => {
-    const date = slot.date || slot.start?.split('T')[0];
-    const time = slot.start?.split('T')[1]?.substring(0, 5) || slot.time;
-
-    if (date && time && slot.available > 0) {
-      if (!availableDates.includes(date)) {
-        availableDates.push(date);
-      }
-
-      timeSlots.push({
-        date,
-        time,
-        available_spots: slot.available || slot.capacity || 25,
-        price: parseFloat(slot.price || slot.cost || '70'),
-        booking_id: slot.id
-      });
-    }
-  });
-
-  return {
-    availableDates: availableDates.sort(),
-    timeSlots
-  };
-}
-
-function generateRealAvailability(productId: string, existingBookings: any[], startDate: Date, endDate: Date, restrictions: any = {}) {
-  const availableDates: string[] = [];
-  const timeSlots: BookingSlot[] = [];
-
-  // Business rules for Key Largo Scuba Diving
-  const defaultTimeSlots = [
-    { time: '08:00', capacity: 25, price: 70 },
-    { time: '13:00', capacity: 25, price: 75 }, // Afternoon slightly higher
-  ];
-
-  const current = new Date(startDate);
-  current.setDate(current.getDate() + 1); // Start tomorrow
-
-  while (current <= endDate) {
-    const dateString = current.toISOString().split('T')[0];
-    const dayOfWeek = current.getDay();
-
-    // Apply WooCommerce booking restrictions
-    const isBusinessDay = dayOfWeek !== 0; // No Sundays (customize based on restrictions.restrictedDays)
-    const isNotHoliday = !isHoliday(current);
-    const isWithinDateRange = isWithinBookingDateRange(current, restrictions);
-    const isNotRestrictedDay = !isRestrictedDay(current, restrictions);
-
-    if (isBusinessDay && isNotHoliday && isWithinDateRange && isNotRestrictedDay) {
-      availableDates.push(dateString);
-
-      // Check each time slot
-      defaultTimeSlots.forEach(slot => {
-        const bookedCount = existingBookings.filter((booking: any) => {
-          const bookingDate = booking.start?.split('T')[0] || booking.date;
-          const bookingTime = booking.start?.split('T')[1]?.substring(0, 5) || booking.time;
-          return bookingDate === dateString && bookingTime === slot.time && booking.status === 'confirmed';
-        }).reduce((sum: number, booking: any) => sum + (booking.persons || 1), 0);
-
-        const availableSpots = Math.max(0, slot.capacity - bookedCount);
-
-        if (availableSpots > 0) {
-          timeSlots.push({
-            date: dateString,
-            time: slot.time,
-            available_spots: availableSpots,
-            price: slot.price
-          });
-        }
-      });
-    }
-
-    current.setDate(current.getDate() + 1);
-  }
-
-  return {
-    availableDates,
-    timeSlots
-  };
-}
-
-function isHoliday(date: Date): boolean {
-  // Add your specific holiday logic here
-  // For now, skip Christmas and New Year's
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-
-  return (month === 12 && day === 25) || // Christmas
-         (month === 1 && day === 1) ||   // New Year's
-         (month === 7 && day === 4);     // July 4th
 }
