@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import GuestDetailsModal from "@/components/GuestDetailsModal";
-import BookingCalendar from "@/client/components/BookingCalendar";
+import BookingCalendar from "@/components/BookingCalendar";
 import { type TourData } from "../data";
 import {
   Calendar,
