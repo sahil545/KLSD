@@ -169,49 +169,41 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
   endDate.setDate(today.getDate() + 60); // Check next 60 days
   
   try {
-    // Try multiple WooCommerce Bookings API endpoints
-    console.log('Trying WooCommerce Bookings APIs...');
-    
-    // Method 1: Try WC Bookings API
+    // Try the most successful WooCommerce endpoint based on logs
+    console.log('Fetching existing bookings...');
+
     let existingBookings = [];
-    const bookingEndpoints = [
-      `${baseApiUrl}/bookings?product_id=${productId}&status=confirmed&per_page=50`,
-      `${baseApiUrl}/bookings?product=${productId}&per_page=50`,
-      `${baseApiUrl}/orders?meta_key=_booking_product_id&meta_value=${productId}&per_page=50`
-    ];
-    
-    for (const endpoint of bookingEndpoints) {
-      try {
-        console.log(`Trying booking endpoint: ${endpoint}`);
+    try {
+      // Use the endpoint that was working in the logs
+      const endpoint = `${baseApiUrl}/orders?meta_key=_booking_product_id&meta_value=${productId}&per_page=50`;
+      console.log(`Trying primary booking endpoint: ${endpoint}`);
 
-        // Add timeout for faster fallback
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+      // Add timeout for faster fallback
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
 
-        const bookingsResponse = await fetch(endpoint, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/json',
-          },
-          signal: controller.signal
-        });
+      const bookingsResponse = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal
+      });
 
-        clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
 
-        if (bookingsResponse.ok) {
-          existingBookings = await bookingsResponse.json();
-          console.log(`✅ Found ${existingBookings.length} existing bookings for product ${productId}`);
-          break;
-        } else {
-          console.log(`❌ Endpoint failed: ${bookingsResponse.status}`);
-        }
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          console.log(`⏱️ Endpoint timeout: ${endpoint}`);
-        } else {
-          console.log(`❌ Endpoint error: ${err}`);
-        }
+      if (bookingsResponse.ok) {
+        existingBookings = await bookingsResponse.json();
+        console.log(`✅ Found ${existingBookings.length} existing bookings for product ${productId}`);
+      } else {
+        console.log(`❌ Booking endpoint failed: ${bookingsResponse.status}`);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log(`⏱️ Booking endpoint timeout`);
+      } else {
+        console.log(`❌ Booking endpoint error: ${err}`);
       }
     }
 
