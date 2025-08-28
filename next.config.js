@@ -12,6 +12,20 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@woocommerce/api'],
   },
 
+  // Fix webpack module resolution issues
+  webpack: (config, { dev, isServer }) => {
+    // Improve module resolution
+    config.resolve.symlinks = false;
+
+    // Fix webpack runtime issues
+    if (dev && !isServer) {
+      config.optimization.moduleIds = 'named';
+      config.optimization.chunkIds = 'named';
+    }
+
+    return config;
+  },
+
 
   // Image optimization settings
   images: {

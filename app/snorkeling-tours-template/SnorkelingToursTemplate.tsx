@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import Navigation from "../../client/components/Navigation";
 import TourPageNavigation from "../../client/components/TourPageNavigation";
 import Footer from "../../client/components/Footer";
@@ -20,6 +21,25 @@ interface SnorkelingToursTemplateProps {
   data?: Partial<TourData>;
   loading?: boolean;
   productId?: number;
+}
+
+function ErrorFallback({error}: {error: Error}) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center p-8 max-w-md">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h1>
+        <p className="text-gray-600 mb-4">
+          There was an error loading the page. Please refresh to try again.
+        </p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Refresh Page
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function SnorkelingToursTemplate({
@@ -47,6 +67,13 @@ export default function SnorkelingToursTemplate({
     }
     return tourData;
   });
+
+  // Add hydration check to prevent SSR mismatch
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Update data when customData changes
   useEffect(() => {
@@ -104,21 +131,34 @@ export default function SnorkelingToursTemplate({
     );
   }
 
+  // Show simplified version during hydration to prevent mismatches
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 h-96 flex items-center justify-center">
+          <h1 className="text-4xl font-bold text-white">Christ of the Abyss Snorkeling Tour</h1>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen">
-      <Navigation />
-      <TourPageNavigation />
-      <main>
-        {/* All sections use the same data and loading pattern */}
-        <HeroSection data={templateData} />
-        <BookingSection data={templateData} productId={productId} />
-        <ExperienceSection data={templateData} />
-        <JourneySection data={templateData} />
-        <MarineLifeSection data={templateData} />
-        <TrustSection data={templateData} />
-        <FinalCTASection data={templateData} />
-      </main>
-      <Footer />
-    </div>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <div className="min-h-screen">
+        <Navigation />
+        <TourPageNavigation />
+        <main>
+          {/* All sections use the same data and loading pattern */}
+          <HeroSection data={templateData} />
+          <BookingSection data={templateData} productId={productId} />
+          <ExperienceSection data={templateData} />
+          <JourneySection data={templateData} />
+          <MarineLifeSection data={templateData} />
+          <TrustSection data={templateData} />
+          <FinalCTASection data={templateData} />
+        </main>
+        <Footer />
+      </div>
+    </ErrorBoundary>
   );
 }
