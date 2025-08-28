@@ -8,9 +8,9 @@ export async function GET(
   const { id } = params;
 
   try {
-    // Add timeout protection to prevent hanging
+    // Add timeout protection to prevent hanging (fast timeout for better performance)
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("API_TIMEOUT")), 5000); // 5 second timeout
+      setTimeout(() => reject(new Error("API_TIMEOUT")), 1000); // 1 second timeout for fast response
     });
 
     // Fetch product data from WooCommerce
