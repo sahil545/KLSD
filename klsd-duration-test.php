@@ -22,21 +22,104 @@ if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get
 }
 
 /**
- * Add Duration field to WooCommerce product admin page
- * Using WooCommerce-specific hook for better integration
+ * Add Duration field as standalone meta box on product admin page
  */
 function klsd_add_duration_field() {
-    echo '<div class="options_group">';
-    woocommerce_wp_text_input(array(
-        'id' => '_klsd_test_duration',
-        'label' => 'Duration',
-        'placeholder' => '99 hours',
-        'desc_tip' => true,
-        'description' => 'Testing duration field for this product'
-    ));
-    echo '</div>';
+    add_meta_box(
+        'klsd_duration_test',
+        'Product Duration Test',
+        'klsd_duration_field_callback',
+        'product',
+        'normal',
+        'high'
+    );
 }
-add_action('woocommerce_product_options_general_product_data', 'klsd_add_duration_field');
+add_action('add_meta_boxes', 'klsd_add_duration_field');
+
+/**
+ * Display the Duration field in standalone meta box
+ */
+function klsd_duration_field_callback($post) {
+    // Add nonce for security
+    wp_nonce_field('klsd_duration_save', 'klsd_duration_nonce');
+
+    // Get current value or use default
+    $duration = get_post_meta($post->ID, '_klsd_test_duration', true);
+    if (empty($duration)) {
+        $duration = '99 hours';
+    }
+
+    ?>
+    <style>
+    .klsd-duration-container {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 20px;
+        margin: 10px 0;
+    }
+    .klsd-field-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    .klsd-field-row label {
+        font-weight: 600;
+        min-width: 100px;
+        color: #333;
+    }
+    .klsd-field-row input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid #ccd0d4;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .klsd-field-row input:focus {
+        border-color: #007cba;
+        box-shadow: 0 0 0 1px #007cba;
+        outline: none;
+    }
+    .klsd-description {
+        color: #666;
+        font-style: italic;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+    .klsd-test-badge {
+        background: #00a32a;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        float: right;
+    }
+    </style>
+
+    <div class="klsd-duration-container">
+        <div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ddd;">
+            <strong>Custom Duration Field</strong>
+            <span class="klsd-test-badge">Test Mode</span>
+        </div>
+
+        <div class="klsd-field-row">
+            <label for="klsd_test_duration">Duration:</label>
+            <input type="text"
+                   id="klsd_test_duration"
+                   name="klsd_test_duration"
+                   value="<?php echo esc_attr($duration); ?>"
+                   placeholder="99 hours" />
+        </div>
+
+        <div class="klsd-description">
+            ✨ This is a test field for the Duration functionality. Default value: "99 hours"
+        </div>
+    </div>
+    <?php
+}
 
 /**
  * Save the Duration field using WooCommerce methods
