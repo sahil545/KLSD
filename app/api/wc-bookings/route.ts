@@ -207,49 +207,8 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
       }
     }
 
-    // Method 2: Try WooCommerce Bookings slots API
-    const slotEndpoints = [
-      `${baseApiUrl}/bookings/products/${productId}/slots?min_date=${today.toISOString().split('T')[0]}&max_date=${endDate.toISOString().split('T')[0]}`,
-      `${baseApiUrl}/wc-bookings/v1/products/${productId}/slots`,
-      `${baseApiUrl}/bookings/${productId}/availability`
-    ];
-    
-    for (const endpoint of slotEndpoints) {
-      try {
-        console.log(`Trying slots endpoint: ${endpoint}`);
-
-        // Add timeout for faster fallback
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1500); // 1.5 second timeout
-
-        const availabilityResponse = await fetch(endpoint, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/json',
-          },
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (availabilityResponse.ok) {
-          const slotsData = await availabilityResponse.json();
-          console.log(`✅ Real booking slots fetched: ${Array.isArray(slotsData) ? slotsData.length : 'Object data'}`);
-          return parseWooCommerceSlots(slotsData, existingBookings);
-        } else {
-          console.log(`❌ Slots endpoint failed: ${availabilityResponse.status}`);
-        }
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          console.log(`⏱️ Slots endpoint timeout: ${endpoint}`);
-        } else {
-          console.log(`❌ Slots endpoint error: ${err}`);
-        }
-      }
-    }
-
-    console.log('🔄 All booking APIs unavailable, using business logic with existing bookings...');
+    // Skip slots API since logs show they're all failing with 404
+    console.log('🔄 Using business logic with existing bookings (slots API not available)...');
     
     // Fallback: Generate availability based on business rules, existing bookings, and WooCommerce restrictions
     return generateRealAvailability(productId, existingBookings, today, endDate, restrictions);
