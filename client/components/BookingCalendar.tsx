@@ -175,7 +175,7 @@ export default function BookingCalendar({
         if (controllerRef.current && !controllerRef.current.signal.aborted) {
           controllerRef.current.abort();
         }
-      }, 20000);
+      }, 25000);
 
       const response = await fetch(`/api/wc-bookings?action=get_availability&product_id=${productId}`, {
         signal: controllerRef.current.signal
