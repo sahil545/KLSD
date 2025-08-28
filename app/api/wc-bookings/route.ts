@@ -178,9 +178,9 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
       const endpoint = `${baseApiUrl}/orders?meta_key=_booking_product_id&meta_value=${productId}&per_page=50`;
       console.log(`Trying primary booking endpoint: ${endpoint}`);
 
-      // Add timeout for faster fallback
+      // Add timeout for booking endpoint (needs more time than slots)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 second timeout
 
       const bookingsResponse = await fetch(endpoint, {
         method: 'GET',
