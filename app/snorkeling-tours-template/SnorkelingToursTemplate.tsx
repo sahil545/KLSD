@@ -68,12 +68,7 @@ export default function SnorkelingToursTemplate({
     return tourData;
   });
 
-  // Add hydration check to prevent SSR mismatch
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+  // Removed hydration check to prevent scroll glitches
 
   // Update data when customData changes
   useEffect(() => {
