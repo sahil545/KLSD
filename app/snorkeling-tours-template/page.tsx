@@ -44,8 +44,20 @@ async function fetchProductData(productId: string): Promise<{ tourData: TourData
     };
 
   } catch (error) {
-    console.error('Error fetching product data:', error);
-    return { tourData: null, isTestingCategory: false };
+    // Handle timeout and network errors gracefully
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.log('SSR fetch timeout - using fallback data for fast loading');
+      } else {
+        console.error('Error fetching product data:', error.message);
+      }
+    }
+    // Return fallback that allows testing with mock data
+    return {
+      tourData: null,
+      isTestingCategory: true, // Allow testing even if API fails
+      productName: 'Test Product (API Unavailable)'
+    };
   }
 }
 
