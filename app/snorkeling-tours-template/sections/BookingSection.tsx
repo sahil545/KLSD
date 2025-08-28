@@ -171,24 +171,14 @@ export default function BookingSection({ data, productId = 34592 }: BookingSecti
                 <Button
                 variant="outline"
                 onClick={() => setShowCalendar(true)}
-                disabled={preloadingCalendar}
                 className="w-full justify-start border-2 border-gray-200 hover:border-blue-300 h-12"
               >
                 <Calendar className="w-5 h-5 mr-3 text-blue-600" />
                 <span className="text-gray-700">
-                  {preloadingCalendar ? 'Loading availability data...' :
-                   selectedDate && selectedTime ? formatSelectedDateTime() : 'Choose Date & Time'}
+                  {selectedDate && selectedTime ? formatSelectedDateTime() : 'Choose Date & Time'}
                 </span>
               </Button>
-              {preloadingCalendar && (
-                <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                  <div className="flex items-center gap-2 text-sm text-blue-800">
-                    <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                    <span>Fetching real-time availability...</span>
-                  </div>
-                </div>
-              )}
-              {selectedDate && selectedTime && !preloadingCalendar && (
+              {selectedDate && selectedTime && (
                 <div className="mt-2 p-2 bg-green-50 rounded border border-green-200">
                   <div className="flex items-center gap-2 text-sm text-green-800">
                     <CheckCircle className="w-4 h-4" />
