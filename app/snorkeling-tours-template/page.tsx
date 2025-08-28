@@ -7,8 +7,9 @@ interface PageProps {
 
 async function fetchProductData(productId: string): Promise<{ tourData: TourData | null; isTestingCategory: boolean; productName?: string }> {
   try {
-    // Fetch from our product data API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/product-data/${productId}`, {
+    // Fetch from our product data API (use absolute URL for server-side fetching)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000');
+    const response = await fetch(`${baseUrl}/api/product-data/${productId}`, {
       cache: 'no-store' // Ensure fresh data for SSR
     });
 
