@@ -137,6 +137,7 @@ function klsd_duration_field_callback($post) {
 
 /**
  * Save the Duration field from standalone meta box
+ * Only for products in "Testing Category"
  */
 function klsd_save_duration_field($post_id) {
     // Check nonce for security
@@ -156,6 +157,12 @@ function klsd_save_duration_field($post_id) {
 
     // Only save for products
     if (get_post_type($post_id) !== 'product') {
+        return;
+    }
+
+    // Only save for products in "Testing Category"
+    $product_cats = wp_get_post_terms($post_id, 'product_cat', array('fields' => 'names'));
+    if (!in_array('Testing Category', $product_cats)) {
         return;
     }
 
