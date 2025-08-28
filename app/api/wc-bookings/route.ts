@@ -175,22 +175,30 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
     // Method 1: Try WC Bookings API
     let existingBookings = [];
     const bookingEndpoints = [
-      `${baseApiUrl}/bookings?product_id=${productId}&status=confirmed&per_page=100`,
-      `${baseApiUrl}/bookings?product=${productId}&per_page=100`,
-      `${baseApiUrl}/orders?meta_key=_booking_product_id&meta_value=${productId}&per_page=100`
+      `${baseApiUrl}/bookings?product_id=${productId}&status=confirmed&per_page=50`,
+      `${baseApiUrl}/bookings?product=${productId}&per_page=50`,
+      `${baseApiUrl}/orders?meta_key=_booking_product_id&meta_value=${productId}&per_page=50`
     ];
     
     for (const endpoint of bookingEndpoints) {
       try {
         console.log(`Trying booking endpoint: ${endpoint}`);
+
+        // Add timeout for faster fallback
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
         const bookingsResponse = await fetch(endpoint, {
           method: 'GET',
           headers: {
             'Authorization': `Basic ${auth}`,
             'Content-Type': 'application/json',
           },
+          signal: controller.signal
         });
-        
+
+        clearTimeout(timeoutId);
+
         if (bookingsResponse.ok) {
           existingBookings = await bookingsResponse.json();
           console.log(`✅ Found ${existingBookings.length} existing bookings for product ${productId}`);
@@ -199,7 +207,11 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
           console.log(`❌ Endpoint failed: ${bookingsResponse.status}`);
         }
       } catch (err) {
-        console.log(`❌ Endpoint error: ${err}`);
+        if (err instanceof Error && err.name === 'AbortError') {
+          console.log(`⏱️ Endpoint timeout: ${endpoint}`);
+        } else {
+          console.log(`❌ Endpoint error: ${err}`);
+        }
       }
     }
 
@@ -213,13 +225,21 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
     for (const endpoint of slotEndpoints) {
       try {
         console.log(`Trying slots endpoint: ${endpoint}`);
+
+        // Add timeout for faster fallback
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+
         const availabilityResponse = await fetch(endpoint, {
           method: 'GET',
           headers: {
             'Authorization': `Basic ${auth}`,
             'Content-Type': 'application/json',
           },
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (availabilityResponse.ok) {
           const slotsData = await availabilityResponse.json();
@@ -229,7 +249,11 @@ async function fetchRealBookingAvailability(productId: string, baseApiUrl: strin
           console.log(`❌ Slots endpoint failed: ${availabilityResponse.status}`);
         }
       } catch (err) {
-        console.log(`❌ Slots endpoint error: ${err}`);
+        if (err instanceof Error && err.name === 'AbortError') {
+          console.log(`⏱️ Slots endpoint timeout: ${endpoint}`);
+        } else {
+          console.log(`❌ Slots endpoint error: ${err}`);
+        }
       }
     }
 
