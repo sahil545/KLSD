@@ -57,8 +57,18 @@ add_action('woocommerce_process_product_meta', 'klsd_save_duration_field');
 
 /**
  * Helper function to get duration value (for future frontend use)
+ * Can accept product ID or WooCommerce product object
  */
-function klsd_get_product_duration($product_id) {
+function klsd_get_product_duration($product) {
+    // Handle both product ID and product object
+    if (is_numeric($product)) {
+        $product_id = $product;
+    } elseif (is_object($product) && method_exists($product, 'get_id')) {
+        $product_id = $product->get_id();
+    } else {
+        return '99 hours'; // fallback
+    }
+
     $duration = get_post_meta($product_id, '_klsd_test_duration', true);
     return !empty($duration) ? $duration : '99 hours';
 }
