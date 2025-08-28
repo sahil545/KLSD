@@ -182,7 +182,7 @@ function klsd_duration_admin_notice() {
     $screen = get_current_screen();
     if ($screen && $screen->post_type === 'product' && $screen->base === 'post') {
         echo '<div class="notice notice-info is-dismissible">';
-        echo '<p><strong>Duration Test Plugin Active:</strong> Look for the "Duration" field in the General tab of Product Data.</p>';
+        echo '<p><strong>Duration Test Plugin Active:</strong> Look for the standalone "Product Duration Test" box below the main product editor.</p>';
         echo '</div>';
     }
 }
