@@ -170,14 +170,15 @@ class WooCommerceAPI implements WooCommerceAPIInterface {
       });
 
       if (!response.ok) {
-        // Use clone to safely read error details
+        // Clone the response before reading to avoid "body stream already read" error
         const responseClone = response.clone();
         let errorText: string;
 
         try {
-          errorText = await responseClone.text();
+          errorText = await response.text();
         } catch {
-          errorText = `HTTP ${response.status} ${response.statusText}`;
+          // If we can't read as text, try the clone
+          errorText = await responseClone.text();
         }
 
         throw new Error(

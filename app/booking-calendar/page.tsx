@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Navigation } from "../../client/components/Navigation";
 import { Footer } from "../../client/components/Footer";
 import BookingCalendar from "../../client/components/BookingCalendar";
@@ -9,14 +9,6 @@ import { DevStatus } from "../../client/components/DevStatus";
 import { Badge } from "../../client/components/ui/badge";
 
 export default function BookingCalendarPage() {
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedTime, setSelectedTime] = useState<string>("");
-
-  const handleDateTimeSelect = (date: string, time: string, price: number) => {
-    setSelectedDate(date);
-    setSelectedTime(time);
-    console.log(`Selected: ${date} at ${time} for $${price}`);
-  };
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -44,25 +36,8 @@ export default function BookingCalendarPage() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <BookingCalendarErrorBoundary>
-            <BookingCalendar
-              isOpen={true}
-              onClose={() => console.log('Calendar closed')}
-              productId={34592}
-              onDateTimeSelect={handleDateTimeSelect}
-              selectedDate={selectedDate}
-              selectedTime={selectedTime}
-            />
+            <BookingCalendar />
           </BookingCalendarErrorBoundary>
-
-          {selectedDate && selectedTime && (
-            <div className="mt-8 text-center">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 inline-block">
-                <p className="text-green-800 font-medium">
-                  Selected: {selectedDate} at {selectedTime}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "../client/global.css";
+import "./globals.css";
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ClientErrorHandler from "./components/ClientErrorHandler";

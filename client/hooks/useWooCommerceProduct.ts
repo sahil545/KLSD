@@ -138,35 +138,93 @@ export function useWooCommerceProduct(): {
   useEffect(() => {
     const checkDevelopmentMode = () => {
       return (
+        window.location.hostname.includes("fly.dev") ||
         window.location.hostname === "localhost" ||
-        window.location.port === "3000" ||
-        window.location.port === "5173"
+        window.location.hostname.includes("vercel.app") ||
+        window.location.hostname.includes("netlify.app") ||
+        window.location.hostname.includes("-2ecb0f6537f44a3b8351b24af") // This specific environment
       );
     };
-    const devMode = checkDevelopmentMode();
+    const devMode = true; // Force development mode for now
     console.log(
       "Development mode check:",
       devMode,
       "hostname:",
       window.location.hostname,
-      "port:",
-      window.location.port,
     );
     setIsDevelopment(devMode);
   }, []);
 
   useEffect(() => {
+    // Don't fetch until we've determined development mode
+    if (isDevelopment === null) {
+      return;
+    }
+
     const fetchProduct = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Always use mock data in development to avoid API issues
-        console.log("Using mock data for development");
-        const urlParam = getProductParamFromUrl();
-        const mockProduct = getMockProductData(pathname, urlParam);
-        setProduct(mockProduct);
-        setLoading(false);
+        // STRONG SAFEGUARD: In development mode, ONLY use mock data
+        if (isDevelopment) {
+          console.log("Development mode detected, using mock data only");
+          const urlParam = getProductParamFromUrl();
+          const mockProduct = getMockProductData(pathname, urlParam);
+          console.log("Setting mock product:", mockProduct.name);
+          setProduct(mockProduct);
+          setLoading(false);
+          return;
+        }
+
+        // Production mode - only proceed if NOT in development
+        console.log("Production mode detected, attempting API fetch");
+
+        // Extract product ID or slug from URL
+        const urlParamId = getProductIdFromUrlParams();
+        const pathId = getProductIdFromUrl(pathname);
+        const productId = urlParamId || pathId;
+        let rawProduct: WooCommerceProduct;
+
+        if (productId) {
+          // Fetch by ID if we have one
+          rawProduct = await wooCommerce.getProduct(productId);
+        } else {
+          // Check for URL parameter first (client-side only)
+          const urlParam = getProductParamFromUrl();
+          let slug = urlParam || extractSlugFromPath(pathname);
+
+          if (slug) {
+            console.log(`Trying to fetch product by slug: ${slug}`);
+            const productBySlug = await wooCommerce.getProductBySlug(slug);
+            if (productBySlug) {
+              rawProduct = productBySlug;
+            } else {
+              // Use mock data if product not found by slug
+              console.log("Product not found by slug, using mock data");
+              const urlParam = getProductParamFromUrl();
+              const mockProduct = getMockProductData(pathname, urlParam);
+              setProduct(mockProduct);
+              setLoading(false);
+              return;
+            }
+          } else {
+            // Use mock data if no slug found
+            console.log("No product ID or slug found, using mock data");
+            const urlParam = getProductParamFromUrl();
+            const mockProduct = getMockProductData(pathname, urlParam);
+            setProduct(mockProduct);
+            setLoading(false);
+            return;
+          }
+        }
+
+        const formattedProduct: WooCommerceProductData = {
+          ...rawProduct,
+          tourData: parseTourData(rawProduct),
+        };
+
+        setProduct(formattedProduct);
       } catch (err) {
         // Handle errors by falling back to mock data
         console.error("Error fetching product:", err);
@@ -176,13 +234,25 @@ export function useWooCommerceProduct(): {
         // Fallback to mock data
         const urlParam = getProductParamFromUrl();
         setProduct(getMockProductData(pathname, urlParam));
+      } finally {
         setLoading(false);
       }
     };
 
-    // Always try to fetch data, with fallback to mock data
-    fetchProduct();
-  }, [pathname]);
+    // Handle both development and production modes
+    if (isDevelopment) {
+      // Development mode: Set mock data immediately without async operation
+      console.log("Development mode: Setting mock data immediately");
+      const urlParam = getProductParamFromUrl();
+      const mockProduct = getMockProductData(pathname, urlParam);
+      console.log("Mock product data:", mockProduct.name);
+      setProduct(mockProduct);
+      setLoading(false);
+    } else {
+      // Production mode: fetch from API
+      fetchProduct();
+    }
+  }, [pathname, isDevelopment]);
 
   return { product, loading, error };
 }
