@@ -56,6 +56,7 @@ export function Navigation() {
       children: [
         { label: "Certification Template", href: "/certification-template" },
         { label: "Christ Statue Template", href: "/christ-statue-tour" },
+        { label: "Snorkeling Tours Template", href: "/snorkeling-tours-template" },
         { label: "Product Template 1A", href: "/product-template-1a" },
       ]
     }

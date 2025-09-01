@@ -16,16 +16,25 @@ import {
 
 export default function WooCommerceHeroNoBooking() {
   const [showGuestModal, setShowGuestModal] = useState(false);
-  const { product, loading, error } = useWooCommerceProduct();
 
-  // Debug: Log the product data to see if plugin fields are coming through
-  useEffect(() => {
-    if (product) {
-      console.log("Product data from plugin:", product.tourData);
-      console.log("Duration from plugin:", product.tourData?.duration);
-      console.log("Group size from plugin:", product.tourData?.groupSize);
+  // Static product data - no loading required
+  const product = {
+    name: "Christ of the Abyss Snorkeling Tour",
+    images: [{ src: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&h=600&fit=crop" }],
+    categories: [{ name: "Tours" }],
+    tourData: {
+      duration: "4 Hours",
+      groupSize: "25 Max",
+      location: "Key Largo",
+      gearIncluded: true,
+      highlights: [
+        "Famous 9-foot bronze Christ statue in crystal-clear water",
+        "All snorkeling equipment included",
+        "PADI certified guides",
+        "Small group experience"
+      ]
     }
-  }, [product]);
+  };
 
   const scrollToBooking = () => {
     const bookingSection = document.getElementById("booking-section");
@@ -33,29 +42,6 @@ export default function WooCommerceHeroNoBooking() {
       bookingSection.scrollIntoView({ behavior: "smooth" });
     }
   };
-
-  // Show loading state only when actually loading (development mode is handled in the hook)
-  if (loading) {
-    return (
-      <section
-        className="relative text-white overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #0f766e 100%)",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative container mx-auto px-4 pt-24 pb-12">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white/90">Loading tour details...</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section
@@ -76,10 +62,9 @@ export default function WooCommerceHeroNoBooking() {
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/40" />
 
-      {/* Background Effects */}
+      {/* Background Effects - Simplified */}
       <div className="absolute inset-0">
-        <div className="absolute w-96 h-96 bg-white/5 rounded-full -top-48 -right-48"></div>
-        <div className="absolute w-64 h-64 bg-blue-500/10 rounded-full -bottom-32 -left-32"></div>
+        {/* Subtle gradient overlays only */}
       </div>
 
       <div className="relative container mx-auto px-4 pt-24 pb-12">

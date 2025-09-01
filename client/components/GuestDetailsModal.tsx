@@ -91,13 +91,66 @@ export default function GuestDetailsModal({
     return leadGuestValid && passengersValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isFormValid()) {
-      onSubmit({
-        ...formData,
-        passengers: passengers,
-      });
+    if (!isFormValid()) return;
+
+    // Prepare booking data for WooCommerce
+    const bookingData = {
+      lead_guest: {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        location: formData.location,
+        specialRequests: formData.specialRequests,
+      },
+      passengers: passengers,
+      booking_details: {
+        guest_count: guestCount,
+        selected_date: selectedDate,
+        selected_time: selectedTime,
+        total_price: totalPrice,
+      }
+    };
+
+    try {
+      // Call WooCommerce add to cart
+      await handleWooCommerceBooking(bookingData);
+    } catch (error) {
+      console.error('Booking error:', error);
+      // Handle error - maybe show error message
+    }
+  };
+
+  const handleWooCommerceBooking = async (bookingData: any) => {
+    // Get product ID from URL or props
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('product') || '34450'; // Default Christ Statue Tour ID
+
+    // For WordPress integration, we'll redirect to the WordPress product page with booking data
+    if (typeof window !== 'undefined') {
+      const isWordPressContext = urlParams.get('wordpress') === '1';
+
+      if (isWordPressContext) {
+        // We're in WordPress - trigger WooCommerce booking flow
+        window.parent.postMessage({
+          type: 'KLSD_ADD_TO_CART',
+          productId: productId,
+          bookingData: bookingData,
+          guestCount: guestCount,
+          selectedDate: selectedDate,
+          selectedTime: selectedTime,
+          totalPrice: totalPrice
+        }, '*');
+
+        // Close modal
+        onClose();
+      } else {
+        // Development/staging - redirect to WordPress for actual booking
+        const wpProductUrl = `https://keylargoscubadiving.com/product/christ-of-the-abyss-snorkeling-tour/?add-to-cart=${productId}&quantity=${guestCount}`;
+        window.location.href = wpProductUrl;
+      }
     }
   };
 
