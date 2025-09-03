@@ -9,12 +9,14 @@ export const WOOCOMMERCE_CONFIG = {
 };
 
 // Helper function to get config with environment variable fallbacks
-export function getWooCommerceConfig() {
-  return {
-    url: process.env.NEXT_PUBLIC_WOOCOMMERCE_URL || WOOCOMMERCE_CONFIG.url,
-    consumerKey:
-      process.env.NEXT_PUBLIC_WOOCOMMERCE_KEY || WOOCOMMERCE_CONFIG.consumerKey,
-    consumerSecret:
-      process.env.WOOCOMMERCE_SECRET || WOOCOMMERCE_CONFIG.consumerSecret,
-  };
-}
+export const getWooCommerceConfig = {
+  url: process.env.NEXT_PUBLIC_WOOCOMMERCE_URL || WOOCOMMERCE_CONFIG.url,
+  consumerKey:
+    process.env.NEXT_PUBLIC_WOOCOMMERCE_KEY || WOOCOMMERCE_CONFIG.consumerKey,
+  consumerSecret:
+    process.env.WOOCOMMERCE_SECRET || WOOCOMMERCE_CONFIG.consumerSecret,
+};
+
+export const auth = btoa(
+  `${getWooCommerceConfig.consumerKey}:${getWooCommerceConfig.consumerSecret}`,
+);

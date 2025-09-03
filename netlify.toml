@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm run build:production"
   publish = ".next"
 
 [build.environment]
@@ -9,10 +9,6 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
 
 [[headers]]
   for = "/*"

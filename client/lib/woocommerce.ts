@@ -148,7 +148,7 @@ class WooCommerceAPI implements WooCommerceAPIInterface {
 
   constructor() {
     // Get configuration from environment variables or fallback config
-    this.config = getWooCommerceConfig();
+    this.config = getWooCommerceConfig;
     this.baseUrl = `${this.config.url}/wp-json/wc/v3`;
   }
 
@@ -160,6 +160,7 @@ class WooCommerceAPI implements WooCommerceAPIInterface {
 
     try {
       const response = await fetch(url, {
+        cache: "no-store",
         ...options,
         mode: "cors", // Explicitly set CORS mode
         headers: {
@@ -170,15 +171,14 @@ class WooCommerceAPI implements WooCommerceAPIInterface {
       });
 
       if (!response.ok) {
-        // Clone the response before reading to avoid "body stream already read" error
+        // Use clone to safely read error details
         const responseClone = response.clone();
         let errorText: string;
 
         try {
-          errorText = await response.text();
-        } catch {
-          // If we can't read as text, try the clone
           errorText = await responseClone.text();
+        } catch {
+          errorText = `HTTP ${response.status} ${response.statusText}`;
         }
 
         throw new Error(
@@ -207,14 +207,16 @@ class WooCommerceAPI implements WooCommerceAPIInterface {
 
   // Get product details
   async getProduct(productId: number): Promise<WooCommerceProduct> {
-    return this.makeRequest(`/products/${productId}`);
+    return this.makeRequest(
+      `/products/${productId}?_fields=id,name,price,regular_price,sale_price,description,short_description,stock_quantity,stock_status,in_stock,permalink,categories,images,attributes,meta_data,wcf_tour_data`,
+    );
   }
 
   // Search for product by slug
   async getProductBySlug(slug: string): Promise<WooCommerceProduct | null> {
     try {
       const products = await this.makeRequest(
-        `/products?slug=${slug}&per_page=1`,
+        `/products?slug=${encodeURIComponent(slug)}&per_page=1&_fields=id,name,price,regular_price,sale_price,description,short_description,stock_quantity,stock_status,in_stock,permalink,categories,images,attributes,meta_data,wcf_tour_data`,
       );
       return products.length > 0 ? products[0] : null;
     } catch (error) {

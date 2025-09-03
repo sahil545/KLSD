@@ -25,12 +25,14 @@ import {
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
-  const [openDropdowns, setOpenDropdowns] = useState<{[key: string]: boolean}>({});
+  const [openDropdowns, setOpenDropdowns] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const toggleDropdown = (label: string) => {
-    setOpenDropdowns(prev => ({
+    setOpenDropdowns((prev) => ({
       ...prev,
-      [label]: !prev[label]
+      [label]: !prev[label],
     }));
   };
 
@@ -48,17 +50,24 @@ export function Navigation() {
       children: [
         { label: "Content Manager", href: "/content-manager" },
         { label: "Bookings", href: "/booking-calendar" },
+        { label: "Dev Calendar", href: "/dev/calender" },
+        { label: "Dev Modal", href: "/dev/modal" },
         { label: "Image Test", href: "/image-test" },
-      ]
+      ],
     },
     {
       label: "Template",
       children: [
         { label: "Certification Template", href: "/certification-template" },
         { label: "Christ Statue Template", href: "/christ-statue-tour" },
-        { label: "Product Template 1A", href: "/product-template-1a" },
-      ]
-    }
+        {
+          label: "Snorkeling Tours Template",
+          href: "/snorkeling-tours-template",
+        },
+        { label: "Dive Trip Template", href: "/dive-trip-template" },
+        { label: "Simple Product Template", href: "/product-template-1a" },
+      ],
+    },
   ];
 
   const tripsMenuItems = [
@@ -236,8 +245,18 @@ export function Navigation() {
               <div
                 key={`parent-${index}`}
                 className="relative"
-                onMouseEnter={() => setOpenDropdowns(prev => ({ ...prev, [parentItem.label]: true }))}
-                onMouseLeave={() => setOpenDropdowns(prev => ({ ...prev, [parentItem.label]: false }))}
+                onMouseEnter={() =>
+                  setOpenDropdowns((prev) => ({
+                    ...prev,
+                    [parentItem.label]: true,
+                  }))
+                }
+                onMouseLeave={() =>
+                  setOpenDropdowns((prev) => ({
+                    ...prev,
+                    [parentItem.label]: false,
+                  }))
+                }
               >
                 <button className="flex items-center gap-1 text-foreground hover:text-ocean transition-colors font-medium">
                   {parentItem.label}
@@ -372,13 +391,19 @@ export function Navigation() {
                     {parentNavItems.map((parentItem, index) => (
                       <div key={`mobile-parent-${index}`}>
                         <button
-                          onClick={() => toggleDropdown(`mobile-${parentItem.label}`)}
+                          onClick={() =>
+                            toggleDropdown(`mobile-${parentItem.label}`)
+                          }
                           className="flex items-center justify-between w-full py-3 text-lg font-medium text-foreground hover:text-ocean transition-colors border-b border-gray-100"
                         >
                           <span>{parentItem.label}</span>
-                          <ChevronDown className={`w-4 h-4 transition-transform ${
-                            openDropdowns[`mobile-${parentItem.label}`] ? 'rotate-180' : ''
-                          }`} />
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${
+                              openDropdowns[`mobile-${parentItem.label}`]
+                                ? "rotate-180"
+                                : ""
+                            }`}
+                          />
                         </button>
                         {openDropdowns[`mobile-${parentItem.label}`] && (
                           <div className="pl-4 pb-2 space-y-1">
