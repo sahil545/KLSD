@@ -893,7 +893,7 @@ export default function GuestDetailsModal({
             </Card>
 
             {/* Additional Passengers */}
-            {diverCount && diverCount > 0 && (
+            {(diverCount || 0) > 0 && passengers.length > 0 && (
               <Card className="mt-4">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">

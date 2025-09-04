@@ -89,6 +89,12 @@ const customDatePickerStyles = `
   
   .custom-datepicker .react-datepicker__day--disabled {
     color: #d1d5db !important;
+    background-color: #f9fafb !important;
+    cursor: not-allowed !important;
+  }
+  
+  .custom-datepicker .react-datepicker__day--disabled:hover {
+    background-color: #f9fafb !important;
   }
   
   .custom-datepicker .react-datepicker__navigation {
@@ -171,6 +177,68 @@ export default function SimpleDatePicker({
   const [personTypes, setPersonTypes] = useState<PersonType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bookingData, setBookingData] = useState<BookingData | null>(null);
+  const [blockedDates, setBlockedDates] = useState<Date[]>([]);
+
+  // Parse blocked dates from availability array
+  const parseBlockedDates = (availability: any[]): Date[] => {
+    const blocked: Date[] = [];
+
+    availability.forEach((item) => {
+      if (
+        (item.type === "custom" || item.type === "custom:daterange") &&
+        item.bookable === "no"
+      ) {
+        if (item.type === "custom") {
+          // Check if it's a single date or date range
+          if (item.from && item.to && item.from !== item.to) {
+            // Date range blocking (using from and to fields)
+            const startDate = new Date(item.from);
+            const endDate = new Date(item.to);
+
+            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+              const currentDate = new Date(startDate);
+              while (currentDate <= endDate) {
+                blocked.push(new Date(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+              }
+            }
+          } else {
+            // Single date blocking
+            const blockedDate = new Date(item.from);
+            if (!isNaN(blockedDate.getTime())) {
+              blocked.push(blockedDate);
+            }
+          }
+        } else if (item.type === "custom:daterange") {
+          // Date range blocking (using from_date and to_date fields)
+          const startDate = new Date(item.from_date);
+          const endDate = new Date(item.to_date);
+
+          if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+            const currentDate = new Date(startDate);
+            while (currentDate <= endDate) {
+              blocked.push(new Date(currentDate));
+              currentDate.setDate(currentDate.getDate() + 1);
+            }
+          }
+        }
+      }
+    });
+
+    return blocked;
+  };
+
+  // Check if a date is blocked
+  const isDateBlocked = (date: Date): boolean => {
+    return blockedDates.some((blockedDate) => {
+      return (
+        date.getFullYear() === blockedDate.getFullYear() &&
+        date.getMonth() === blockedDate.getMonth() &&
+        date.getDate() === blockedDate.getDate()
+      );
+    });
+  };
 
   // Fetch person types on component mount
   useEffect(() => {
@@ -189,11 +257,25 @@ export default function SimpleDatePicker({
 
       const data: ProductResponse = await response.json();
 
-      if (data.booking_data && data.booking_data.person_types) {
-        setPersonTypes(data.booking_data.person_types);
-        // Pass person types to parent component immediately
-        if (onPersonTypesLoaded) {
-          onPersonTypesLoaded(data.booking_data.person_types);
+      if (data.booking_data) {
+        setBookingData(data.booking_data);
+
+        if (data.booking_data.person_types) {
+          setPersonTypes(data.booking_data.person_types);
+          // Pass person types to parent component immediately
+          if (onPersonTypesLoaded) {
+            onPersonTypesLoaded(data.booking_data.person_types);
+          }
+        }
+
+        // Parse blocked dates from availability
+        if (data.booking_data.availability) {
+          const blocked = parseBlockedDates(data.booking_data.availability);
+          setBlockedDates(blocked);
+          console.log(
+            "🚫 Blocked dates parsed:",
+            blocked.map((d) => d.toDateString()),
+          );
         }
       }
     } catch (err) {
@@ -285,13 +367,14 @@ export default function SimpleDatePicker({
             value={date ? formatDate(date) : ""}
             readOnly
             placeholder="Select a date"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onClick={() => setIsOpen(!isOpen)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
           />
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsOpen(!isOpen)}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 pointer-events-none"
           >
             <Calendar className="w-4 h-4 text-gray-500" />
           </Button>
@@ -306,6 +389,7 @@ export default function SimpleDatePicker({
               inline
               minDate={new Date()}
               maxDate={new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)} // 90 days from now
+              excludeDates={blockedDates}
               className="w-full"
               calendarClassName="custom-datepicker"
             />
