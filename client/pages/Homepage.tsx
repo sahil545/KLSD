@@ -751,7 +751,7 @@ function Homepage() {
                       ))}
                     </div>
 
-                    <Button className="w-full bg-coral hover:bg-coral/90 text-white font-semibold text-sm">
+                    <Button className="w-full hhhh bg-coral hover:bg-coral/90 text-white font-semibold text-sm">
                       Book Adventure
                     </Button>
                   </div>
