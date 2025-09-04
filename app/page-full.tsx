@@ -738,36 +738,64 @@ export default function Homepage() {
           <div className="overflow-x-auto pb-4">
             <div className="flex gap-6 w-max">
               {sortedAdventures.map((adventure) => (
-                <EnhancedCard
+               <EnhancedCard
                   key={adventure.id}
                   className="w-80 flex-shrink-0"
                   hoverScale={1}
                   glowColor="blue"
                   tilting={false}
                 >
-                  <div className="relative h-48 overflow-hidden">
-                    <Image
-                      src={adventure.image}
-                      alt={adventure.title}
-                      width={1000}
-                      height={1000}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40"></div>
-                    <div className="absolute inset-0 p-4 text-white flex flex-col justify-end">
-                      <Badge className="bg-white/20 text-white mb-2 w-fit text-xs">
-                        {adventure.category}
-                      </Badge>
-                      <h3 className="text-lg font-bold text-white">
-                        {adventure.title}
-                      </h3>
+                  <Link
+                    href={(() => {
+                      const slugs = (adventure.catSlugs || []).map((s) =>
+                        (s || "").toLowerCase(),
+                      );
+                      const names = (adventure.catNames || []).map((n) =>
+                        (n || "").toLowerCase(),
+                      );
+                      const isSnorkeling =
+                        slugs.includes("snorkeling-trips") ||
+                        names.some((n) => n.includes("snorkel"));
+                      const rawSlug =
+                        adventure.slug ||
+                        (adventure.permalink || "")
+                          .split("/")
+                          .filter(Boolean)
+                          .pop() ||
+                        String(adventure.id);
+                      const snorkelish =
+                        isSnorkeling ||
+                        rawSlug.toLowerCase().includes("snorkel");
+                      const href = snorkelish
+                        ? `/snorkeling-trips/${rawSlug}`
+                        : `/trips/${rawSlug}`;
+                      return href;
+                    })()}
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <Image
+                        src={adventure.image}
+                        alt={adventure.title}
+                        width={1000}
+                        height={1000}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40"></div>
+                      <div className="absolute inset-0 p-4 text-white flex flex-col justify-end">
+                        <Badge className="bg-white/20 text-white mb-2 w-fit text-xs">
+                          {adventure.category}
+                        </Badge>
+                        <h3 className="text-lg font-bold text-white">
+                          {adventure.title}
+                        </h3>
+                      </div>
+                      <div className="absolute top-4 right-4 bg-black/50 rounded-lg px-3 py-1">
+                        <span className="text-white font-semibold">
+                          ${adventure.price}
+                        </span>
+                      </div>
                     </div>
-                    <div className="absolute top-4 right-4 bg-black/50 rounded-lg px-3 py-1">
-                      <span className="text-white font-semibold">
-                        ${adventure.price}
-                      </span>
-                    </div>
-                  </div>
+                  </Link>
 
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-3">
@@ -809,17 +837,37 @@ export default function Homepage() {
                         ))}
                     </div>
 
-                    {adventure.permalink ? (
-                      <Link href={adventure.permalink} className="block w-full">
-                        <Button className="w-full bg-coral hover:bg-coral/90 text-white font-semibold text-sm">
-                          Book Adventure
-                        </Button>
-                      </Link>
-                    ) : (
-                      <Button className="w-full bg-coral hover:bg-coral/90 text-white font-semibold text-sm">
-                        Book Adventure
-                      </Button>
-                    )}
+                    {(() => {
+                      const slugs = (adventure.catSlugs || []).map((s) =>
+                        (s || "").toLowerCase(),
+                      );
+                      const names = (adventure.catNames || []).map((n) =>
+                        (n || "").toLowerCase(),
+                      );
+                      const isSnorkeling =
+                        slugs.includes("snorkeling-trips") ||
+                        names.some((n) => n.includes("snorkel"));
+                      const rawSlug =
+                        adventure.slug ||
+                        (adventure.permalink || "")
+                          .split("/")
+                          .filter(Boolean)
+                          .pop() ||
+                        String(adventure.id);
+                      const snorkelish =
+                        isSnorkeling ||
+                        rawSlug.toLowerCase().includes("snorkel");
+                      const href = snorkelish
+                        ? `/snorkeling-trips/${rawSlug}`
+                        : `/trips/${rawSlug}`;
+                      return (
+                        <Link href={href} className="block w-full">
+                          <Button className="w-full ggg bg-coral hover:bg-coral/90 text-white font-semibold text-sm">
+                            Book Adventure
+                          </Button>
+                        </Link>
+                      );
+                    })()}
                   </div>
                 </EnhancedCard>
               ))}
