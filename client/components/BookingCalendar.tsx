@@ -83,7 +83,7 @@ export default function BookingCalendar({
   selectedTime,
   lazyLoad = false,
   mode = "date-time",
-  showManualTimeInput = true,
+  showManualTimeInput = false,
 }: BookingCalendarProps) {
   const [availability, setAvailability] = useState<BookingAvailability | null>(
     null,
@@ -133,10 +133,9 @@ export default function BookingCalendar({
         !abortControllerRef.current.signal.aborted
       ) {
         try {
-          abortControllerRef.current.abort("component unmounted");
+          abortControllerRef.current.abort();
         } catch (err) {
-          // Ignore errors during cleanup
-          console.debug("AbortController cleanup error (safe to ignore):", err);
+          // Silently ignore during cleanup
         }
       }
     };
@@ -154,7 +153,7 @@ export default function BookingCalendar({
       !abortControllerRef.current.signal.aborted
     ) {
       try {
-        abortControllerRef.current.abort("new request initiated");
+        abortControllerRef.current.abort();
       } catch {}
     }
     if (!isMountedRef.current) return;
@@ -211,20 +210,12 @@ export default function BookingCalendar({
 
       if (err instanceof Error) {
         if (err.name === "AbortError") {
-          // Handle different types of aborts
-          const reason = controller.signal.reason;
+          const reason = (controller as any)?.signal?.reason;
           if (reason === "request timeout") {
             setError("Loading is taking too long. Please try again.");
-          } else if (
-            reason === "component unmounted" ||
-            reason === "new request initiated"
-          ) {
-            // Don't show error for intentional aborts
-            console.debug("Request aborted:", reason);
-          } else {
-            // Unknown abort reason, might be a network issue
-            setError("Request was cancelled. Please try again.");
           }
+          // For other aborts (unmount or new request), do nothing
+          return;
         } else if (err.message.includes("Failed to fetch")) {
           setError("Unable to connect. Please check your internet connection.");
         } else {
@@ -235,24 +226,11 @@ export default function BookingCalendar({
       }
 
       if (err instanceof Error && err.name === "AbortError") {
-        const reason: any =
-          (abortControllerRef.current?.signal as any)?.reason ??
-          (controller as any)?.signal?.reason;
-        if (
-          reason === "component unmounted" ||
-          reason === "new request initiated"
-        ) {
-          console.debug(
-            "Booking availability request intentionally aborted:",
-            reason,
-          );
-        } else if (reason === "request timeout") {
+        const reason: any = (controller as any)?.signal?.reason;
+        if (reason === "request timeout") {
           console.warn("Booking availability request timed out");
-        } else {
-          console.error("Booking availability abort error:", err);
         }
-      } else {
-        console.error("Booking availability error:", err);
+        return;
       }
     } finally {
       if (timeoutId) {

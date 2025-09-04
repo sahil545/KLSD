@@ -47,6 +47,7 @@ export default function Homepage() {
   const [adventures, setAdventures] = useState<
     Array<{
       id: number;
+      slug?: string;
       title: string;
       category: string;
       price: number;
@@ -82,6 +83,7 @@ export default function Homepage() {
         const data = await res.json();
         const trips = (data.trips || []).map((t: any) => ({
           id: t.id,
+          slug: t.slug,
           title: t.name,
           category: t.categoryDisplay || (t.categories?.[0]?.name ?? "All"),
           price: Number(t.price) || 0,
@@ -738,7 +740,7 @@ export default function Homepage() {
           <div className="overflow-x-auto pb-4">
             <div className="flex gap-6 w-max">
               {sortedAdventures.map((adventure) => (
-               <EnhancedCard
+                <EnhancedCard
                   key={adventure.id}
                   className="w-80 flex-shrink-0"
                   hoverScale={1}
@@ -862,7 +864,7 @@ export default function Homepage() {
                         : `/trips/${rawSlug}`;
                       return (
                         <Link href={href} className="block w-full">
-                          <Button className="w-full ggg bg-coral hover:bg-coral/90 text-white font-semibold text-sm">
+                          <Button className="w-full bg-coral hover:bg-coral/90 text-white font-semibold text-sm">
                             Book Adventure
                           </Button>
                         </Link>

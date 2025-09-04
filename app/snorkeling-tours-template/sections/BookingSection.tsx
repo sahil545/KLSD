@@ -482,6 +482,11 @@ export default function BookingSection({
         selectedTime={selectedTimeSlot ? formatTime(selectedTimeSlot.from) : ""}
         customFormFields={customFormFields}
         personTypes={personTypes}
+        personTypeCounts={personTypes.map((pt) => ({
+          id: pt.id,
+          count: personCounts[pt.id] || 0,
+          name: pt.name,
+        }))}
         onRentalGearUpdate={handleRentalGearUpdate}
         rentalGearSelections={rentalGearSelections}
         productIdNumber={productId}

@@ -50,6 +50,7 @@ export function Navigation() {
       children: [
         { label: "Content Manager", href: "/content-manager" },
         { label: "Bookings", href: "/booking-calendar" },
+        { label: "Snorkeling Trips", href: "/snorkeling-trips" },
         { label: "Dev Calendar", href: "/dev/calender" },
         { label: "Dev Modal", href: "/dev/modal" },
         { label: "Image Test", href: "/image-test" },

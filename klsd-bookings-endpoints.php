@@ -49,22 +49,31 @@ function klsd_person_types_map($product_id) {
   if (is_array($map)) return $map;
 
   $map = [];
-  if (class_exists('WC_Product_Booking')) {
-    $product = wc_get_product($product_id);
-    if ($product && $product instanceof WC_Product_Booking) {
-      $types = method_exists($product, 'get_person_types') ? $product->get_person_types() : [];
-      if (is_array($types)) {
-        foreach ($types as $type) {
-          if (is_object($type)) {
-            $slug = sanitize_key($type->post_name ?: $type->post_title ?: 'person');
-            $map[$slug] = (int) $type->ID;
-          } elseif (is_array($type) && isset($type['id'])) {
-            $map['person_' . (int)$type['id']] = (int)$type['id'];
-          }
+  $product = wc_get_product($product_id);
+  if ($product && method_exists($product, 'get_person_types')) {
+    $types = $product->get_person_types();
+    if (is_array($types)) {
+      foreach ($types as $type) {
+        if (is_object($type) && method_exists($type, 'get_id')) {
+          $id = (int) $type->get_id();
+          $name = method_exists($type, 'get_name') ? $type->get_name() : '';
+          $slug = $name ? sanitize_title($name) : ('person_' . $id);
+          $map[$slug] = $id;
+        } elseif (is_array($type) && isset($type['id'])) {
+          $id = (int)$type['id'];
+          $name = isset($type['name']) ? $type['name'] : '';
+          $slug = $name ? sanitize_title($name) : ('person_' . $id);
+          $map[$slug] = $id;
+        } elseif (is_object($type) && isset($type->ID)) { // WP_Post style
+          $id = (int)$type->ID;
+          $name = isset($type->post_title) ? $type->post_title : '';
+          $slug = $name ? sanitize_title($name) : ('person_' . $id);
+          $map[$slug] = $id;
         }
       }
     }
   }
+
   if (empty($map)) {
     $map['adult'] = 0; // fallback single type
   }
@@ -139,6 +148,21 @@ function klsd_bookings_availability(\WP_REST_Request $req) {
     $by_id = klsd_be_persons_by_id($product_id, $persons_qs);
   }
 
+  // Default to minimum persons when product requires persons but none were provided
+  if (empty($by_id)) {
+    $product = wc_get_product($product_id);
+    if ($product && method_exists($product, 'has_persons') && $product->has_persons()) {
+      $min_persons = method_exists($product, 'get_min_persons') ? (int)$product->get_min_persons() : 1;
+      if ($min_persons <= 0) { $min_persons = 1; }
+      $map = klsd_person_types_map($product_id);
+      $first_id = (int) (array_values($map)[0] ?? 0);
+      // When Woo has person types, provide at least one type with min quantity so availability works
+      if ($first_id || !empty($map)) {
+        $by_id[$first_id] = $min_persons;
+      }
+    }
+  }
+
   // Mirror Woo frontend: wc_bookings_get_availability
   $params = [
     'product_id' => $product_id,
@@ -209,6 +233,20 @@ function klsd_bookings_price(\WP_REST_Request $req) {
     if ($first_id) {
       $sum = 0; foreach ($persons_in as $q) { $sum += (int)$q; }
       if ($sum > 0) $by_id[$first_id] = $sum;
+    }
+  }
+
+  // If still empty and product requires persons, default to its minimum persons
+  if (empty($by_id)) {
+    $product = wc_get_product($product_id);
+    if ($product && method_exists($product, 'has_persons') && $product->has_persons()) {
+      $min_persons = method_exists($product, 'get_min_persons') ? (int)$product->get_min_persons() : 1;
+      if ($min_persons <= 0) { $min_persons = 1; }
+      $map = klsd_person_types_map($product_id);
+      $first_id = (int) (array_values($map)[0] ?? 0);
+      if ($first_id || !empty($map)) {
+        $by_id[$first_id] = $min_persons;
+      }
     }
   }
 
