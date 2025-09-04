@@ -37,6 +37,7 @@ export default function BookingSection({
 }: BookingSectionProps) {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [personTypes, setPersonTypes] = useState<PersonType[]>([]);
+  const [personTypesLoaded, setPersonTypesLoaded] = useState(false);
   const [personCounts, setPersonCounts] = useState<{ [key: number]: number }>(
     {},
   );
@@ -150,6 +151,7 @@ export default function BookingSection({
   // Initialize person types when they become available
   const initializePersonTypes = (personTypesData: PersonType[]) => {
     setPersonTypes(personTypesData);
+    setPersonTypesLoaded(true);
     console.log("Person types initialized:", personTypesData);
 
     // Initialize person counts with minimum values
@@ -285,7 +287,14 @@ export default function BookingSection({
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">
                   Select Person Types
                 </h4>
-                {personTypes.length > 0 ? (
+                {!personTypesLoaded ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <Users className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm text-gray-500">
+                      Loading person types...
+                    </p>
+                  </div>
+                ) : personTypes.length > 0 ? (
                   <div
                     className={`grid gap-4 ${personTypes.length === 2 ? "grid-cols-2" : "grid-cols-1"}`}
                   >
@@ -344,7 +353,7 @@ export default function BookingSection({
                   <div className="text-center py-8 bg-gray-50 rounded-lg">
                     <Users className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                     <p className="text-sm text-gray-500">
-                      Loading person types...
+                      No specific Person Type found
                     </p>
                   </div>
                 )}
