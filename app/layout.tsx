@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import "../client/global.css";
+import "./globals.css";
 
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ClientErrorHandler from "./components/ClientErrorHandler";
+import NetworkErrorHandler from "./components/NetworkErrorHandler";
 
 export const metadata: Metadata = {
   title: "Key Largo Scuba Diving | #1 Rated Tours & PADI Certification",
@@ -52,6 +53,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ErrorBoundary>
           <ClientErrorHandler />
+          <NetworkErrorHandler />
           {children}
         </ErrorBoundary>
       </body>

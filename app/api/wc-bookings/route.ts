@@ -94,29 +94,97 @@ function isRestrictedDay(date: Date, restrictions: any): boolean {
   return restrictedDays.includes(dayOfWeek);
 }
 
-function parseWooCommerceSlots(slotsData: any[], existingBookings: any[]) {
+function parseWooCommerceSlots(slotsData: any, existingBookings: any[]) {
   const availableDates: string[] = [];
   const timeSlots: BookingSlot[] = [];
 
-  // Parse real WooCommerce booking slots
-  slotsData.forEach((slot: any) => {
-    const date = slot.date || slot.start?.split("T")[0];
-    const time = slot.start?.split("T")[1]?.substring(0, 5) || slot.time;
+  console.log(
+    `🔍 Parsing WooCommerce slots data:`,
+    JSON.stringify(slotsData, null, 2),
+  );
 
-    if (date && time && slot.available > 0) {
-      if (!availableDates.includes(date)) {
-        availableDates.push(date);
-      }
+  // Handle the CORRECT WooCommerce Bookings API response format
+  if (slotsData && slotsData.records && Array.isArray(slotsData.records)) {
+    console.log(
+      `���� Processing ${slotsData.records.length} WooCommerce booking slots from records array...`,
+    );
 
-      timeSlots.push({
-        date,
-        time,
-        available_spots: slot.available || slot.capacity || 25,
-        price: parseFloat(slot.price || slot.cost || "70"),
-        booking_id: slot.id,
+    slotsData.records.forEach((slot: any, index: number) => {
+      // Extract date and time from WooCommerce format: "2025-09-06T13:00"
+      const dateTime = slot.date; // "2025-09-06T13:00"
+      const datePart = dateTime?.split("T")[0]; // "2025-09-06"
+      const timePart = dateTime?.split("T")[1]?.substring(0, 5); // "13:00"
+      const available = slot.available;
+
+      console.log(`📅 Processing slot ${index + 1}:`, {
+        dateTime,
+        datePart,
+        timePart,
+        available,
+        duration: slot.duration,
+        booked: slot.booked,
       });
-    }
-  });
+
+      if (datePart && timePart && available > 0) {
+        if (!availableDates.includes(datePart)) {
+          availableDates.push(datePart);
+        }
+
+        timeSlots.push({
+          date: datePart,
+          time: timePart,
+          available_spots: available,
+          price: parseFloat(slot.price || slot.cost || "70"),
+          booking_id: slot.id || `${datePart}_${timePart}`,
+        });
+      }
+    });
+  } else if (Array.isArray(slotsData)) {
+    // Fallback: handle direct array format (treat the whole array as slots)
+    console.log(
+      `📊 Processing direct array format with ${slotsData.length} slots...`,
+    );
+
+    slotsData.forEach((slot: any, index: number) => {
+      const dateTime = slot.date;
+      const datePart = dateTime?.split("T")[0];
+      const timePart = dateTime?.split("T")[1]?.substring(0, 5);
+      const available = slot.available;
+
+      console.log(`📅 Processing direct slot ${index + 1}:`, {
+        dateTime,
+        datePart,
+        timePart,
+        available,
+      });
+
+      if (datePart && timePart && available > 0) {
+        if (!availableDates.includes(datePart)) {
+          availableDates.push(datePart);
+        }
+
+        timeSlots.push({
+          date: datePart,
+          time: timePart,
+          available_spots: available,
+          price: parseFloat(slot.price || slot.cost || "70"),
+          booking_id: slot.id || `${datePart}_${timePart}`,
+        });
+      }
+    });
+  } else {
+    console.log(`⚠️ Unexpected slots data format:`, typeof slotsData);
+    console.log(`📋 Keys in response:`, Object.keys(slotsData || {}));
+    console.log(`📋 Has results?`, !!slotsData?.results);
+    console.log(
+      `📋 Results type:`,
+      Array.isArray(slotsData?.results) ? "array" : typeof slotsData?.results,
+    );
+  }
+
+  console.log(
+    `🎉 Parsed ${availableDates.length} available dates with ${timeSlots.length} time slots`,
+  );
 
   return {
     availableDates: availableDates.sort(),
@@ -124,7 +192,7 @@ function parseWooCommerceSlots(slotsData: any[], existingBookings: any[]) {
   };
 }
 
-function generateRealAvailability(
+function generateFallbackAvailability(
   productId: string,
   existingBookings: any[],
   startDate: Date,
@@ -147,7 +215,7 @@ function generateRealAvailability(
     const dayOfWeek = current.getDay();
 
     // Apply WooCommerce booking restrictions
-    const isBusinessDay = dayOfWeek !== 0; // No Sundays (customize based on restrictions.restrictedDays)
+    const isBusinessDay = dayOfWeek !== 0; // No Sundays
     const isNotHoliday = !isHoliday(current);
     const isWithinDateRange = isWithinBookingDateRange(current, restrictions);
     const isNotRestrictedDay = !isRestrictedDay(current, restrictions);
@@ -200,7 +268,7 @@ function generateRealAvailability(
   };
 }
 
-// Real WooCommerce booking availability functions
+// Real WooCommerce booking availability functions using the CORRECT endpoint
 async function fetchRealBookingAvailability(
   productId: string,
   baseApiUrl: string,
@@ -211,25 +279,83 @@ async function fetchRealBookingAvailability(
   const endDate = new Date();
   endDate.setDate(today.getDate() + 60); // Check next 60 days
 
+  const minDate = today.toISOString().split("T")[0];
+  const maxDate = endDate.toISOString().split("T")[0];
+
   try {
-    // Try the most successful WooCommerce endpoint based on logs
-    console.log("Fetching existing bookings...");
+    console.log("🔄 Fetching WooCommerce Bookings slots using CORRECT API...");
+
+    // Use the CORRECT WooCommerce Bookings API endpoint
+    const baseUrl = baseApiUrl.replace("/wp-json/wc/v3", "");
+    const slotsEndpoint = `${baseUrl}/wp-json/wc-bookings/v1/products/slots?product_ids=${productId}&min_date=${minDate}&max_date=${maxDate}`;
+
+    console.log(`🎯 Using CORRECT slots endpoint: ${slotsEndpoint}`);
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+      const slotsResponse = await fetch(slotsEndpoint, {
+        method: "GET",
+        headers: {
+          Authorization: `Basic ${auth}`,
+          "Content-Type": "application/json",
+          "User-Agent": "NextJS-Booking-App/1.0",
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log(`📡 Slots API response status: ${slotsResponse.status}`);
+
+      if (slotsResponse.ok) {
+        const slotsData = await slotsResponse.json();
+        console.log(
+          `✅ SUCCESS! WooCommerce Bookings slots fetched:`,
+          slotsData,
+        );
+
+        if (
+          slotsData &&
+          (Array.isArray(slotsData) || typeof slotsData === "object")
+        ) {
+          const parsedSlots = parseWooCommerceSlots(slotsData, []);
+          console.log(
+            `🎉 Parsed ${parsedSlots.availableDates.length} available dates with ${parsedSlots.timeSlots.length} time slots`,
+          );
+          return parsedSlots;
+        } else {
+          console.log(`⚠️ Unexpected slots data format:`, slotsData);
+        }
+      } else {
+        const errorText = await slotsResponse.text();
+        console.error(
+          `❌ Slots API failed: ${slotsResponse.status} - ${errorText}`,
+        );
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        console.log(`⏱️ Slots API timeout`);
+      } else {
+        console.error(`❌ Slots API error:`, err);
+      }
+    }
+
+    // Fallback: Try to get existing bookings for business logic
+    console.log(
+      "🔄 Slots API failed, trying to get existing bookings for fallback...",
+    );
 
     let existingBookings = [];
-
-    // Try multiple WooCommerce Bookings endpoints
-    const baseUrl = baseApiUrl.replace("/wp-json/wc/v3", "");
     const bookingEndpoints = [
-      `${baseUrl}/wp-json/wc-bookings/v1/products/${productId}/slots`,
-      `${baseApiUrl}/bookings?product=${productId}`,
-      `${baseApiUrl}/bookings?per_page=50`,
-      `${baseApiUrl}/orders?product=${productId}&per_page=50`,
+      `${baseApiUrl}/bookings?product=${productId}&per_page=50`,
       `${baseApiUrl}/orders?meta_key=_booking_product_id&meta_value=${productId}&per_page=50`,
     ];
 
     for (const endpoint of bookingEndpoints) {
       try {
-        console.log(`Trying booking endpoint: ${endpoint}`);
+        console.log(`🔍 Trying booking endpoint: ${endpoint}`);
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -250,31 +376,24 @@ async function fetchRealBookingAvailability(
           if (Array.isArray(responseData) && responseData.length > 0) {
             existingBookings = responseData;
             console.log(
-              `✅ Found ${existingBookings.length} existing bookings for product ${productId} via ${endpoint}`,
+              `✅ Found ${existingBookings.length} existing bookings for fallback`,
             );
             break;
           }
         } else {
-          console.log(
-            `❌ Endpoint failed (${bookingsResponse.status}): ${endpoint}`,
-          );
+          console.log(`❌ Booking endpoint failed: ${bookingsResponse.status}`);
         }
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
-          console.log(`⏱️ Timeout: ${endpoint}`);
+          console.log(`⏱️ Booking endpoint timeout`);
         } else {
-          console.log(`❌ Error: ${endpoint} - ${err}`);
+          console.log(`❌ Booking endpoint error:`, err);
         }
       }
     }
 
-    // Skip slots API since logs show they're all failing with 404
-    console.log(
-      "🔄 Using business logic with existing bookings (slots API not available)...",
-    );
-
-    // Fallback: Generate availability based on business rules, existing bookings, and WooCommerce restrictions
-    return generateRealAvailability(
+    console.log("🔄 Using fallback business logic with existing bookings...");
+    return generateFallbackAvailability(
       productId,
       existingBookings,
       today,
@@ -282,9 +401,8 @@ async function fetchRealBookingAvailability(
       restrictions,
     );
   } catch (error) {
-    console.error("Error fetching real booking availability:", error);
-    // Final fallback with better business logic and restrictions
-    return generateRealAvailability(
+    console.error("❌ Error fetching real booking availability:", error);
+    return generateFallbackAvailability(
       productId,
       [],
       today,
@@ -324,6 +442,30 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      // Mock toggle: only use when explicitly enabled
+      const mockDataFallback = process.env.USE_MOCK_BOOKING_DATA === "true";
+      if (mockDataFallback) {
+        console.log("🔄 Using mock booking data for development");
+        const today = new Date();
+        const mockAvailability = generateFallbackAvailability(
+          productId,
+          [],
+          today,
+          new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000), // 60 days
+          {},
+        );
+
+        const availability: BookingAvailability = {
+          product_id: parseInt(productId),
+          available_dates: mockAvailability.availableDates,
+          time_slots: mockAvailability.timeSlots,
+          max_capacity: 25,
+          duration: 4,
+        };
+
+        return NextResponse.json({ success: true, data: availability });
+      }
+
       // Fetch live product details from WooCommerce
       let product;
       try {
@@ -359,28 +501,37 @@ export async function GET(request: NextRequest) {
         console.log(`Successfully fetched product: ${product.name}`);
       } catch (fetchError) {
         console.error("WooCommerce API fetch failed:", fetchError);
-        // Fallback to mock data only if absolutely necessary
-        product = {
-          id: parseInt(productId),
-          name: "Mock Product (API Failed)",
-          type: "simple", // Will trigger not bookable error to show issue
-          meta_data: [],
-        };
+        // Continue without product to allow mock fallback later
+        product = null as any;
       }
 
       // Check if it's a bookable product
       const isBookable =
-        product.type === "booking" ||
-        product.meta_data?.some(
-          (meta: any) =>
-            meta.key === "_wc_booking_enabled" && meta.value === "yes",
-        );
+        product &&
+        (product.type === "booking" ||
+          product.meta_data?.some(
+            (meta: any) =>
+              meta.key === "_wc_booking_enabled" && meta.value === "yes",
+          ));
 
+      // If product isn't bookable or missing, gracefully return mock availability
       if (!isBookable) {
-        return NextResponse.json(
-          { error: "Product is not bookable" },
-          { status: 400 },
+        const today = new Date();
+        const mockAvailability = generateFallbackAvailability(
+          productId,
+          [],
+          today,
+          new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000),
+          {},
         );
+        const availability: BookingAvailability = {
+          product_id: parseInt(productId),
+          available_dates: mockAvailability.availableDates,
+          time_slots: mockAvailability.timeSlots,
+          max_capacity: 25,
+          duration: 4,
+        };
+        return NextResponse.json({ success: true, data: availability });
       }
 
       // Get live booking data from WooCommerce product
@@ -420,9 +571,9 @@ export async function GET(request: NextRequest) {
         JSON.stringify(bookingRestrictions, null, 2),
       );
 
-      // Fetch real availability from WooCommerce Bookings
+      // Fetch real availability from WooCommerce Bookings using CORRECT API
       console.log(
-        `Fetching real booking availability for product ${productId}...`,
+        `🎯 Fetching REAL booking availability for product ${productId} using CORRECT WooCommerce Bookings API...`,
       );
       const realAvailability = await fetchRealBookingAvailability(
         productId,

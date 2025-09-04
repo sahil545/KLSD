@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import GuestDetailsModal from "@/components/GuestDetailsModal";
@@ -22,6 +22,16 @@ interface HeroSectionProps {
 
 export default function HeroSection({ data }: HeroSectionProps) {
   const [showGuestModal, setShowGuestModal] = useState(false);
+
+  // Debug: open modal via query param
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get("showGuestModal") === "1" || sp.get("debug-modal") === "guest") {
+        setShowGuestModal(true);
+      }
+    } catch {}
+  }, []);
 
   const scrollToBooking = () => {
     const bookingSection = document.getElementById("booking-section");

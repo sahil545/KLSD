@@ -8,5 +8,5 @@ interface PageProps {
 export default function SnorkelingToursTemplatePage({
   searchParams,
 }: PageProps) {
-  return <SnorkelingToursTemplate data={tourData} productId={34592} />;
+  return <SnorkelingToursTemplate data={tourData} productId={2553} />;
 }

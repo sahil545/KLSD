@@ -37,7 +37,6 @@ export default function BookingSection({
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedPrice, setSelectedPrice] = useState(data.pricing.basePrice);
-const [isCalendarOpen, setCalendarOpen] = useState(false);
 
   // Calculate base pricing (gear and services will be handled in modal)
   const baseCost = diverCount * selectedPrice;
@@ -171,8 +170,7 @@ const [isCalendarOpen, setCalendarOpen] = useState(false);
                           onDateTimeSelect={handleDateTimeSelect}
                           selectedDate={selectedDate}
                           selectedTime={selectedTime}
-                            isOpen={isCalendarOpen}          // ✅ required
-  onClose={() => setCalendarOpen(false)}
+                          lazyLoad={true}
                         />
                       ) : (
                         <div className="p-6 text-center">

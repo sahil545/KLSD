@@ -33,7 +33,7 @@ interface BookingSectionProps {
 
 export default function BookingSection({
   data,
-  productId = 34592,
+  productId,
 }: BookingSectionProps) {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [personTypes, setPersonTypes] = useState<PersonType[]>([]);
@@ -70,7 +70,7 @@ export default function BookingSection({
   const fetchCustomFormFields = async () => {
     try {
       const response = await fetch(
-        `https://keylargoscubadiving.com/wp-json/childtheme/v1/product/34450`,
+        `https://keylargoscubadiving.com/wp-json/childtheme/v1/product/${productId}`,
       );
 
       if (!response.ok) {
@@ -150,6 +150,7 @@ export default function BookingSection({
   // Initialize person types when they become available
   const initializePersonTypes = (personTypesData: PersonType[]) => {
     setPersonTypes(personTypesData);
+    console.log("Person types initialized:", personTypesData);
 
     // Initialize person counts with minimum values
     const initialCounts: { [key: number]: number } = {};
@@ -241,53 +242,6 @@ export default function BookingSection({
     }
 
     setShowGuestModal(true);
-
-    // setIsCreatingBooking(true);
-
-    // try {
-    //   // Create booking order via API
-    //   const bookingData = {
-    //     product_id: productId,
-    //     date: selectedDate.toISOString().split("T")[0],
-    //     time: selectedTimeSlot.from,
-    //     guests: totalGuests,
-    //     customer: {
-    //       first_name: "Guest", // Would get from form
-    //       last_name: "Customer",
-    //       email: "guest@example.com",
-    //       phone: "(555) 123-4567",
-    //     },
-    //   };
-
-    //   const response = await fetch("/api/wc-bookings", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(bookingData),
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    //   }
-
-    //   const result = await response.json();
-
-    //   if (result.success) {
-    //     // Redirect to WooCommerce checkout
-    //     window.location.href = result.checkout_url;
-    //   } else {
-    //     console.error("Booking creation failed:", result.error);
-    //     // Fallback: show guest modal for manual booking
-    //     setShowGuestModal(true);
-    //   }
-    // } catch (error) {
-    //   console.error("Booking error:", error);
-    //   // Fallback: show guest modal for manual booking
-    //   setShowGuestModal(true);
-    // } finally {
-    //   setIsCreatingBooking(false);
-    // }
   };
 
   return (
@@ -518,9 +472,10 @@ export default function BookingSection({
         selectedDate={selectedDate ? formatDate(selectedDate) : ""}
         selectedTime={selectedTimeSlot ? formatTime(selectedTimeSlot.from) : ""}
         customFormFields={customFormFields}
+        personTypes={personTypes}
         onRentalGearUpdate={handleRentalGearUpdate}
         rentalGearSelections={rentalGearSelections}
-        productIdNumber={34450}
+        productIdNumber={productId}
       />
     </section>
   );

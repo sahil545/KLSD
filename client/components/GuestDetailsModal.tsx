@@ -52,6 +52,15 @@ interface GuestDetailsModalProps {
       price: number;
     }>;
   };
+  personTypes?: Array<{
+    id: number;
+    name: string;
+    description: string;
+    base_cost: string;
+    block_cost: string;
+    min: string;
+    max: string;
+  }>;
   onRentalGearUpdate?: (
     passengerIndex: number,
     productId: string,
@@ -76,6 +85,12 @@ interface PassengerInfo {
   rentalGear?: { [key: number]: boolean };
 }
 
+interface SnorkelerInfo {
+  firstName: string;
+  lastName: string;
+  age?: string;
+}
+
 export default function GuestDetailsModal({
   isOpen,
   onClose,
@@ -88,6 +103,7 @@ export default function GuestDetailsModal({
   selectedTime,
   totalPrice,
   customFormFields,
+  personTypes,
   onRentalGearUpdate,
   rentalGearSelections,
   productIdNumber,
@@ -104,8 +120,9 @@ export default function GuestDetailsModal({
     phone: "",
     location: "",
     specialRequests: "",
-    snorkelerNames: "",
   });
+
+  const [isScreenLoading, setIsScreenLoading] = useState(false);
 
   const [passengers, setPassengers] = useState<PassengerInfo[]>(
     Array.from({ length: diverCount || 0 }, () => ({
@@ -119,6 +136,17 @@ export default function GuestDetailsModal({
       bcdRental: false,
       fullGearRental: false,
       rentalGear: {},
+    })),
+  );
+
+  // Calculate snorkeler count
+  const snorkelerCount = guestCount - (diverCount || 0);
+
+  const [snorkelers, setSnorkelers] = useState<SnorkelerInfo[]>(
+    Array.from({ length: snorkelerCount }, () => ({
+      firstName: "",
+      lastName: "",
+      age: "",
     })),
   );
 
@@ -139,7 +167,19 @@ export default function GuestDetailsModal({
         rentalGear: rentalGearSelections?.[index] || {},
       })),
     );
-  }, [diverCount, rentalGearSelections]);
+  }, [diverCount]);
+
+  // Update snorkelers array when snorkeler count changes
+  useEffect(() => {
+    const newSnorkelerCount = guestCount - (diverCount || 0);
+    setSnorkelers(
+      Array.from({ length: newSnorkelerCount }, () => ({
+        firstName: "",
+        lastName: "",
+        age: "",
+      })),
+    );
+  }, [guestCount, diverCount]);
 
   const updateField = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -155,6 +195,16 @@ export default function GuestDetailsModal({
     );
   };
 
+  const updateSnorkeler = (
+    index: number,
+    field: keyof SnorkelerInfo,
+    value: string,
+  ) => {
+    setSnorkelers((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)),
+    );
+  };
+
   const isFormValid = () => {
     // Check lead guest information
     const leadGuestValid =
@@ -163,28 +213,27 @@ export default function GuestDetailsModal({
       formData.email?.trim() &&
       formData.phone?.trim();
 
-    // If no additional passengers, only validate lead guest
-    if (!diverCount || diverCount === 0) {
-      return leadGuestValid;
-    }
+    // Validate additional passengers (divers) if any
+    const additionalPassengersValid =
+      !diverCount ||
+      diverCount === 0 ||
+      passengers
+        .slice(1)
+        .every((p) => p.firstName?.trim() && p.lastName?.trim());
 
-    // If diverCount > 0, we need to validate additional passengers (skip index 0 as it's the lead guest)
-    const additionalPassengersValid = passengers
-      .slice(1)
-      .every((p) => p.firstName?.trim() && p.lastName?.trim());
+    // Validate snorkelers if any
+    const snorkelersValid =
+      snorkelerCount === 0 ||
+      snorkelers.every((s) => s.firstName?.trim() && s.lastName?.trim());
 
-    return leadGuestValid && additionalPassengersValid;
+    return leadGuestValid && additionalPassengersValid && snorkelersValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Debug validation
+    // validation
     const validationResult = isFormValid();
-    console.log("Form validation result:", validationResult);
-    console.log("Form data:", formData);
-    console.log("Passengers:", passengers);
-    console.log("Diver count:", diverCount);
 
     if (!validationResult) {
       // More specific error message
@@ -196,11 +245,35 @@ export default function GuestDetailsModal({
 
       if (diverCount && diverCount > 0) {
         // Only check additional passengers (skip index 0 as it's the lead guest)
+        const diverPersonType = personTypes?.find(
+          (pt) =>
+            pt.name.toLowerCase().includes("diver") ||
+            pt.name.toLowerCase().includes("# of divers"),
+        );
+        const diverTypeName = diverPersonType?.name || "Diver";
+
         passengers.slice(1).forEach((passenger, index) => {
           if (!passenger.firstName?.trim())
-            missingFields.push(`Passenger ${index + 2} First Name`);
+            missingFields.push(`${diverTypeName} ${index + 2} First Name`);
           if (!passenger.lastName?.trim())
-            missingFields.push(`Passenger ${index + 2} Last Name`);
+            missingFields.push(`${diverTypeName} ${index + 2} Last Name`);
+        });
+      }
+
+      // Check snorkelers
+      if (snorkelerCount > 0) {
+        const snorkelerPersonType = personTypes?.find(
+          (pt) =>
+            pt.name.toLowerCase().includes("snorkeler") ||
+            pt.name.toLowerCase().includes("# of snorkelers"),
+        );
+        const snorkelerTypeName = snorkelerPersonType?.name || "Snorkeler";
+
+        snorkelers.forEach((snorkeler, index) => {
+          if (!snorkeler.firstName?.trim())
+            missingFields.push(`${snorkelerTypeName} ${index + 1} First Name`);
+          if (!snorkeler.lastName?.trim())
+            missingFields.push(`${snorkelerTypeName} ${index + 1} Last Name`);
         });
       }
 
@@ -209,6 +282,8 @@ export default function GuestDetailsModal({
       );
       return;
     }
+
+    setIsScreenLoading(true);
 
     try {
       // Calculate rental gear costs
@@ -249,7 +324,7 @@ export default function GuestDetailsModal({
       const wooCommerceData: WooCommerceData = {
         // Basic product info
         "add-to-cart": productIdNumber,
-        quantity: guestCount,
+        quantity: diverCount,
 
         // Date and time fields (matching PHP format exactly)
         wc_bookings_field_start_date_year: selectedDate
@@ -290,56 +365,132 @@ export default function GuestDetailsModal({
           : "30",
 
         // Persons fields (use correct IDs from your site)
-        wc_bookings_field_persons_34628: guestCount, // Adjust ID as needed
-        wc_bookings_field_persons_34629: 0, // Adjust ID as needed
+        // wc_bookings_field_persons_4696: diverCount, // Adjust ID as needed
+        // wc_bookings_field_persons_4697: guestCount - diverCount, // Adjust ID as needed
 
-        // Customer information
+        // Persons fields (use dynamic IDs from personTypes)
+        ...(() => {
+          const personFields: { [key: string]: number } = {};
+
+          if (personTypes) {
+            personTypes.forEach((personType) => {
+              if (
+                personType.name.toLowerCase() === "divers" ||
+                personType.name.toLowerCase() === "# of divers"
+              ) {
+                personFields[`wc_bookings_field_persons_${personType.id}`] =
+                  diverCount || 0;
+              } else if (
+                personType.name.toLowerCase() === "snorkelers" ||
+                personType.name.toLowerCase() === "# of snorkelers"
+              ) {
+                personFields[`wc_bookings_field_persons_${personType.id}`] =
+                  guestCount - (diverCount || 0);
+              }
+            });
+          }
+          return personFields;
+        })(),
+
+        // Customer information (lead guest)
         tmcp_textfield_0: `${formData.firstName} ${formData.lastName}`,
-        tmcp_select_1:
-          passengers[0]?.certificationLevel || "Open Water Diver_3",
-        tmcp_select_2:
-          passengers[0]?.lastDiveDate || "Less than 18 months ago_3",
+        // tmcp_select_1:
+        //   passengers[0]?.certificationLevel || "Open Water Diver_3",
+        // tmcp_select_2:
+        //   passengers[0]?.lastDiveDate || "Less than 18 months ago_3",
 
         // Location and special requests
         tmcp_textfield_3: formData.location || "",
         tmcp_textarea_4: formData.specialRequests || "",
+        tmcp_textarea_30:
+          snorkelers.map((s) => `${s.firstName} ${s.lastName}`).join("\n") ||
+          "",
       };
 
       // Add additional passenger and rental gear data
       const enhancedWooCommerceData = {
         ...wooCommerceData,
 
-        // Certification levels for additional passengers
-        ...passengers.slice(1).reduce(
-          (acc, passenger, index) => {
-            if (passenger.certificationLevel) {
-              acc[`tmcp_select_${index + 6}`] = passenger.certificationLevel;
-            }
-            if (passenger.lastDiveDate) {
-              acc[`tmcp_textfield_${index + 11}`] = passenger.lastDiveDate;
-            }
-            return acc;
-          },
-          {} as Record<string, string>,
-        ),
+        // Additional passengers (divers 2, 3, 4, etc.)
+        ...passengers.slice(1).reduce((acc, passenger, index) => {
+          const actualIndex = index + 1; // Start from passenger 1
 
-        // Rental gear selections (matching PHP format exactly)
+          // Use the exact numbering from static version:
+          // Diver 1: 0,1,2 | Diver 2: 6,7,8 | Diver 3: 11,12,13 | Diver 4: 16,17,18 | Diver 5: 21,22,23
+          let baseFieldIndex;
+          if (actualIndex === 1) {
+            baseFieldIndex = 6; // Diver 2: 6,7,8
+          } else if (actualIndex === 2) {
+            baseFieldIndex = 11; // Diver 3: 11,12,13
+          } else if (actualIndex === 3) {
+            baseFieldIndex = 16; // Diver 4: 16,17,18
+          } else if (actualIndex === 4) {
+            baseFieldIndex = 21; // Diver 5: 21,22,23
+          } else {
+            // For additional divers, continue the pattern
+            baseFieldIndex = 21 + (actualIndex - 4) * 5;
+          }
+
+          // Passenger names
+          acc[`tmcp_textfield_${baseFieldIndex}`] =
+            `${passenger.firstName} ${passenger.lastName}`;
+
+          // Certification levels
+          if (passenger.certificationLevel) {
+            acc[`tmcp_select_${baseFieldIndex + 1}`] =
+              passenger.certificationLevel;
+          }
+
+          // Last dive dates - should be tmcp_select, not tmcp_textfield
+          if (passenger.lastDiveDate) {
+            acc[`tmcp_select_${baseFieldIndex + 2}`] = passenger.lastDiveDate;
+          }
+
+          return acc;
+        }, {}),
+
+        // Rental gear add-ons for all passengers
         ...Object.entries(rentalGearSelections || {}).reduce(
           (acc, [passengerIndex, gearSelections]) => {
-            // Get all selected product IDs for this passenger
             const selectedProductIds = Object.entries(gearSelections)
               .filter(([_, isSelected]) => isSelected)
               .map(([productId, _]) => productId);
 
             if (selectedProductIds.length > 0) {
-              // Format: tmcp_product_5_0 => '2506,2507' (comma-separated)
-              acc[`tmcp_product_5_${passengerIndex}`] =
-                selectedProductIds.join(",");
-              acc[`tmcp_product_5_${passengerIndex}_quantity`] = "1";
+              // Add each add-on as separate fields (like static version)
+              selectedProductIds.forEach((productId, addonIndex) => {
+                // Use the exact format from static version:
+                // Passenger 0 (Diver 1): base 5, addon indices 0,1 → 5_0, 5_1
+                // Passenger 1 (Diver 2): base 10, addon indices 2,3 → 10_2, 10_3
+                // Passenger 2 (Diver 3): base 15, addon indices 4,5 → 15_4, 15_5
+
+                let baseFieldNumber, addonIndexForField;
+
+                if (parseInt(passengerIndex) === 0) {
+                  // Diver 1: use base 5, addon indices 0,1
+                  baseFieldNumber = 5;
+                  addonIndexForField = addonIndex; // 0, 1
+                } else if (parseInt(passengerIndex) === 1) {
+                  // Diver 2: use base 10, addon indices 2,3
+                  baseFieldNumber = 10;
+                  addonIndexForField = addonIndex + 2; // 2, 3
+                } else {
+                  // Diver 3+: use base 15, addon indices 4,5,6,7...
+                  baseFieldNumber = 15 + (parseInt(passengerIndex) - 2) * 5;
+                  addonIndexForField =
+                    addonIndex + 4 + (parseInt(passengerIndex) - 2) * 2;
+                }
+
+                const fieldKey = `tmcp_product_${baseFieldNumber}_${addonIndexForField}`;
+                const quantityKey = `tmcp_product_${baseFieldNumber}_${addonIndexForField}_quantity`;
+
+                acc[fieldKey] = productId;
+                acc[quantityKey] = "1";
+              });
             }
             return acc;
           },
-          {} as Record<string, string>,
+          {},
         ),
 
         // Additional booking metadata
@@ -347,7 +498,9 @@ export default function GuestDetailsModal({
         booking_diver_count: (diverCount || 0).toString(),
         booking_total_price: totalPrice?.toString() || "0",
         booking_rental_cost: rentalGearCost.toString(),
-        booking_snorkeler_names: formData.snorkelerNames || "",
+        booking_snorkeler_names:
+          snorkelers.map((s) => `${s.firstName} ${s.lastName}`).join("\n") ||
+          "",
       };
 
       // Complete booking data for logging and storage
@@ -360,7 +513,9 @@ export default function GuestDetailsModal({
           phone: formData.phone,
           location: formData.location,
           specialRequests: formData.specialRequests,
-          snorkelerNames: formData.snorkelerNames,
+          snorkelerNames: snorkelers
+            .map((s) => `${s.firstName} ${s.lastName}`)
+            .join("\n"),
         },
 
         // All passengers (divers) information
@@ -398,7 +553,9 @@ export default function GuestDetailsModal({
           basePrice: totalPrice - rentalGearCost,
           rentalGearCost: rentalGearCost,
           totalPrice: totalPrice,
-          snorkelerNames: formData.snorkelerNames,
+          snorkelerNames: snorkelers
+            .map((s) => `${s.firstName} ${s.lastName}`)
+            .join("\n"),
         },
 
         // WooCommerce data
@@ -408,22 +565,18 @@ export default function GuestDetailsModal({
         submittedAt: new Date().toISOString(),
       };
 
-      console.log("Complete Booking Data:", bookingData);
-      console.log("WooCommerce Data:", wooCommerceData);
-      console.log(
-        "Enhanced WooCommerce Data (with rental gear):",
-        enhancedWooCommerceData,
-      );
-      console.log("Rental Gear Selections:", rentalGearSelections);
-
       // Store booking data for later submission
       localStorage.setItem("pendingBookingData", JSON.stringify(bookingData));
 
       // Submit to WooCommerce via rest.php
-      await handleWooCommerceBooking(enhancedWooCommerceData, wooCommerceData);
+      await handleWooCommerceBooking(
+        enhancedWooCommerceData,
+        enhancedWooCommerceData,
+      );
 
-      onClose();
+      // onClose();
     } catch (error) {
+      setIsScreenLoading(false);
       console.error("Booking error:", error);
       alert("There was a problem processing your booking. Please try again.");
     }
@@ -432,24 +585,13 @@ export default function GuestDetailsModal({
   const submitFormToWooCommerce = (wooCommerceData: WooCommerceData) => {
     const site_url = "https://keylargoscubadiving.com";
 
-    // Direct form submission - simple, reliable, works everywhere
+    // Single form submission with ALL data (main product + all passengers + rental gear)
     const form = document.createElement("form");
     form.method = "POST";
     form.action = `${site_url}/?wc-ajax=add_to_cart`;
     form.style.display = "none";
 
-    // Add all WooCommerce fields
-    Object.entries(wooCommerceData).forEach(([key, value]) => {
-      if (value && value !== "") {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = value.toString();
-        form.appendChild(input);
-      }
-    });
-
-    // Add required fields
+    // Add main tour product
     const addToCartInput = document.createElement("input");
     addToCartInput.type = "hidden";
     addToCartInput.name = "add-to-cart";
@@ -462,12 +604,36 @@ export default function GuestDetailsModal({
     quantityInput.value = guestCount.toString();
     form.appendChild(quantityInput);
 
+    // Add ALL WooCommerce fields (including passenger details and rental gear)
+    Object.entries(wooCommerceData).forEach(([key, value]) => {
+      if (value && value !== "") {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value.toString();
+        form.appendChild(input);
+      }
+    });
+
     // Debug logging
-    console.log("Submitting form to WooCommerce:", {
+    console.log("Submitting complete form to WooCommerce:", {
       action: form.action,
       method: form.method,
       data: wooCommerceData,
     });
+
+    // Debug: Check what fields are actually being added to the form
+    const formFields = Array.from(form.elements).map((element: any) => ({
+      name: element.name,
+      value: element.value,
+    }));
+    console.log("Form fields being submitted:", formFields);
+
+    // Debug: Check if rental gear fields are present
+    const rentalGearInForm = formFields.filter(
+      (field) => field.name && field.name.startsWith("tmcp_product_"),
+    );
+    console.log("Rental gear fields in form:", rentalGearInForm);
 
     // Submit the form
     document.body.appendChild(form);
@@ -513,11 +679,96 @@ export default function GuestDetailsModal({
               wooCommerceData["wc_bookings_field_persons_34628"],
             wc_bookings_field_persons_34629:
               wooCommerceData["wc_bookings_field_persons_34629"],
+
+            // Diver 1 (lead guest) - already in wooCommerceData
             tmcp_textfield_0: wooCommerceData["tmcp_textfield_0"],
             tmcp_select_1: wooCommerceData["tmcp_select_1"],
             tmcp_select_2: wooCommerceData["tmcp_select_2"],
             tmcp_textfield_3: wooCommerceData["tmcp_textfield_3"],
             tmcp_textarea_4: wooCommerceData["tmcp_textarea_4"],
+
+            // Additional passengers (divers 2, 3, 4, etc.)
+            ...passengers.slice(1).reduce((acc, passenger, index) => {
+              const actualIndex = index + 1; // Start from passenger 1
+
+              // Use the exact numbering from static version:
+              // Diver 1: 0,1,2 | Diver 2: 6,7,8 | Diver 3: 11,12,13 | Diver 4: 16,17,18 | Diver 5: 21,22,23
+              let baseFieldIndex;
+              if (actualIndex === 1) {
+                baseFieldIndex = 6; // Diver 2: 6,7,8
+              } else if (actualIndex === 2) {
+                baseFieldIndex = 11; // Diver 3: 11,12,13
+              } else if (actualIndex === 3) {
+                baseFieldIndex = 16; // Diver 4: 16,17,18
+              } else if (actualIndex === 4) {
+                baseFieldIndex = 21; // Diver 5: 21,22,23
+              } else {
+                // For additional divers, continue the pattern
+                baseFieldIndex = 21 + (actualIndex - 4) * 5;
+              }
+
+              // Passenger names
+              acc[`tmcp_textfield_${baseFieldIndex}`] =
+                `${passenger.firstName} ${passenger.lastName}`;
+
+              // Certification levels
+              if (passenger.certificationLevel) {
+                acc[`tmcp_select_${baseFieldIndex + 1}`] =
+                  passenger.certificationLevel;
+              }
+
+              // Last dive dates - should be tmcp_select, not tmcp_textfield
+              if (passenger.lastDiveDate) {
+                acc[`tmcp_select_${baseFieldIndex + 2}`] =
+                  passenger.lastDiveDate;
+              }
+
+              return acc;
+            }, {}),
+
+            // Rental gear add-ons for all passengers
+            ...Object.entries(rentalGearSelections || {}).reduce(
+              (acc, [passengerIndex, gearSelections]) => {
+                const selectedProductIds = Object.entries(gearSelections)
+                  .filter(([_, isSelected]) => isSelected)
+                  .map(([productId, _]) => productId);
+
+                if (selectedProductIds.length > 0) {
+                  // Add each add-on as separate fields (like static version)
+                  selectedProductIds.forEach((productId, addonIndex) => {
+                    // Use the exact format from static version:
+                    // Passenger 0 (Diver 1): base 5, addon indices 0,1 → 5_0, 5_1
+                    // Passenger 1 (Diver 2): base 10, addon indices 2,3 → 10_2, 10_3
+                    // Passenger 2 (Diver 3): base 15, addon indices 4,5 → 15_4, 15_5
+
+                    let baseFieldNumber, addonIndexForField;
+
+                    if (parseInt(passengerIndex) === 0) {
+                      // Diver 1: use base 5, addon indices 0,1
+                      baseFieldNumber = 5;
+                      addonIndexForField = addonIndex; // 0, 1
+                    } else if (parseInt(passengerIndex) === 1) {
+                      // Diver 2: use base 10, addon indices 2,3
+                      baseFieldNumber = 10;
+                      addonIndexForField = addonIndex + 2; // 2, 3
+                    } else {
+                      // Diver 3+: use base 15, addon indices 4,5,6,7...
+                      baseFieldNumber = 15 + (parseInt(passengerIndex) - 2) * 5;
+                      addonIndexForField =
+                        addonIndex + 4 + (parseInt(passengerIndex) - 2) * 2;
+                    }
+
+                    const fieldKey = `tmcp_product_${baseFieldNumber}_${addonIndexForField}`;
+                    const quantityKey = `tmcp_product_${baseFieldNumber}_${addonIndexForField}_quantity`;
+
+                    acc[fieldKey] = productId;
+                    acc[quantityKey] = "1";
+                  });
+                }
+                return acc;
+              },
+              {},
+            ),
           },
           "*",
         );
@@ -655,7 +906,16 @@ export default function GuestDetailsModal({
                     <div key={i} className="p-4 border rounded-lg bg-gray-50">
                       <h4 className="font-medium mb-3 flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        Passenger {i + 1}
+                        {(() => {
+                          const diverPersonType = personTypes?.find(
+                            (pt) =>
+                              pt.name.toLowerCase().includes("diver") ||
+                              pt.name.toLowerCase().includes("# of divers"),
+                          );
+                          const personTypeName =
+                            diverPersonType?.name || "Diver";
+                          return `${personTypeName} ${i + 1}`;
+                        })()}
                         {i === 0 && (
                           <Badge variant="outline" className="text-xs">
                             Lead Guest (above)
@@ -860,31 +1120,77 @@ export default function GuestDetailsModal({
               </Card>
             )}
 
-            {/* Snorkeler Names */}
-            <Card className="mt-4">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Snorkeler Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-sm font-semibold text-gray-700 uppercase">
-                    Enter All Snorkelers Name(s)
-                  </Label>
-                  <textarea
-                    className="w-full mt-2 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    rows={4}
-                    placeholder="Enter the names of all snorkelers..."
-                    value={formData.snorkelerNames || ""}
-                    onChange={(e) =>
-                      updateField("snorkelerNames", e.target.value)
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            {/* Snorkeler Information */}
+            {snorkelerCount > 0 && (
+              <Card className="mt-4">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Snorkeler Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {snorkelers.map((snorkeler, index) => (
+                    <div
+                      key={index}
+                      className="p-4 border rounded-lg bg-gray-50"
+                    >
+                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        {(() => {
+                          const snorkelerPersonType = personTypes?.find(
+                            (pt) =>
+                              pt.name.toLowerCase().includes("snorkeler") ||
+                              pt.name.toLowerCase().includes("# of snorkelers"),
+                          );
+                          const personTypeName =
+                            snorkelerPersonType?.name || "Snorkeler";
+                          return `${personTypeName} ${index + 1}`;
+                        })()}
+                      </h4>
+                      <div className="grid md:grid-cols-3 gap-3">
+                        <div>
+                          <Label>First Name *</Label>
+                          <Input
+                            value={snorkeler.firstName}
+                            onChange={(e) =>
+                              updateSnorkeler(
+                                index,
+                                "firstName",
+                                e.target.value,
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label>Last Name *</Label>
+                          <Input
+                            value={snorkeler.lastName}
+                            onChange={(e) =>
+                              updateSnorkeler(index, "lastName", e.target.value)
+                            }
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label>Age</Label>
+                          <Input
+                            type="number"
+                            min="5"
+                            max="100"
+                            value={snorkeler.age}
+                            onChange={(e) =>
+                              updateSnorkeler(index, "age", e.target.value)
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Actions */}
             <div className="flex gap-4 pt-6">
@@ -892,7 +1198,7 @@ export default function GuestDetailsModal({
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                disabled={isLoading}
+                disabled={isScreenLoading}
                 className="flex-1"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -903,7 +1209,7 @@ export default function GuestDetailsModal({
                 // disabled={!isFormValid() || isLoading}
                 className="flex-1 bg-coral hover:bg-coral/90 text-white"
               >
-                {isLoading ? (
+                {isScreenLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Processing...
@@ -922,494 +1228,3 @@ export default function GuestDetailsModal({
     </div>
   );
 }
-
-// import React, { useState } from "react";
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Badge } from "@/components/ui/badge";
-// import {
-//   User,
-//   Calendar,
-//   CreditCard,
-//   CheckCircle,
-//   ArrowLeft,
-//   Users,
-//   X,
-// } from "lucide-react";
-
-// interface GuestDetailsModalProps {
-//   isOpen: boolean;
-//   onClose: () => void;
-//   onSubmit?: (customerData: any) => void;
-//   isLoading?: boolean;
-//   packageDetails?: any;
-//   guestCount: number;
-//   selectedDate?: string;
-//   selectedTime?: string;
-//   totalPrice?: number;
-// }
-
-// interface PassengerInfo {
-//   firstName: string;
-//   lastName: string;
-//   age?: string;
-// }
-
-// export default function GuestDetailsModal({
-//   isOpen,
-//   onClose,
-//   onSubmit,
-//   isLoading = false,
-//   packageDetails,
-//   guestCount,
-//   selectedDate,
-//   selectedTime,
-//   totalPrice,
-// }: GuestDetailsModalProps) {
-//   // Format currency inside component for consistency
-//   const formattedTotal = new Intl.NumberFormat(undefined, {
-//     style: "currency",
-//     currency: "USD",
-//   }).format(totalPrice ?? 0);
-//   const [formData, setFormData] = useState({
-//     firstName: "",
-//     lastName: "",
-//     email: "",
-//     phone: "",
-//     location: "",
-//     specialRequests: "",
-//   });
-
-//   const [passengers, setPassengers] = useState<PassengerInfo[]>(
-//     Array.from({ length: guestCount }, () => ({
-//       firstName: "",
-//       lastName: "",
-//       age: "",
-//     })),
-//   );
-
-//   const updateField = (field: string, value: string) => {
-//     setFormData((prev) => ({ ...prev, [field]: value }));
-//   };
-
-//   const updatePassenger = (
-//     index: number,
-//     field: keyof PassengerInfo,
-//     value: string,
-//   ) => {
-//     setPassengers((prev) =>
-//       prev.map((passenger, i) =>
-//         i === index ? { ...passenger, [field]: value } : passenger,
-//       ),
-//     );
-//   };
-
-//   const isFormValid = () => {
-//     const leadGuestValid =
-//       formData.firstName &&
-//       formData.lastName &&
-//       formData.email &&
-//       formData.phone;
-//     const passengersValid = passengers.every((p) => p.firstName && p.lastName);
-//     return leadGuestValid && passengersValid;
-//   };
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (!isFormValid()) return;
-
-//     // Prepare booking data for WooCommerce
-//     const bookingData = {
-//       lead_guest: {
-//         firstName: formData.firstName,
-//         lastName: formData.lastName,
-//         email: formData.email,
-//         phone: formData.phone,
-//         location: formData.location,
-//         specialRequests: formData.specialRequests,
-//       },
-//       passengers: passengers,
-//       booking_details: {
-//         guest_count: guestCount,
-//         selected_date: selectedDate,
-//         selected_time: selectedTime,
-//         total_price: totalPrice,
-//       }
-//     };
-
-//     try {
-//       // Call WooCommerce add to cart
-//       await handleWooCommerceBooking(bookingData);
-//     } catch (error) {
-//       console.error('Booking error:', error);
-//       // Handle error - maybe show error message
-//     }
-//   };
-
-//   const handleWooCommerceBooking = async (bookingData: any) => {
-//     // Get product ID from URL or props
-//     const urlParams = new URLSearchParams(window.location.search);
-//     const productId = urlParams.get('product') || '34450'; // Default Christ Statue Tour ID
-
-//     // For WordPress integration, we'll redirect to the WordPress product page with booking data
-//     if (typeof window !== 'undefined') {
-//       const isWordPressContext = urlParams.get('wordpress') === '1';
-
-//       if (isWordPressContext) {
-//         // We're in WordPress - trigger WooCommerce booking flow
-//         window.parent.postMessage({
-//           type: 'KLSD_ADD_TO_CART',
-//           productId: productId,
-//           bookingData: bookingData,
-//           guestCount: guestCount,
-//           selectedDate: selectedDate,
-//           selectedTime: selectedTime,
-//           totalPrice: totalPrice
-//         }, '*');
-
-//         // Close modal
-//         onClose();
-//       } else {
-//         // Development/staging - redirect to WordPress for actual booking
-//         const wpProductUrl = `https://keylargoscubadiving.com/product/christ-of-the-abyss-snorkeling-tour/?add-to-cart=${productId}&quantity=${guestCount}`;
-//         window.location.href = wpProductUrl;
-//       }
-//     }
-//   };
-
-//   if (!isOpen) return null;
-
-//   return (
-//     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-//       <div className="bg-white rounded-lg max-w-2xl max-h-[90vh] overflow-y-auto w-full">
-//         {/* Header */}
-//         <div className="p-6 border-b">
-//           <div className="flex items-center justify-between">
-//             <h2 className="flex items-center gap-3 text-2xl font-semibold">
-//               <Users className="w-6 h-6 text-ocean" />
-//               Guest Details - Christ Statue Tour
-//             </h2>
-//             <Button variant="ghost" onClick={onClose} className="h-8 w-8 p-0">
-//               <X className="h-4 w-4" />
-//             </Button>
-//           </div>
-//         </div>
-
-//         {/* Content */}
-//         <div className="p-6 space-y-6">
-//           {/* Booking Summary */}
-//           <Card className="bg-ocean/5 border-ocean/20">
-//             <CardHeader className="pb-3">
-//               <CardTitle className="text-lg flex items-center gap-2">
-//                 <Calendar className="w-5 h-5 text-ocean" />
-//                 Booking Summary
-//               </CardTitle>
-//             </CardHeader>
-//             <CardContent className="space-y-2">
-//               <div className="flex justify-between">
-//                 <span>Tour Date:</span>
-//                 <span className="font-semibold">
-//                   {selectedDate || "Date to be selected"}
-//                 </span>
-//               </div>
-//               <div className="flex justify-between">
-//                 <span>Tour Time:</span>
-//                 <span className="font-semibold">
-//                   {selectedTime || "8:00 AM"}
-//                 </span>
-//               </div>
-//               <div className="flex justify-between">
-//                 <span>Guests:</span>
-//                 <span className="font-semibold">
-//                   {guestCount} {guestCount === 1 ? "Adult" : "Adults"}
-//                 </span>
-//               </div>
-//               {packageDetails && (
-//                 <div className="flex justify-between">
-//                   <span>Package:</span>
-//                   <span className="font-semibold">{packageDetails.name}</span>
-//                 </div>
-//               )}
-//               <div className="flex justify-between text-lg border-t pt-2">
-//                 <span>Total (incl. tax):</span>
-//                 <span className="font-bold text-ocean">{formattedTotal}</span>
-//               </div>
-//             </CardContent>
-//           </Card>
-
-//           {/* Guest Information Form */}
-//           <form onSubmit={handleSubmit}>
-//             <Card>
-//               <CardHeader className="pb-3">
-//                 <CardTitle className="text-lg flex items-center gap-2">
-//                   <User className="w-5 h-5" />
-//                   Lead Guest Information
-//                 </CardTitle>
-//                 <p className="text-sm text-muted-foreground">
-//                   Primary contact for this booking
-//                 </p>
-//               </CardHeader>
-//               <CardContent className="space-y-4">
-//                 <div className="grid md:grid-cols-2 gap-4">
-//                   <div>
-//                     <Label htmlFor="firstName">First Name *</Label>
-//                     <Input
-//                       id="firstName"
-//                       value={formData.firstName}
-//                       onChange={(e) => updateField("firstName", e.target.value)}
-//                       placeholder="Enter first name"
-//                       className="mt-1"
-//                       required
-//                     />
-//                   </div>
-//                   <div>
-//                     <Label htmlFor="lastName">Last Name *</Label>
-//                     <Input
-//                       id="lastName"
-//                       value={formData.lastName}
-//                       onChange={(e) => updateField("lastName", e.target.value)}
-//                       placeholder="Enter last name"
-//                       className="mt-1"
-//                       required
-//                     />
-//                   </div>
-//                   <div>
-//                     <Label htmlFor="email">Email Address *</Label>
-//                     <Input
-//                       id="email"
-//                       type="email"
-//                       value={formData.email}
-//                       onChange={(e) => updateField("email", e.target.value)}
-//                       placeholder="Enter email address"
-//                       className="mt-1"
-//                       required
-//                     />
-//                   </div>
-//                   <div>
-//                     <Label htmlFor="phone">Phone Number *</Label>
-//                     <Input
-//                       id="phone"
-//                       type="tel"
-//                       value={formData.phone}
-//                       onChange={(e) => updateField("phone", e.target.value)}
-//                       placeholder="(305) 555-0123"
-//                       className="mt-1"
-//                       required
-//                     />
-//                   </div>
-//                   <div className="md:col-span-2">
-//                     <Label htmlFor="location">Hotel/Location (Optional)</Label>
-//                     <Input
-//                       id="location"
-//                       value={formData.location}
-//                       onChange={(e) => updateField("location", e.target.value)}
-//                       placeholder="e.g., Hawks Cay Resort, Mile Marker 61"
-//                       className="mt-1"
-//                     />
-//                   </div>
-//                   <div className="md:col-span-2">
-//                     <Label htmlFor="specialRequests">
-//                       Special Requests (Optional)
-//                     </Label>
-//                     <textarea
-//                       id="specialRequests"
-//                       value={formData.specialRequests}
-//                       onChange={(e) =>
-//                         updateField("specialRequests", e.target.value)
-//                       }
-//                       placeholder="Any special accommodations, dietary restrictions, or requests..."
-//                       className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-//                       rows={3}
-//                     />
-//                   </div>
-//                 </div>
-//               </CardContent>
-//             </Card>
-
-//             {/* All Passengers Information */}
-//             {guestCount > 1 && (
-//               <Card>
-//                 <CardHeader className="pb-3">
-//                   <CardTitle className="text-lg flex items-center gap-2">
-//                     <Users className="w-5 h-5" />
-//                     All Passenger Names ({guestCount} total)
-//                 </CardTitle>
-//                   <p className="text-sm text-muted-foreground">
-//                     Required for Coast Guard manifest and safety briefing
-//                   </p>
-//                 </CardHeader>
-//                 <CardContent className="space-y-4">
-//                   {passengers.map((passenger, index) => (
-//                     <div
-//                       key={index}
-//                       className="p-4 border rounded-lg bg-gray-50"
-//                     >
-//                       <h4 className="font-medium mb-3 flex items-center gap-2">
-//                         <User className="w-4 h-4" />
-//                         Passenger {index + 1}
-//                         {index === 0 && (
-//                           <Badge variant="outline" className="text-xs">
-//                             Lead Guest (above)
-//                           </Badge>
-//                         )}
-//                       </h4>
-//                       <div className="grid md:grid-cols-3 gap-3">
-//                         <div>
-//                           <Label htmlFor={`passenger-firstName-${index}`}>
-//                             First Name *
-//                           </Label>
-//                           <Input
-//                             id={`passenger-firstName-${index}`}
-//                             value={
-//                               index === 0
-//                                 ? formData.firstName
-//                                 : passenger.firstName
-//                             }
-//                             onChange={(e) => {
-//                               if (index === 0) {
-//                                 updateField("firstName", e.target.value);
-//                               }
-//                               updatePassenger(
-//                                 index,
-//                                 "firstName",
-//                                 e.target.value,
-//                               );
-//                             }}
-//                             placeholder="First name"
-//                             className="mt-1"
-//                             disabled={index === 0}
-//                             required
-//                           />
-//                           {index === 0 && (
-//                             <p className="text-xs text-gray-500 mt-1">
-//                               Auto-filled from lead guest
-//                             </p>
-//                           )}
-//                         </div>
-//                         <div>
-//                           <Label htmlFor={`passenger-lastName-${index}`}>
-//                             Last Name *
-//                           </Label>
-//                           <Input
-//                             id={`passenger-lastName-${index}`}
-//                             value={
-//                               index === 0
-//                                 ? formData.lastName
-//                                 : passenger.lastName
-//                             }
-//                             onChange={(e) => {
-//                               if (index === 0) {
-//                                 updateField("lastName", e.target.value);
-//                               }
-//                               updatePassenger(
-//                                 index,
-//                                 "lastName",
-//                                 e.target.value,
-//                               );
-//                             }}
-//                             placeholder="Last name"
-//                             className="mt-1"
-//                             disabled={index === 0}
-//                             required
-//                           />
-//                         </div>
-//                         <div>
-//                           <Label htmlFor={`passenger-age-${index}`}>
-//                             Age (Optional)
-//                           </Label>
-//                           <Input
-//                             id={`passenger-age-${index}`}
-//                             value={passenger.age}
-//                             onChange={(e) =>
-//                               updatePassenger(index, "age", e.target.value)
-//                             }
-//                             placeholder="Age"
-//                             className="mt-1"
-//                             type="number"
-//                             min="5"
-//                             max="100"
-//                           />
-//                         </div>
-//                       </div>
-//                     </div>
-//                   ))}
-//                 </CardContent>
-//               </Card>
-//             )}
-
-//             {/* Safety & Requirements Notice */}
-//             <Card className="bg-amber-50 border-amber-200 mt-6">
-//               <CardContent className="p-4">
-//                 <h4 className="font-semibold text-amber-800 mb-2">
-//                   Important Safety Information
-//                 </h4>
-//                 <ul className="text-sm text-amber-700 space-y-1">
-//                   <li>
-//                     • All guests must be comfortable in water and able to swim
-//                   </li>
-//                   <li>
-//                     • Minimum age: 5 years old (children must be accompanied by
-//                     adults)
-//                   </li>
-//                   <li>
-//                     • Please inform us of any medical conditions or concerns
-//                   </li>
-//                   <li>• Tour may be cancelled due to weather conditions</li>
-//                 </ul>
-//               </CardContent>
-//             </Card>
-
-//             {/* Action Buttons */}
-//             <div className="flex gap-4 pt-6">
-//               <Button
-//                 type="button"
-//                 variant="outline"
-//                 onClick={onClose}
-//                 className="flex-1"
-//                 disabled={isLoading}
-//               >
-//                 <ArrowLeft className="w-4 h-4 mr-2" />
-//                 Back to Booking
-//               </Button>
-//               <Button
-//                 type="submit"
-//                 disabled={!isFormValid() || isLoading}
-//                 className="flex-1 bg-coral hover:bg-coral/90 text-white"
-//               >
-//                 {isLoading ? (
-//                   <>
-//                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-//                     Processing...
-//                   </>
-//                 ) : (
-//                   <>
-//                     <CreditCard className="w-4 h-4 mr-2" />
-//                     Complete Booking {totalPrice}
-//                   </>
-//                 )}
-//               </Button>
-//             </div>
-
-//             {/* Trust Indicators */}
-//             <div className="flex items-center justify-center gap-6 pt-4 text-sm text-muted-foreground border-t">
-//               <div className="flex items-center gap-1">
-//                 <CheckCircle className="w-4 h-4 text-green-600" />
-//                 <span>Secure Booking</span>
-//               </div>
-//               <div className="flex items-center gap-1">
-//                 <CheckCircle className="w-4 h-4 text-green-600" />
-//                 <span>Instant Confirmation</span>
-//               </div>
-//               <div className="flex items-center gap-1">
-//                 <CheckCircle className="w-4 h-4 text-green-600" />
-//                 <span>Weather Guarantee</span>
-//               </div>
-//             </div>
-//           </form>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }

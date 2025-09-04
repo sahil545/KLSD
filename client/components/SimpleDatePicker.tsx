@@ -180,7 +180,7 @@ export default function SimpleDatePicker({
   const fetchPersonTypes = async () => {
     try {
       const response = await fetch(
-        `https://keylargoscubadiving.com/wp-json/childtheme/v1/product/34450`,
+        `https://keylargoscubadiving.com/wp-json/childtheme/v1/product/${productId}`,
       );
 
       if (!response.ok) {
@@ -191,10 +191,6 @@ export default function SimpleDatePicker({
 
       if (data.booking_data && data.booking_data.person_types) {
         setPersonTypes(data.booking_data.person_types);
-        console.log(
-          "✅ Person types loaded on mount:",
-          data.booking_data.person_types,
-        );
         // Pass person types to parent component immediately
         if (onPersonTypesLoaded) {
           onPersonTypesLoaded(data.booking_data.person_types);
@@ -211,7 +207,7 @@ export default function SimpleDatePicker({
 
     try {
       const response = await fetch(
-        `https://keylargoscubadiving.com/wp-json/childtheme/v1/product/34450`,
+        `https://keylargoscubadiving.com/wp-json/childtheme/v1/product/${productId}`,
       );
 
       if (!response.ok) {
@@ -221,8 +217,10 @@ export default function SimpleDatePicker({
       const data: ProductResponse = await response.json();
 
       if (data.booking_data && data.booking_data.availability) {
-        setTimeSlots(data.booking_data.availability);
-        console.log("✅ Time slots loaded:", data.booking_data.availability);
+        const filteredTimeSlots = data.booking_data.availability.filter(
+          (slot) => slot.bookable === "yes",
+        );
+        setTimeSlots(filteredTimeSlots);
       } else {
         setTimeSlots([]);
         setError("No time slots available");

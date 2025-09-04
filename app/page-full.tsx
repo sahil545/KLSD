@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Navigation } from "../client/components/Navigation";
@@ -11,13 +13,8 @@ import { Card } from "../client/components/ui/card";
 import { Dialog, DialogContent } from "../client/components/ui/dialog";
 import Booking from "../client/components/Booking";
 
-import FloatingBubbles from "../client/components/FloatingBubbles";
 import EnhancedCard from "../client/components/EnhancedCard";
 import ScrollAnimation from "../client/components/ScrollAnimation";
-import {
-  AnimatedGradientText,
-  FloatingGradientOrbs,
-} from "../client/components/GlassmorphismCard";
 
 import {
   Star,
@@ -46,7 +43,25 @@ import {
 export default function Homepage() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [activeAdventureFilter, setActiveAdventureFilter] = useState("All");
+  const [activeAdventureFilter, setActiveAdventureFilter] = useState("all");
+  const [adventures, setAdventures] = useState<
+    Array<{
+      id: number;
+      title: string;
+      category: string;
+      price: number;
+      duration?: string;
+      rating: number;
+      reviews: number;
+      description: string;
+      image: string;
+      permalink?: string;
+      features?: string[];
+      catSlugs?: string[];
+      catNames?: string[];
+    }>
+  >([]);
+  const [loadingTrips, setLoadingTrips] = useState(true);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
   const openBooking = () => {
@@ -56,6 +71,52 @@ export default function Homepage() {
   const closeBooking = () => {
     setIsBookingOpen(false);
   };
+
+  // Load live trips from WooCommerce
+  useEffect(() => {
+    let ignore = false;
+    async function loadTrips() {
+      try {
+        const res = await fetch(`/api/trips?limit=100`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const trips = (data.trips || []).map((t: any) => ({
+          id: t.id,
+          title: t.name,
+          category: t.categoryDisplay || (t.categories?.[0]?.name ?? "All"),
+          price: Number(t.price) || 0,
+          duration: t.duration || undefined,
+          rating: Number(t.average_rating) || 0,
+          reviews: Number(t.rating_count) || 0,
+          description: (t.short_description || "").replace(/<[^>]+>/g, ""),
+          image:
+            t.image ||
+            "https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          permalink: t.permalink,
+          features: [],
+          catSlugs: (t.categories || []).map((c: any) =>
+            (c.slug || "").toLowerCase(),
+          ),
+          catNames: (t.categories || []).map((c: any) =>
+            (c.name || "").toLowerCase(),
+          ),
+        }));
+        if (!ignore) {
+          if (trips.length > 0) {
+            setAdventures(trips);
+          }
+        }
+      } catch (e) {
+        console.warn("Trips API error; keeping current adventures", e);
+      } finally {
+        if (!ignore) setLoadingTrips(false);
+      }
+    }
+    loadTrips();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const heroSlides = [
     {
@@ -151,7 +212,7 @@ export default function Homepage() {
     return () => clearInterval(timer);
   }, [heroSlides.length]);
 
-  const adventures = [
+  const defaultAdventures = [
     {
       id: 1,
       title: "Christ of the Abyss",
@@ -256,22 +317,29 @@ export default function Homepage() {
     },
   ];
 
-  const filteredAdventures =
-    activeAdventureFilter === "All"
-      ? adventures
-      : adventures.filter(
-          (adventure) => adventure.category === activeAdventureFilter,
-        );
+  const sortedAdventures = React.useMemo(() => {
+    if ((activeAdventureFilter || "").toLowerCase() === "all")
+      return adventures;
+    const wanted = (activeAdventureFilter || "").toLowerCase();
+    return adventures.filter((a) => {
+      const slugs = (a.catSlugs || []).map((s) => (s || "").toLowerCase());
+      return slugs.includes(wanted);
+    });
+  }, [adventures, activeAdventureFilter]);
 
   const adventureFilterOptions = [
-    { name: "All", icon: Users, color: "ocean" },
-    { name: "Snorkeling Trips", icon: Waves, color: "coral" },
-    { name: "Reef Dive Trips", icon: Fish, color: "sage" },
-    { name: "Wreck Dive Trips", icon: Ship, color: "ocean" },
-    { name: "Night Dives", icon: Moon, color: "coral" },
-    { name: "Spearfishing Trips", icon: Target, color: "sage" },
-    { name: "Lobster Trips", icon: Zap, color: "coral" },
-    { name: "Private Charters", icon: Anchor, color: "ocean" },
+    { name: "all", icon: Users, color: "ocean" },
+    { name: "sunset-cruise", icon: Ship, color: "coral" },
+    { name: "snorkeling-trips", icon: Waves, color: "coral" },
+    { name: "dive-trips", icon: Fish, color: "sage" },
+    { name: "spearfishing", icon: Target, color: "sage" },
+    { name: "reef-dives", icon: Fish, color: "sage" },
+    { name: "wreck-dives", icon: Ship, color: "ocean" },
+    { name: "shark-dive", icon: Fish, color: "ocean" },
+    { name: "night-dive", icon: Moon, color: "coral" },
+    { name: "coral-restoration-dives", icon: Shield, color: "sage" },
+    { name: "private-dive-charters", icon: Anchor, color: "ocean" },
+    { name: "private-snorkeling-trips", icon: Waves, color: "coral" },
   ];
 
   const certifications = [
@@ -449,21 +517,10 @@ export default function Homepage() {
         <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent"></div>
 
         {/* Floating Bubbles for Underwater Ambiance */}
-        <FloatingBubbles count={25} className="opacity-60" />
 
         {/* Floating Gradient Orbs */}
-        <FloatingGradientOrbs />
 
         {/* Additional floating elements */}
-        <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute bottom-1/4 left-1/4 w-24 h-24 bg-white/5 rounded-full blur-2xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-        <div
-          className="absolute top-1/2 right-1/6 w-16 h-16 bg-white/5 rounded-full blur-xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
 
         <div className="relative z-10 container mx-auto px-4 py-20">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -482,12 +539,10 @@ export default function Homepage() {
                 </Badge>
               </div>
 
-              <h1 className="text-5xl lg:text-7xl font-bold mb-8 leading-tight drop-shadow-lg">
-                <span className="text-white">Key Largo</span>
+              <h1 className="text-5xl lg:text-7xl font-bold text-white mb-8 leading-tight drop-shadow-lg">
+                Key Largo
                 <br />
-                <AnimatedGradientText className="font-black">
-                  Scuba Diving
-                </AnimatedGradientText>
+                Scuba Diving
               </h1>
 
               {/* Hero Slider */}
@@ -633,7 +688,7 @@ export default function Homepage() {
               Adventures & Tours
             </Badge>
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Underwater Paradise Awaits
+              Best Key Largo Dive Trips
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Discover the magic beneath the surface with our world-famous
@@ -669,7 +724,9 @@ export default function Homepage() {
                       onClick={() => setActiveAdventureFilter(filter.name)}
                     >
                       <IconComponent className="w-4 h-4 mr-2" />
-                      {filter.name}
+                      <span className="capitalize">
+                        {filter.name.replace(/-/g, " ")}
+                      </span>
                     </Button>
                   );
                 })}
@@ -677,19 +734,16 @@ export default function Homepage() {
             </div>
           </div>
 
-          {/* Enhanced Adventure Cards with Scroll Animation */}
-          <ScrollAnimation
-            animation="fadeInUp"
-            className="overflow-x-auto pb-4"
-          >
+          {/* Enhanced Adventure Cards - animations removed for stability */}
+          <div className="overflow-x-auto pb-4">
             <div className="flex gap-6 w-max">
-              {filteredAdventures.map((adventure) => (
+              {sortedAdventures.map((adventure) => (
                 <EnhancedCard
                   key={adventure.id}
                   className="w-80 flex-shrink-0"
-                  hoverScale={1.08}
+                  hoverScale={1}
                   glowColor="blue"
-                  tilting={true}
+                  tilting={false}
                 >
                   <div className="relative h-48 overflow-hidden">
                     <Image
@@ -740,27 +794,37 @@ export default function Homepage() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Clock className="w-4 h-4 text-ocean" />
-                        <span>{adventure.duration}</span>
+                        <span>{adventure.duration || ""}</span>
                       </div>
-                      {adventure.features.slice(0, 2).map((feature, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 text-sm text-gray-600"
-                        >
-                          <span className="text-green-600">✓</span>
-                          <span>{feature}</span>
-                        </div>
-                      ))}
+                      {(adventure.features || [])
+                        .slice(0, 2)
+                        .map((feature, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 text-sm text-gray-600"
+                          >
+                            <span className="text-green-600">✓</span>
+                            <span>{feature}</span>
+                          </div>
+                        ))}
                     </div>
 
-                    <Button className="w-full bg-coral hover:bg-coral/90 text-white font-semibold text-sm transform hover:scale-105 transition-all duration-300">
-                      Book Adventure
-                    </Button>
+                    {adventure.permalink ? (
+                      <Link href={adventure.permalink} className="block w-full">
+                        <Button className="w-full bg-coral hover:bg-coral/90 text-white font-semibold text-sm">
+                          Book Adventure
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button className="w-full bg-coral hover:bg-coral/90 text-white font-semibold text-sm">
+                        Book Adventure
+                      </Button>
+                    )}
                   </div>
                 </EnhancedCard>
               ))}
             </div>
-          </ScrollAnimation>
+          </div>
 
           <div className="text-center mt-12">
             <Button
@@ -1510,7 +1574,7 @@ export default function Homepage() {
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="text-coral text-lg mt-1">✓</span>
+                    <span className="text-coral text-lg mt-1">��</span>
                     <span className="text-gray-700">
                       Exclusive dive sites & activities
                     </span>
