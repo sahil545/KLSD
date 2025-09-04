@@ -3,7 +3,7 @@ import { getWooCommerceConfig } from "../../../client/lib/woocommerce-config";
 
 export async function GET() {
   try {
-    const config = getWooCommerceConfig();
+    const config = getWooCommerceConfig;
     const auth = btoa(`${config.consumerKey}:${config.consumerSecret}`);
 
     // Test multiple endpoints and methods

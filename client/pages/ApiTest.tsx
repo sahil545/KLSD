@@ -105,7 +105,7 @@ function ApiTest() {
       setIsConnected(connectionResult.success);
 
       if (connectionResult.success) {
-        const config = getWooCommerceConfig();
+        const config = getWooCommerceConfig;
 
         // Test 2: Products API
         try {
