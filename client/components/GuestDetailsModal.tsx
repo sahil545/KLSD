@@ -428,15 +428,17 @@ export default function GuestDetailsModal({
         tmcp_textarea_4: formData.specialRequests || "",
         // Format passenger names based on person types
         ...(() => {
-          // Check if person types contain divers or snorkelers
-          const hasDiversOrSnorkelers = personTypes?.some(
-            (pt) =>
-              pt.name.toLowerCase().includes("diver") ||
-              pt.name.toLowerCase().includes("snorkeler"),
+          // Check if person types contain both divers AND snorkelers
+          const hasDivers = personTypes?.some((pt) =>
+            pt.name.toLowerCase().includes("diver"),
           );
+          const hasSnorkelers = personTypes?.some((pt) =>
+            pt.name.toLowerCase().includes("snorkeler"),
+          );
+          const hasBothDiversAndSnorkelers = hasDivers && hasSnorkelers;
 
-          // If person types are divers/snorkelers, use string format
-          if (hasDiversOrSnorkelers) {
+          // If person types include both divers and snorkelers, use string format
+          if (hasBothDiversAndSnorkelers) {
             return {
               tmcp_textarea_30:
                 snorkelers
