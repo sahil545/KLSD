@@ -519,6 +519,7 @@ export default function ScubaGear() {
     badges: item.badges,
     tags: item.tags,
     category: item.category,
+    categoryId: item.categoryId,
     rating: item.rating,
     reviews: item.reviews,
     description: item.description,
@@ -954,7 +955,7 @@ export default function ScubaGear() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-ocean"
+                  className="border-white text-ocean hover:bg-white hover:text-ocean"
                 >
                   Learn More
                 </Button>

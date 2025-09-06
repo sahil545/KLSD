@@ -59,6 +59,7 @@ export default function Homepage() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeAdventureFilter, setActiveAdventureFilter] = useState("all");
+  const [activeGearFilter, setActiveGearFilter] = useState("All");
   const [featuredGearProducts, setFeaturedGearProducts] = useState<any[]>([]);
   const [loadingFeaturedGear, setLoadingFeaturedGear] = useState(true);
   const [adventures, setAdventures] = useState<
@@ -584,6 +585,25 @@ export default function Homepage() {
     { name: "Private", icon: UserCheck, color: "ocean" },
     { name: "Specialty", icon: BookOpen, color: "sage" },
   ];
+
+  // Gear filter options
+  const gearFilterOptions = [
+    { name: "All", icon: Users, color: "ocean" },
+    { name: "Scuba Gear", icon: Star, color: "sage" },
+    { name: "BCDs", icon: Award, color: "coral" },
+    { name: "Regulators", icon: UserCheck, color: "ocean" },
+    { name: "Scuba Masks", icon: BookOpen, color: "sage" },
+    { name: "Dive Fins", icon: Fish, color: "coral" },
+    { name: "Rash Guards", icon: Waves, color: "ocean" },
+  ];
+
+  // Filter featured gear products
+  const filteredFeaturedGear = React.useMemo(() => {
+    if (activeGearFilter === "All") return featuredGearProducts;
+    return featuredGearProducts.filter(
+      (product) => product.category === activeGearFilter,
+    );
+  }, [featuredGearProducts, activeGearFilter]);
 
   return (
     <div className="min-h-screen">
@@ -1325,6 +1345,39 @@ export default function Homepage() {
               </p>
             </div>
 
+            {/* Gear Filter Buttons */}
+            <div className="mb-12">
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                {gearFilterOptions.map((filter) => {
+                  const IconComponent = filter.icon;
+                  const isActive = activeGearFilter === filter.name;
+                  const colorClasses = {
+                    ocean: isActive
+                      ? "bg-ocean text-white border-ocean"
+                      : "border-ocean text-ocean hover:bg-ocean hover:text-white",
+                    sage: isActive
+                      ? "bg-sage text-white border-sage"
+                      : "border-sage text-sage hover:bg-sage hover:text-white",
+                    coral: isActive
+                      ? "bg-coral text-white border-coral"
+                      : "border-coral text-coral hover:bg-coral hover:text-white",
+                  };
+
+                  return (
+                    <Button
+                      key={filter.name}
+                      variant="outline"
+                      className={colorClasses[filter.color]}
+                      onClick={() => setActiveGearFilter(filter.name)}
+                    >
+                      <IconComponent className="w-4 h-4 mr-2" />
+                      {filter.name}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Product Cards Grid */}
             <div className="overflow-x-auto pb-4">
               {loadingFeaturedGear ? (
@@ -1336,8 +1389,8 @@ export default function Homepage() {
                 </div>
               ) : (
                 <div className="flex gap-4 w-max md:w-full md:grid md:grid-cols-6">
-                  {featuredGearProducts.length > 0 ? (
-                    featuredGearProducts.map((product) => (
+                  {filteredFeaturedGear.length > 0 ? (
+                    filteredFeaturedGear.map((product) => (
                       <Link
                         key={product.id}
                         href={`/product/${product.name
