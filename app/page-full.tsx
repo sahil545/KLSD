@@ -38,12 +38,29 @@ import {
   Truck,
   Settings,
   X,
+  Loader2,
 } from "lucide-react";
+
+// Base API URL for category products
+const CATEGORY_API_BASE =
+  "https://keylargoscubadiving.com/wp-json/childtheme/v1/products-by-category/";
+
+// Category chips with their IDs for featured gear
+const FEATURED_CATEGORIES = [
+  { id: 186, name: "Scuba Gear" },
+  { id: 204, name: "BCDs" },
+  { id: 203, name: "Regulators" },
+  { id: 195, name: "Scuba Masks" },
+  { id: 205, name: "Dive Fins" },
+  { id: 211, name: "Rash Guards" },
+];
 
 export default function Homepage() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeAdventureFilter, setActiveAdventureFilter] = useState("all");
+  const [featuredGearProducts, setFeaturedGearProducts] = useState<any[]>([]);
+  const [loadingFeaturedGear, setLoadingFeaturedGear] = useState(true);
   const [adventures, setAdventures] = useState<
     Array<{
       id: number;
@@ -72,6 +89,106 @@ export default function Homepage() {
   const closeBooking = () => {
     setIsBookingOpen(false);
   };
+
+  // Function to load products from specific category API
+  const loadCategoryProducts = async (categoryId: number): Promise<any[]> => {
+    const apiUrl = `${CATEGORY_API_BASE}${categoryId}`;
+
+    try {
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const data = await response.json();
+        // The API returns an object with a 'products' array, not a direct array
+        if (data && data.products && Array.isArray(data.products)) {
+          return data.products;
+        }
+        // Fallback: if it's already an array (for backward compatibility)
+        if (Array.isArray(data)) {
+          return data;
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to load products for category ${categoryId}:`,
+        error,
+      );
+    }
+    return [];
+  };
+
+  // Function to convert API product to display format
+  const convertToGearItem = (product: any) => {
+    const productName = product.name || product.title || "Unknown Product";
+    const productPrice = product.price || product.regular_price || "0";
+    const productSalePrice = product.sale_price || "";
+    const productImages = product.images || [];
+    const productCategories = product.categories || [];
+    const stockStatus =
+      product.stock_status || product.in_stock ? "instock" : "outofstock";
+
+    return {
+      id: product.id,
+      name: productName,
+      category: productCategories?.[0]?.name || "Accessories",
+      categoryId: productCategories?.[0]?.id || 186,
+      price: `$${parseFloat(productSalePrice || productPrice).toFixed(2)}`,
+      originalPrice:
+        productSalePrice && productPrice !== productSalePrice
+          ? `$${parseFloat(productPrice).toFixed(2)}`
+          : null,
+      rating: parseFloat(product.average_rating) || 4.5,
+      reviews: product.rating_count || Math.floor(Math.random() * 30),
+      image: productImages?.[0]?.src || "https://via.placeholder.com/300x200",
+      badges: product.attributes?.find((attr: any) => attr.name === "Brand")
+        ?.options || ["ScubaPro"],
+      inStock: stockStatus === "instock",
+      description:
+        product.short_description || product.description || productName,
+    };
+  };
+
+  // Load featured gear products from multiple categories
+  useEffect(() => {
+    const loadFeaturedGear = async () => {
+      try {
+        setLoadingFeaturedGear(true);
+
+        // Fetch products from multiple categories
+        const categoryPromises = FEATURED_CATEGORIES.map((category) =>
+          loadCategoryProducts(category.id),
+        );
+
+        const categoryResults = await Promise.all(categoryPromises);
+
+        // Flatten all products and filter for featured ones
+        const allProducts = categoryResults.flat();
+        const featuredProducts = allProducts
+          .filter((product) => product.featured || product.featured_product)
+          .map(convertToGearItem);
+
+        // If no featured products, get random products from all categories
+        let displayProducts = featuredProducts;
+        if (displayProducts.length < 6) {
+          const randomProducts = allProducts
+            .map(convertToGearItem)
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 6);
+          displayProducts = randomProducts;
+        }
+
+        // Take only 6 products and randomize them
+        setFeaturedGearProducts(displayProducts.slice(0, 6));
+      } catch (error) {
+        console.warn("Failed to load featured gear products:", error);
+        // Fallback to empty array
+        setFeaturedGearProducts([]);
+      } finally {
+        setLoadingFeaturedGear(false);
+      }
+    };
+
+    loadFeaturedGear();
+  }, []);
 
   // Load live trips from WooCommerce
   useEffect(() => {
@@ -1210,137 +1327,69 @@ export default function Homepage() {
 
             {/* Product Cards Grid */}
             <div className="overflow-x-auto pb-4">
-              <div className="flex gap-4 w-max md:w-full md:grid md:grid-cols-6">
-                {/* ScubaPro MK25 Regulator */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
-                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
-                    <Image
-                      src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
-                      alt="ScubaPro MK25 Regulator"
-                      width={300}
-                      height={200}
-                      className="w-full h-full object-cover"
-                    />
-                    <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
-                      ScubaPro
-                    </Badge>
-                  </div>
-                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
-                    MK25 EVO Regulator
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-2">
-                    Professional Grade
-                  </p>
-                  <div className="text-lg font-bold text-ocean">$649</div>
+              {loadingFeaturedGear ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-ocean" />
+                  <span className="ml-2 text-gray-600">
+                    Loading featured gear...
+                  </span>
                 </div>
-
-                {/* ScubaPro Hydros Pro BCD */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
-                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
-                    <Image
-                      src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
-                      alt="ScubaPro Hydros Pro BCD"
-                      width={300}
-                      height={200}
-                      className="w-full h-full object-cover"
-                    />
-                    <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
-                      ScubaPro
-                    </Badge>
-                  </div>
-                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
-                    Hydros Pro BCD
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-2">Modular Design</p>
-                  <div className="text-lg font-bold text-ocean">$459</div>
+              ) : (
+                <div className="flex gap-4 w-max md:w-full md:grid md:grid-cols-6">
+                  {featuredGearProducts.length > 0 ? (
+                    featuredGearProducts.map((product) => (
+                      <Link
+                        key={product.id}
+                        href={`/product/${product.name
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, "-")
+                          .replace(
+                            /^-+|-+$/g,
+                            "",
+                          )}?categoryId=${product.categoryId || 186}&productId=${product.id}`}
+                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0 cursor-pointer"
+                      >
+                        <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            width={300}
+                            height={200}
+                            className="w-full h-full object-cover"
+                          />
+                          {product.badges && product.badges.length > 0 && (
+                            <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
+                              {product.badges[0]}
+                            </Badge>
+                          )}
+                        </div>
+                        <h4 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">
+                          {product.name}
+                        </h4>
+                        <p className="text-xs text-gray-600 mb-2 line-clamp-1">
+                          {product.category}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="text-lg font-bold text-ocean">
+                            {product.price}
+                          </div>
+                          {product.originalPrice && (
+                            <div className="text-sm text-gray-500 line-through">
+                              {product.originalPrice}
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="col-span-6 text-center py-12">
+                      <p className="text-gray-500">
+                        No featured gear products available at the moment.
+                      </p>
+                    </div>
+                  )}
                 </div>
-
-                {/* Ocean Reef Neptune Space G.divers */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
-                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
-                    <Image
-                      src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
-                      alt="Ocean Reef Neptune Space"
-                      width={300}
-                      height={200}
-                      className="w-full h-full object-cover"
-                    />
-                    <Badge className="absolute top-2 right-2 bg-teal-600 text-white text-xs">
-                      Ocean Reef
-                    </Badge>
-                  </div>
-                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
-                    Neptune Space G.divers
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-2">Full Face Mask</p>
-                  <div className="text-lg font-bold text-ocean">$749</div>
-                </div>
-
-                {/* ScubaPro Seawing Nova Fins */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
-                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
-                    <Image
-                      src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
-                      alt="ScubaPro Seawing Nova Fins"
-                      width={300}
-                      height={200}
-                      className="w-full h-full object-cover"
-                    />
-                    <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
-                      ScubaPro
-                    </Badge>
-                  </div>
-                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
-                    Seawing Nova Fins
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-2">
-                    Advanced Propulsion
-                  </p>
-                  <div className="text-lg font-bold text-ocean">$179</div>
-                </div>
-
-                {/* Ocean Reef Diving Mask */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
-                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
-                    <Image
-                      src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
-                      alt="Ocean Reef Aria Classic"
-                      width={300}
-                      height={200}
-                      className="w-full h-full object-cover"
-                    />
-                    <Badge className="absolute top-2 right-2 bg-teal-600 text-white text-xs">
-                      Ocean Reef
-                    </Badge>
-                  </div>
-                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
-                    Aria Classic Mask
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-2">Low Volume</p>
-                  <div className="text-lg font-bold text-ocean">$89</div>
-                </div>
-
-                {/* ScubaPro Wetsuit */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0">
-                  <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
-                    <Image
-                      src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80"
-                      alt="ScubaPro Definition Wetsuit"
-                      width={300}
-                      height={200}
-                      className="w-full h-full object-cover"
-                    />
-                    <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
-                      ScubaPro
-                    </Badge>
-                  </div>
-                  <h4 className="font-semibold text-sm text-gray-900 mb-1">
-                    Definition 3mm Wetsuit
-                  </h4>
-                  <p className="text-xs text-gray-600 mb-2">Tropical Diving</p>
-                  <div className="text-lg font-bold text-ocean">$299</div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Dealer Status Badges */}

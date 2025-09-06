@@ -217,14 +217,288 @@ const reviews = [
   },
 ];
 
-export default function ProductTemplate1a() {
-  const [selectedColor, setSelectedColor] = useState("Black/Blue");
-  const [selectedSize, setSelectedSize] = useState("M");
+// Function to convert API product data to template format
+const convertApiProductToTemplate = (apiProduct: any) => {
+  const productImages = apiProduct.images || [];
+  const productCategories = apiProduct.categories || [];
+  const productAttributes = apiProduct.attributes || [];
+
+  // Extract brand from attributes
+  const brandAttr = productAttributes.find(
+    (attr: any) =>
+      attr.name?.toLowerCase().includes("brand") ||
+      attr.slug?.includes("brand"),
+  );
+  const brand = brandAttr?.options?.[0] || "ScubaPro";
+
+  // Extract colors from attributes or use default
+  const colorAttr = productAttributes.find(
+    (attr: any) =>
+      attr.name?.toLowerCase().includes("color") ||
+      attr.slug?.includes("color"),
+  );
+  const colors = colorAttr?.options || ["Black/Blue", "Black", "Blue"];
+
+  // Extract sizes from attributes or use default
+  const sizeAttr = productAttributes.find(
+    (attr: any) =>
+      attr.name?.toLowerCase().includes("size") || attr.slug?.includes("size"),
+  );
+  const sizes = sizeAttr?.options || ["XS", "S", "M", "L", "XL"];
+
+  return {
+    id: apiProduct.id,
+    name: apiProduct.name,
+    price: apiProduct.price
+      ? `$${parseFloat(apiProduct.price).toFixed(2)}`
+      : "$0.00",
+    originalPrice:
+      apiProduct.regular_price &&
+      apiProduct.sale_price &&
+      apiProduct.regular_price !== apiProduct.sale_price
+        ? `$${parseFloat(apiProduct.regular_price).toFixed(2)}`
+        : null,
+    description: apiProduct.description || apiProduct.short_description || "",
+    images:
+      productImages.length > 0
+        ? productImages.map((img: any) => img.src)
+        : ["/placeholder.svg"],
+    category: productCategories[0]?.name || "Scuba Gear",
+    brand,
+    colors,
+    sizes,
+    inStock: apiProduct.stock_status === "instock",
+    stockQuantity: apiProduct.stock_quantity || 0,
+    rating: parseFloat(apiProduct.average_rating) || 4.5,
+    reviewCount: apiProduct.rating_count || 0,
+    sku: apiProduct.sku || "",
+    weight: apiProduct.weight || "",
+    dimensions: apiProduct.dimensions || { length: "", width: "", height: "" },
+    features: [
+      "Professional grade construction",
+      "High quality materials",
+      "Durable design",
+      "Trusted by divers worldwide",
+    ],
+    specifications: [
+      { label: "Brand", value: brand },
+      { label: "Category", value: productCategories[0]?.name || "Scuba Gear" },
+      { label: "SKU", value: apiProduct.sku || "N/A" },
+      { label: "Weight", value: apiProduct.weight || "N/A" },
+      {
+        label: "Dimensions",
+        value: apiProduct.dimensions
+          ? `${apiProduct.dimensions.length || "N/A"} x ${apiProduct.dimensions.width || "N/A"} x ${apiProduct.dimensions.height || "N/A"}`
+          : "N/A",
+      },
+    ],
+    included: [
+      "Product as described",
+      "Manufacturer warranty",
+      "Quality guarantee",
+    ],
+    shipping:
+      "Free shipping on orders over $100. Standard shipping 3-5 business days.",
+    returnPolicy: "30-day return policy. Items must be in original condition.",
+  };
+};
+
+// Helper function to generate WooCommerce URLs
+const generateWooCommerceUrl = (
+  action: "cart" | "checkout",
+  productData: any,
+  quantity: number,
+  selectedColor: string,
+  selectedSize: string,
+) => {
+  // Use the WooCommerce add-to-cart endpoint
+  const baseUrl = "https://keylargoscubadiving.com/cart/";
+
+  const url = new URL(baseUrl);
+
+  // Add basic product data
+  url.searchParams.set("add-to-cart", productData.id.toString());
+  url.searchParams.set("quantity", quantity.toString());
+
+  // Add product variations based on WooCommerce attribute naming conventions
+  if (selectedColor) {
+    // Try different possible attribute names for color
+    const colorValue = selectedColor.toLowerCase().replace(/\s+/g, "-");
+    url.searchParams.set("attribute_pa_color", colorValue);
+    url.searchParams.set("attribute_color", colorValue);
+    url.searchParams.set("attribute_pa_colour", colorValue); // Alternative spelling
+  }
+
+  if (selectedSize) {
+    // Try different possible attribute names for size
+    const sizeValue = selectedSize.toLowerCase();
+    url.searchParams.set("attribute_pa_size", sizeValue);
+    url.searchParams.set("attribute_size", sizeValue);
+  }
+
+  // For checkout, redirect to checkout after adding to cart
+  if (action === "checkout") {
+    url.searchParams.set("checkout", "true");
+  }
+
+  return url.toString();
+};
+
+// Method to add product to WooCommerce cart using direct URL approach
+const addToWooCommerceCart = async (
+  productData: any,
+  quantity: number,
+  selectedColor: string,
+  selectedSize: string,
+) => {
+  try {
+    // Create a hidden form and submit it to add to cart
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "https://keylargoscubadiving.com/cart/";
+    form.target = "_blank";
+    form.style.display = "none";
+
+    // Add product ID
+    const productIdInput = document.createElement("input");
+    productIdInput.type = "hidden";
+    productIdInput.name = "add-to-cart";
+    productIdInput.value = productData.id.toString();
+    form.appendChild(productIdInput);
+
+    // Add quantity
+    const quantityInput = document.createElement("input");
+    quantityInput.type = "hidden";
+    quantityInput.name = "quantity";
+    quantityInput.value = quantity.toString();
+    form.appendChild(quantityInput);
+
+    // Add color variation if selected
+    if (selectedColor) {
+      const colorInput = document.createElement("input");
+      colorInput.type = "hidden";
+      colorInput.name = "attribute_pa_color";
+      colorInput.value = selectedColor.toLowerCase().replace(/\s+/g, "-");
+      form.appendChild(colorInput);
+    }
+
+    // Add size variation if selected
+    if (selectedSize) {
+      const sizeInput = document.createElement("input");
+      sizeInput.type = "hidden";
+      sizeInput.name = "attribute_pa_size";
+      sizeInput.value = selectedSize.toLowerCase();
+      form.appendChild(sizeInput);
+    }
+
+    // Submit the form
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+
+    return true;
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    return false;
+  }
+};
+
+// Alternative method using direct URL redirection
+const redirectToWooCommerce = (
+  action: "cart" | "checkout",
+  productData: any,
+  quantity: number,
+  selectedColor: string,
+  selectedSize: string,
+) => {
+  // Build the URL with all parameters
+  let url = `https://keylargoscubadiving.com/cart/?add-to-cart=${productData.id}&quantity=${quantity}`;
+
+  // Add variations
+  if (selectedColor) {
+    const colorValue = selectedColor.toLowerCase().replace(/\s+/g, "-");
+    url += `&attribute_pa_color=${encodeURIComponent(colorValue)}`;
+  }
+
+  if (selectedSize) {
+    const sizeValue = selectedSize.toLowerCase();
+    url += `&attribute_pa_size=${encodeURIComponent(sizeValue)}`;
+  }
+
+  // For checkout, add checkout parameter
+  if (action === "checkout") {
+    url += `&checkout=true`;
+  }
+
+  // Open in same window for checkout, new tab for cart
+  if (action === "checkout") {
+    window.location.href = url;
+  } else {
+    window.open(url, "_blank");
+  }
+};
+
+export default function ProductTemplate1a({
+  productData,
+}: {
+  productData?: any;
+}) {
+  // Use dynamic data if available, otherwise use static data
+  const templateData = productData
+    ? convertApiProductToTemplate(productData)
+    : {
+        id: 1,
+        name: "ScubaPro Hydros Pro BCD",
+        price: "$899.00",
+        originalPrice: "$999.00",
+        description:
+          "The ScubaPro Hydros Pro BCD represents the pinnacle of buoyancy control device technology, combining innovative design with uncompromising performance.",
+        images: ["/placeholder.svg"],
+        category: "BCDs",
+        brand: "ScubaPro",
+        colors: ["Black/Blue", "Black", "Blue"],
+        sizes: ["XS", "S", "M", "L", "XL"],
+        inStock: true,
+        stockQuantity: 5,
+        rating: 4.8,
+        reviewCount: 127,
+        sku: "HYDROS-PRO-001",
+        weight: "2.5 lbs",
+        dimensions: { length: "18", width: "12", height: "8" },
+        features: [
+          "Revolutionary weight-free design",
+          "Ultra-lightweight construction",
+          "Integrated weight system",
+          "Comfortable fit for all body types",
+        ],
+        specifications: [
+          { label: "Brand", value: "ScubaPro" },
+          { label: "Model", value: "Hydros Pro" },
+          { label: "Type", value: "Back Inflation BCD" },
+          { label: "Weight", value: "2.5 lbs" },
+          { label: "Dimensions", value: "18 x 12 x 8 inches" },
+        ],
+        included: [
+          "Hydros Pro BCD",
+          "Integrated weight pockets",
+          "ScubaPro warranty card",
+          "User manual",
+        ],
+        shipping:
+          "Free shipping on orders over $100. Standard shipping 3-5 business days.",
+        returnPolicy:
+          "30-day return policy. Items must be in original condition.",
+      };
+
+  const [selectedColor, setSelectedColor] = useState(templateData.colors[0]);
+  const [selectedSize, setSelectedSize] = useState(templateData.sizes[0]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [cartMessage, setCartMessage] = useState<string | null>(null);
 
   // States for collapsible sections
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
@@ -238,13 +512,10 @@ export default function ProductTemplate1a() {
     setIsDescriptionOpen(true); // Open product details by default after mounting
   }, []);
 
-  const currentImages =
-    sampleProduct.images[selectedColor] || sampleProduct.images["Black/Blue"];
-  const selectedSizeData = sampleProduct.sizes.find(
-    (s) => s.name === selectedSize,
-  );
-  const selectedColorData = sampleProduct.colors.find(
-    (c) => c.name === selectedColor,
+  const currentImages = templateData.images;
+  const selectedSizeData = templateData.sizes.find((s) => s === selectedSize);
+  const selectedColorData = templateData.colors.find(
+    (c) => c === selectedColor,
   );
 
   const handleQuantityChange = (delta: number) => {
@@ -323,7 +594,7 @@ export default function ProductTemplate1a() {
             </Link>
             <span className="mx-2 text-gray-300">›</span>
             <span className="text-gray-900 font-medium">
-              {sampleProduct.name}
+              {templateData.name}
             </span>
           </nav>
         </div>
@@ -336,16 +607,16 @@ export default function ProductTemplate1a() {
             {/* Main Image */}
             <div className="relative aspect-square bg-white rounded-xl overflow-hidden border border-gray-100 shadow-lg group">
               <Image
-                src={currentImages[selectedImage]}
-                alt={`${sampleProduct.name} in ${selectedColor}`}
+                src={currentImages[selectedImage] || currentImages[0]}
+                alt={`${templateData.name} in ${selectedColor}`}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
 
               {/* Discount Badge */}
-              {sampleProduct.discount > 0 && (
+              {templateData.originalPrice && (
                 <Badge className="absolute top-4 left-4 bg-red-600 text-white font-semibold px-3 py-1 shadow-md">
-                  -{sampleProduct.discount}% OFF
+                  SALE
                 </Badge>
               )}
 
@@ -398,30 +669,30 @@ export default function ProductTemplate1a() {
             {/* Brand and Title */}
             <div>
               <Link
-                href={`/brand/${sampleProduct.brand.toLowerCase()}`}
+                href={`/brand/${templateData.brand.toLowerCase()}`}
                 className="inline-block"
               >
                 <p className="text-blue-700 font-semibold mb-3 hover:underline">
-                  {sampleProduct.brand}
+                  {templateData.brand}
                 </p>
               </Link>
               <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
-                {sampleProduct.name}
+                {templateData.name}
               </h1>
 
               {/* Rating and Reviews */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex items-center">
-                  {renderStars(sampleProduct.rating)}
+                  {renderStars(templateData.rating)}
                 </div>
                 <span className="text-lg font-semibold text-gray-900">
-                  {sampleProduct.rating}
+                  {templateData.rating}
                 </span>
                 <Link
                   href="#reviews"
                   className="text-blue-700 hover:text-blue-800 hover:underline font-medium"
                 >
-                  {sampleProduct.reviewCount} ratings
+                  {templateData.reviewCount} ratings
                 </Link>
                 <span className="text-gray-300">|</span>
                 <span className="text-sm text-gray-600">
@@ -434,24 +705,20 @@ export default function ProductTemplate1a() {
             <div className="space-y-3 pb-4 border-b border-gray-200">
               <div className="flex items-baseline gap-3">
                 <span className="text-3xl font-medium text-gray-900">
-                  ${selectedSizeData?.price || sampleProduct.price}
+                  {templateData.price}
                 </span>
-                {sampleProduct.originalPrice > sampleProduct.price && (
+                {templateData.originalPrice && (
                   <span className="text-lg text-gray-500 line-through">
-                    List: ${sampleProduct.originalPrice}
+                    List: {templateData.originalPrice}
                   </span>
                 )}
               </div>
 
               {/* Savings */}
-              {sampleProduct.discount > 0 && (
+              {templateData.originalPrice && (
                 <div className="flex items-center gap-2">
                   <p className="text-red-700 font-semibold">
-                    Save $
-                    {(
-                      sampleProduct.originalPrice - sampleProduct.price
-                    ).toFixed(2)}{" "}
-                    ({sampleProduct.discount}%)
+                    Save {templateData.originalPrice}
                   </p>
                   <Badge className="bg-red-100 text-red-800 text-xs">
                     Limited time
@@ -476,34 +743,23 @@ export default function ProductTemplate1a() {
               </div>
 
               <div className="flex gap-2">
-                {sampleProduct.colors.map((color) => (
+                {templateData.colors.map((color) => (
                   <button
-                    key={color.name}
+                    key={color}
                     onClick={() => {
-                      setSelectedColor(color.name);
+                      setSelectedColor(color);
                       setSelectedImage(0);
                     }}
-                    disabled={!color.available}
-                    className={`group relative w-14 h-14 rounded-lg border-2 transition-all shadow-sm hover:shadow-md ${
-                      selectedColor === color.name
-                        ? "border-orange-500 ring-2 ring-orange-200"
-                        : "border-gray-300 hover:border-gray-400"
-                    } ${!color.available ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                    className={`group relative px-4 py-2 rounded-lg border-2 transition-all shadow-sm hover:shadow-md ${
+                      selectedColor === color
+                        ? "border-orange-500 ring-2 ring-orange-200 bg-orange-50"
+                        : "border-gray-300 hover:border-gray-400 bg-white"
+                    } cursor-pointer`}
                   >
-                    <div
-                      className="w-full h-full rounded-md"
-                      style={{ backgroundColor: color.hex }}
-                    />
-                    {selectedColor === color.name && (
+                    <span className="text-sm font-medium">{color}</span>
+                    {selectedColor === color && (
                       <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center">
                         <CheckCircle className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                    {!color.available && (
-                      <div className="absolute inset-0 bg-white/70 rounded-md flex items-center justify-center">
-                        <span className="text-xs font-medium text-gray-600">
-                          Out
-                        </span>
                       </div>
                     )}
                   </button>
@@ -529,25 +785,17 @@ export default function ProductTemplate1a() {
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                {sampleProduct.sizes.map((size) => (
+                {templateData.sizes.map((size) => (
                   <button
-                    key={size.name}
-                    onClick={() => setSelectedSize(size.name)}
-                    disabled={!size.available}
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
                     className={`p-4 border rounded-lg text-center transition-all font-medium ${
-                      selectedSize === size.name
+                      selectedSize === size
                         ? "border-orange-500 bg-orange-50 text-orange-700 ring-2 ring-orange-200"
-                        : size.available
-                          ? "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
-                          : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    <div className="font-semibold text-lg">{size.name}</div>
-                    {!size.available && (
-                      <div className="text-xs text-red-600 mt-1">
-                        Currently unavailable
-                      </div>
-                    )}
+                    <div className="font-semibold text-lg">{size}</div>
                   </button>
                 ))}
               </div>
@@ -574,7 +822,9 @@ export default function ProductTemplate1a() {
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-600" />
                 <span className="font-semibold text-green-700">
-                  {sampleProduct.availability}
+                  {templateData.inStock
+                    ? `In Stock (${templateData.stockQuantity} available)`
+                    : "Out of Stock"}
                 </span>
               </div>
 
@@ -611,7 +861,7 @@ export default function ProductTemplate1a() {
                 About this item
               </h3>
               <ul className="space-y-3">
-                {sampleProduct.features.slice(0, 5).map((feature, index) => (
+                {templateData.features.slice(0, 5).map((feature, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
                     <span className="text-gray-700 leading-relaxed">
@@ -653,14 +903,65 @@ export default function ProductTemplate1a() {
                 </div>
               </div>
 
+              {/* Cart Message */}
+              {cartMessage && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                  <p className="text-green-700 text-sm font-medium">
+                    {cartMessage}
+                  </p>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="space-y-3">
-                <Button className="w-full bg-gradient-to-b from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-semibold text-base py-3 rounded-full shadow-md hover:shadow-lg transition-all">
-                  Add to Cart
+                <Button
+                  onClick={() => {
+                    setIsAddingToCart(true);
+                    setCartMessage("Adding to cart...");
+
+                    // Use direct URL redirection method
+                    redirectToWooCommerce(
+                      "cart",
+                      templateData,
+                      quantity,
+                      selectedColor,
+                      selectedSize,
+                    );
+
+                    // Reset state after a short delay (since it opens in new tab)
+                    setTimeout(() => {
+                      setIsAddingToCart(false);
+                      setCartMessage(null);
+                    }, 1500);
+                  }}
+                  disabled={isAddingToCart || !templateData.inStock}
+                  className="w-full bg-gradient-to-b from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-semibold text-base py-3 rounded-full shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isAddingToCart ? "Adding..." : "Add to Cart"}
                 </Button>
 
-                <Button className="w-full bg-gradient-to-b from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold text-base py-3 rounded-full shadow-md hover:shadow-lg transition-all">
-                  Buy Now
+                <Button
+                  onClick={() => {
+                    setIsAddingToCart(true);
+                    setCartMessage(
+                      "Adding to cart and redirecting to checkout...",
+                    );
+
+                    // Use direct URL redirection method for checkout
+                    redirectToWooCommerce(
+                      "checkout",
+                      templateData,
+                      quantity,
+                      selectedColor,
+                      selectedSize,
+                    );
+
+                    // No need to reset state since page will redirect
+                  }}
+                  disabled={isAddingToCart || !templateData.inStock}
+                  className="w-full bg-gradient-to-b from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold text-base py-3 rounded-full shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isAddingToCart ? "Processing..." : "Buy Now"}
                 </Button>
 
                 <div className="grid grid-cols-2 gap-2 mt-4">
@@ -735,26 +1036,32 @@ export default function ProductTemplate1a() {
                 <CollapsibleContent>
                   <div className="p-4 bg-gray-50 border border-t-0 border-gray-200 rounded-b-lg">
                     <div className="prose max-w-none">
-                      <p className="mb-4 text-gray-700">
-                        The ScubaPro MK25 EVO represents the pinnacle of
-                        regulator technology, designed for serious divers who
-                        demand the highest performance and reliability. This
-                        balanced diaphragm first stage delivers exceptional
-                        breathing performance at any depth or breathing rate.
-                      </p>
-                      <p className="mb-4 text-gray-700">
-                        Features include an environmental seal for cold water
-                        diving, high-flow performance, and multiple port
-                        configurations. The MK25 EVO is compatible with Nitrox
-                        up to 40% oxygen and meets all major international
-                        diving standards.
-                      </p>
+                      {templateData.description ? (
+                        <div className="mb-4 text-gray-700">
+                          {templateData.description
+                            .split("\n")
+                            .map((paragraph, index) => (
+                              <p key={index} className="mb-4">
+                                {paragraph}
+                              </p>
+                            ))}
+                        </div>
+                      ) : (
+                        <p className="mb-4 text-gray-700">
+                          {templateData.name} represents the pinnacle of
+                          {templateData.category.toLowerCase()} technology,
+                          designed for serious divers who demand the highest
+                          performance and reliability. This professional-grade
+                          equipment delivers exceptional performance in all
+                          diving conditions.
+                        </p>
+                      )}
 
                       <h4 className="text-lg font-semibold mt-6 mb-3 text-gray-900">
                         Complete Features:
                       </h4>
                       <ul className="list-disc pl-6 space-y-1">
-                        {sampleProduct.features.map((feature, index) => (
+                        {templateData.features.map((feature, index) => (
                           <li key={index} className="text-gray-700">
                             {feature}
                           </li>
@@ -785,19 +1092,17 @@ export default function ProductTemplate1a() {
                 <CollapsibleContent>
                   <div className="p-4 bg-gray-50 border border-t-0 border-gray-200 rounded-b-lg">
                     <div className="grid md:grid-cols-1 gap-4">
-                      {Object.entries(sampleProduct.specs).map(
-                        ([key, value]) => (
-                          <div
-                            key={key}
-                            className="flex justify-between border-b border-gray-200 pb-2"
-                          >
-                            <span className="font-medium text-gray-900">
-                              {key}:
-                            </span>
-                            <span className="text-gray-700">{value}</span>
-                          </div>
-                        ),
-                      )}
+                      {templateData.specifications.map((spec) => (
+                        <div
+                          key={spec.label}
+                          className="flex justify-between border-b border-gray-200 pb-2"
+                        >
+                          <span className="font-medium text-gray-900">
+                            {spec.label}:
+                          </span>
+                          <span className="text-gray-700">{spec.value}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </CollapsibleContent>
@@ -811,7 +1116,7 @@ export default function ProductTemplate1a() {
                 <CollapsibleTrigger className="w-full">
                   <div className="flex items-center justify-between w-full p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     <span className="font-semibold text-gray-900">
-                      Reviews ({sampleProduct.reviewCount})
+                      Reviews ({templateData.reviewCount})
                     </span>
                     {mounted && isReviewsOpen ? (
                       <ChevronUp className="w-5 h-5 text-gray-500" />
@@ -831,14 +1136,14 @@ export default function ProductTemplate1a() {
                           </h4>
                           <div className="flex items-center gap-4 mb-4">
                             <span className="text-3xl font-bold text-gray-900">
-                              {sampleProduct.rating}
+                              {templateData.rating}
                             </span>
                             <div>
                               <div className="flex items-center mb-1">
-                                {renderStars(sampleProduct.rating)}
+                                {renderStars(templateData.rating)}
                               </div>
                               <p className="text-gray-600">
-                                {sampleProduct.reviewCount} total reviews
+                                {templateData.reviewCount} total reviews
                               </p>
                             </div>
                           </div>
@@ -883,7 +1188,47 @@ export default function ProductTemplate1a() {
 
                       {/* Individual Reviews */}
                       <div className="space-y-4">
-                        {reviews.slice(0, 2).map((review) => (
+                        {templateData.reviewCount > 0 ? (
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-medium text-gray-900">
+                                    Customer Review
+                                  </span>
+                                  {renderStars(templateData.rating)}
+                                </div>
+                                <p className="text-sm text-gray-600">
+                                  Based on {templateData.reviewCount} reviews
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-gray-700 mb-3">
+                              This {templateData.name} has received excellent
+                              feedback from our customers with an average rating
+                              of {templateData.rating} stars.
+                              {templateData.reviewCount > 10
+                                ? ` With over ${templateData.reviewCount} reviews, this product is highly recommended by the diving community.`
+                                : ""}
+                            </p>
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <span>Verified Purchase</span>
+                              <span>•</span>
+                              <span>
+                                Helpful (
+                                {Math.floor(templateData.reviewCount * 0.7)})
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                            <p className="text-gray-600 mb-2">No reviews yet</p>
+                            <p className="text-sm text-gray-500">
+                              Be the first to review this product!
+                            </p>
+                          </div>
+                        )}
+                        {reviews.slice(0, 1).map((review) => (
                           <div
                             key={review.id}
                             className="bg-white p-4 rounded-lg border border-gray-200"
@@ -950,31 +1295,32 @@ export default function ProductTemplate1a() {
                     <div className="space-y-6">
                       <div className="border-b border-gray-200 pb-4">
                         <h5 className="font-medium mb-2 text-gray-900">
-                          Q: Is this regulator suitable for cold water diving?
+                          Q: What's included with this {templateData.name}?
                         </h5>
                         <p className="text-gray-700 mb-2 text-sm">
-                          A: Yes, the MK25 EVO features an environmental seal
-                          specifically designed for cold water conditions. It's
-                          tested and certified for diving in temperatures as low
-                          as -2°C (28°F).
+                          A: This {templateData.name} comes with{" "}
+                          {templateData.included.join(", ").toLowerCase()}. All
+                          items are carefully packaged and include manufacturer
+                          warranty.
                         </p>
                         <p className="text-xs text-gray-500">
-                          Answered by ScubaGear Pro Expert • 3 days ago
+                          Answered by {templateData.brand} Expert • 3 days ago
                         </p>
                       </div>
 
                       <div className="border-b border-gray-200 pb-4">
                         <h5 className="font-medium mb-2 text-gray-900">
-                          Q: What's included in the box?
+                          Q: Is this {templateData.category.toLowerCase()}{" "}
+                          suitable for my diving level?
                         </h5>
                         <p className="text-gray-700 mb-2 text-sm">
-                          A: The package includes the MK25 EVO first stage, user
-                          manual, warranty card, and a protective dust cap.
-                          Second stage, octopus, and pressure gauge are sold
-                          separately.
+                          A: The {templateData.name} is designed for divers of
+                          all levels. It features professional-grade
+                          construction and is suitable for both recreational and
+                          technical diving applications.
                         </p>
                         <p className="text-xs text-gray-500">
-                          Answered by Product Specialist • 1 week ago
+                          Answered by {templateData.brand} Expert • 1 week ago
                         </p>
                       </div>
 
