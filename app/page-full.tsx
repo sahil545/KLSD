@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -39,6 +37,8 @@ import {
   Settings,
   X,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 // Base API URL for category products
@@ -59,9 +59,10 @@ export default function Homepage() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeAdventureFilter, setActiveAdventureFilter] = useState("all");
-  const [activeGearFilter, setActiveGearFilter] = useState("All");
+  const [activeGearFilter, setActiveGearFilter] = useState("Regulators");
   const [featuredGearProducts, setFeaturedGearProducts] = useState<any[]>([]);
   const [loadingFeaturedGear, setLoadingFeaturedGear] = useState(true);
+  const [currentGearSlide, setCurrentGearSlide] = useState(0);
   const [adventures, setAdventures] = useState<
     Array<{
       id: number;
@@ -145,6 +146,8 @@ export default function Homepage() {
       inStock: stockStatus === "instock",
       description:
         product.short_description || product.description || productName,
+      featured: product.featured || product.featured_product || false,
+      featured_product: product.featured || product.featured_product || false,
     };
   };
 
@@ -163,22 +166,25 @@ export default function Homepage() {
 
         // Flatten all products and filter for featured ones
         const allProducts = categoryResults.flat();
-        const featuredProducts = allProducts
-          .filter((product) => product.featured || product.featured_product)
-          .map(convertToGearItem);
+
+        // Convert all products to proper gear items
+        const convertedProducts = allProducts.map(convertToGearItem);
+
+        // Filter for featured products first
+        const featuredProducts = convertedProducts.filter(
+          (product: any) => product.featured || product.featured_product,
+        );
 
         // If no featured products, get random products from all categories
         let displayProducts = featuredProducts;
         if (displayProducts.length < 6) {
-          const randomProducts = allProducts
-            .map(convertToGearItem)
+          const randomProducts = convertedProducts
             .sort(() => 0.5 - Math.random())
-            .slice(0, 6);
+            .slice(0, 6); // Get more products for better variety
           displayProducts = randomProducts;
         }
 
-        // Take only 6 products and randomize them
-        setFeaturedGearProducts(displayProducts.slice(0, 6));
+        setFeaturedGearProducts(displayProducts);
       } catch (error) {
         console.warn("Failed to load featured gear products:", error);
         // Fallback to empty array
@@ -190,6 +196,55 @@ export default function Homepage() {
 
     loadFeaturedGear();
   }, []);
+
+  // Load products for specific category when filter changes
+  useEffect(() => {
+    if (activeGearFilter === "All") return; // Don't reload for "All" filter
+
+    const loadCategorySpecificProducts = async () => {
+      try {
+        setLoadingFeaturedGear(true);
+
+        // Find the category ID for the selected filter
+        const selectedCategory = FEATURED_CATEGORIES.find(
+          (cat) => cat.name === activeGearFilter,
+        );
+
+        if (!selectedCategory) {
+          console.warn(`Category not found for filter: ${activeGearFilter}`);
+          return;
+        }
+
+        // Load products from the specific category
+        const categoryProducts = await loadCategoryProducts(
+          selectedCategory.id,
+        );
+
+        // Convert to proper gear items
+        const convertedProducts = categoryProducts.map(convertToGearItem);
+
+        // Limit to maximum 6 products per category
+        const limitedProducts = convertedProducts.slice(0, 6);
+
+        // Set the products for this category
+        console.log(
+          `Loaded ${limitedProducts.length} products for category: ${activeGearFilter}`,
+          limitedProducts,
+        );
+        setFeaturedGearProducts(limitedProducts);
+      } catch (error) {
+        console.warn(
+          `Failed to load products for category ${activeGearFilter}:`,
+          error,
+        );
+        setFeaturedGearProducts([]);
+      } finally {
+        setLoadingFeaturedGear(false);
+      }
+    };
+
+    loadCategorySpecificProducts();
+  }, [activeGearFilter]);
 
   // Load live trips from WooCommerce
   useEffect(() => {
@@ -588,10 +643,10 @@ export default function Homepage() {
 
   // Gear filter options
   const gearFilterOptions = [
-    { name: "All", icon: Users, color: "ocean" },
-    { name: "Scuba Gear", icon: Star, color: "sage" },
-    { name: "BCDs", icon: Award, color: "coral" },
+    // { name: "All", icon: Users, color: "ocean" },
+    // { name: "Scuba Gear", icon: Star, color: "sage" },
     { name: "Regulators", icon: UserCheck, color: "ocean" },
+    { name: "BCDs", icon: Award, color: "coral" },
     { name: "Scuba Masks", icon: BookOpen, color: "sage" },
     { name: "Dive Fins", icon: Fish, color: "coral" },
     { name: "Rash Guards", icon: Waves, color: "ocean" },
@@ -599,11 +654,32 @@ export default function Homepage() {
 
   // Filter featured gear products
   const filteredFeaturedGear = React.useMemo(() => {
-    if (activeGearFilter === "All") return featuredGearProducts;
-    return featuredGearProducts.filter(
-      (product) => product.category === activeGearFilter,
+    // Since we're now loading category-specific products, just return all products
+
+    return featuredGearProducts;
+  }, [featuredGearProducts]);
+
+  // Gear slider navigation functions
+  const nextGearSlide = () => {
+    const maxSlides = Math.max(
+      0,
+      Math.ceil(filteredFeaturedGear.length / 6) - 1,
     );
-  }, [featuredGearProducts, activeGearFilter]);
+    setCurrentGearSlide((prev) => (prev >= maxSlides ? 0 : prev + 1));
+  };
+
+  const prevGearSlide = () => {
+    const maxSlides = Math.max(
+      0,
+      Math.ceil(filteredFeaturedGear.length / 6) - 1,
+    );
+    setCurrentGearSlide((prev) => (prev <= 0 ? maxSlides : prev - 1));
+  };
+
+  // Reset gear slide when filter changes
+  React.useEffect(() => {
+    setCurrentGearSlide(0);
+  }, [activeGearFilter]);
 
   return (
     <div className="min-h-screen">
@@ -1378,8 +1454,8 @@ export default function Homepage() {
               </div>
             </div>
 
-            {/* Product Cards Grid */}
-            <div className="overflow-x-auto pb-4">
+            {/* Product Cards Slider */}
+            <div className="relative">
               {loadingFeaturedGear ? (
                 <div className="flex justify-center items-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin text-ocean" />
@@ -1388,59 +1464,72 @@ export default function Homepage() {
                   </span>
                 </div>
               ) : (
-                <div className="flex gap-4 w-max md:w-full md:grid md:grid-cols-6">
-                  {filteredFeaturedGear.length > 0 ? (
-                    filteredFeaturedGear.map((product) => (
-                      <Link
-                        key={product.id}
-                        href={`/product/${product.name
-                          .toLowerCase()
-                          .replace(/[^a-z0-9]+/g, "-")
-                          .replace(
-                            /^-+|-+$/g,
-                            "",
-                          )}?categoryId=${product.categoryId || 186}&productId=${product.id}`}
-                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0 cursor-pointer"
-                      >
-                        <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            width={300}
-                            height={200}
-                            className="w-full h-full object-cover"
-                          />
-                          {product.badges && product.badges.length > 0 && (
-                            <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
-                              {product.badges[0]}
-                            </Badge>
-                          )}
-                        </div>
-                        <h4 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">
-                          {product.name}
-                        </h4>
-                        <p className="text-xs text-gray-600 mb-2 line-clamp-1">
-                          {product.category}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <div className="text-lg font-bold text-ocean">
-                            {product.price}
-                          </div>
-                          {product.originalPrice && (
-                            <div className="text-sm text-gray-500 line-through">
-                              {product.originalPrice}
+                <div>
+                  {/* Product Cards Container */}
+                  <div className="overflow-x-auto pb-4">
+                    <div className="flex gap-4 w-max md:w-full md:grid md:grid-cols-6">
+                      {filteredFeaturedGear.length > 0 ? (
+                        filteredFeaturedGear.map((product, index) => (
+                          <Link
+                            key={`${product.id}-${product.categoryId}-${index}`}
+                            href={`/product/${product.name
+                              .toLowerCase()
+                              .replace(/[^a-z0-9]+/g, "-")
+                              .replace(
+                                /^-+|-+$/g,
+                                "",
+                              )}?categoryId=${product.categoryId || 186}&productId=${product.id}`}
+                            className="bg-white border border-gray-200 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow w-48 flex-shrink-0 cursor-pointer"
+                          >
+                            <div className="relative h-32 mb-3 bg-gray-50 rounded-lg overflow-hidden">
+                              {product.image ? (
+                                <Image
+                                  src={product.image}
+                                  alt={product.name}
+                                  width={300}
+                                  height={200}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                  <span className="text-gray-400 text-xs">
+                                    No Image
+                                  </span>
+                                </div>
+                              )}
+                              {product.badges && product.badges.length > 0 && (
+                                <Badge className="absolute top-2 right-2 bg-blue-600 text-white text-xs">
+                                  {product.badges[0]}
+                                </Badge>
+                              )}
                             </div>
-                          )}
+                            <h4 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2">
+                              {product.name}
+                            </h4>
+                            <p className="text-xs text-gray-600 mb-2 line-clamp-1">
+                              {product.category}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <div className="text-lg font-bold text-ocean">
+                                {product.price}
+                              </div>
+                              {product.originalPrice && (
+                                <div className="text-sm text-gray-500 line-through">
+                                  {product.originalPrice}
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                        ))
+                      ) : (
+                        <div className="col-span-6 text-center py-12">
+                          <p className="text-gray-500">
+                            No featured gear products available at the moment.
+                          </p>
                         </div>
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="col-span-6 text-center py-12">
-                      <p className="text-gray-500">
-                        No featured gear products available at the moment.
-                      </p>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>

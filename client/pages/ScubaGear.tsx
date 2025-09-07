@@ -35,7 +35,6 @@ const CATEGORY_API_BASE =
 
 // Category chips with their IDs
 const categoryChips = [
-  { id: 186, name: "Scuba Gear" },
   { id: 204, name: "BCDs" },
   { id: 197, name: "BCD Accessories" },
   { id: 205, name: "Dive Fins" },
@@ -46,8 +45,8 @@ const categoryChips = [
 ];
 
 export default function ScubaGear() {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [featuredCategory, setFeaturedCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState("BCDs");
+  const [featuredCategory, setFeaturedCategory] = useState("BCDs");
   const [products, setProducts] = useState<WooCommerceProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,13 +71,14 @@ export default function ScubaGear() {
         setError(null);
 
         // Try to load from category APIs first
-        const allProducts = await loadCategoryProducts("All");
+        const firstCategory = categoryChips[0].name;
+        const allProducts = await loadCategoryProducts(firstCategory);
 
         if (allProducts.length > 0) {
           setConnectionStatus("connected");
           setCategoryProducts((prev) => ({
             ...prev,
-            All: allProducts,
+            [firstCategory]: allProducts,
           }));
           setProducts(allProducts);
         } else {
@@ -152,7 +152,7 @@ export default function ScubaGear() {
   }
 
   const categories = React.useMemo(() => {
-    const names = new Set<string>(["All"]);
+    const names = new Set<string>();
 
     if (connectionStatus === "connected" && products.length > 0) {
       products.forEach((p: any) =>
@@ -176,7 +176,7 @@ export default function ScubaGear() {
   const loadCategoryProducts = async (category: string): Promise<any[]> => {
     // Find the category ID from categoryChips
     const categoryChip = categoryChips.find((chip) => chip.name === category);
-    const categoryId = categoryChip?.id || (category === "All" ? 186 : null);
+    const categoryId = categoryChip?.id;
 
     if (!categoryId) return [];
 
@@ -217,8 +217,8 @@ export default function ScubaGear() {
           ...prev,
           [category]: products,
         }));
-        // Update main products if this is the "All" category
-        if (category === "All") {
+        // Update main products if this is the first category
+        if (category === categoryChips[0].name) {
           setProducts(products);
         }
       } catch (error) {
@@ -440,13 +440,9 @@ export default function ScubaGear() {
   ];
 
   const filteredProducts = React.useMemo(() => {
-    if (activeCategory === "All") {
-      return categoryProducts["All"] || products;
-    }
-
     // Use products from the specific category API
     return categoryProducts[activeCategory] || [];
-  }, [categoryProducts, activeCategory, products]);
+  }, [categoryProducts, activeCategory]);
 
   const allGearItems = () => {
     if (
@@ -468,9 +464,7 @@ export default function ScubaGear() {
       return filteredProducts.map(convertToGearItem);
     } else {
       // Fallback to demo data filtering
-      return legacyGearItems.filter(
-        (item) => activeCategory === "All" || item.category === activeCategory,
-      );
+      return legacyGearItems.filter((item) => item.category === activeCategory);
     }
   }, [activeCategory, filteredProducts, connectionStatus, categoryProducts]);
 
@@ -924,9 +918,7 @@ export default function ScubaGear() {
     };
     const featured = allGearItems()
       .filter((i) => i.featured === true)
-      .filter(
-        (i) => featuredCategory === "All" || i.category === featuredCategory,
-      )
+      .filter((i) => i.category === featuredCategory)
       .slice(0, 8);
     return (
       <>
@@ -995,37 +987,6 @@ export default function ScubaGear() {
           <div className="container mx-auto px-4">
             <div className="overflow-x-auto no-scrollbar">
               <div className="flex gap-4 py-1">
-                {/* All Categories Card */}
-                <Card
-                  className={`relative w-[246px] h-[108px] flex-shrink-0 overflow-hidden rounded-lg border-0 shadow-md hover:shadow-lg cursor-pointer ${
-                    featuredCategory === "All"
-                      ? "ring-2 ring-coral ring-offset-2"
-                      : ""
-                  } ${loadingFeaturedCategories.has("All") ? "opacity-75" : ""}`}
-                  onClick={() => handleFeaturedCategoryChange("All")}
-                >
-                  <img
-                    src={
-                      current?.image || "https://via.placeholder.com/300x200"
-                    }
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-br from-ocean/50 via-black/20 to-coral/50" />
-                  {loadingFeaturedCategories.has("All") && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <Loader2 className="w-6 h-6 text-white animate-spin" />
-                    </div>
-                  )}
-                  <CardContent className="relative p-3 h-full flex flex-col justify-center">
-                    <h3 className="text-white text-base font-semibold leading-tight">
-                      All Categories
-                    </h3>
-                    <p className="text-xs text-white/90 line-clamp-1">
-                      Browse all featured products
-                    </p>
-                  </CardContent>
-                </Card>
                 {categoryChips.map((dept) => (
                   <Card
                     key={dept.id}
@@ -1089,8 +1050,9 @@ export default function ScubaGear() {
             <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
               <h3 className="text-xl font-semibold">Browse Scuba Gear</h3>
               <div className="flex flex-wrap gap-2 overflow-x-auto no-scrollbar">
-                {["All", ...categoryChips.map((c) => c.name)].map(
-                  (category) => (
+                {categoryChips
+                  .map((c) => c.name)
+                  .map((category) => (
                     <Button
                       key={`browse-${category}`}
                       variant={
@@ -1113,8 +1075,7 @@ export default function ScubaGear() {
                         category
                       )}
                     </Button>
-                  ),
-                )}
+                  ))}
               </div>
             </div>
             <div className="text-xs text-muted-foreground mb-3">
