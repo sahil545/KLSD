@@ -9,9 +9,134 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
+
+# -------------------- WordPress/WooCommerce Reverse Proxy --------------------
+
+# WordPress admin & login
+[[redirects]]
+from = "/wp-admin/*"
+to = "https://wp.staging13.keylargoscubadiving.com/wp-admin/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "/wp-login.php"
+to = "https://wp.staging13.keylargoscubadiving.com/wp-login.php"
+status = 200
+force = true
+
+# WP core & assets
+[[redirects]]
+from = "/wp-includes/*"
+to = "https://wp.staging13.keylargoscubadiving.com/wp-includes/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "/wp-content/*"
+to = "https://wp.staging13.keylargoscubadiving.com/wp-content/:splat"
+status = 200
+force = true
+
+# AJAX & REST
+[[redirects]]
+from = "/wp-admin/admin-ajax.php"
+to = "https://wp.staging13.keylargoscubadiving.com/wp-admin/admin-ajax.php"
+status = 200
+force = true
+
+[[redirects]]
+from = "/wp-json/*"
+to = "https://wp.staging13.keylargoscubadiving.com/wp-json/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "/wc-api/*"
+to = "https://wp.staging13.keylargoscubadiving.com/wc-api/:splat"
+status = 200
+force = true
+
+# WooCommerce routes
+[[redirects]]
+from = "/cart/*"
+to = "https://wp.staging13.keylargoscubadiving.com/cart/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "/checkout/*"
+to = "https://wp.staging13.keylargoscubadiving.com/checkout/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "/my-account/*"
+to = "https://wp.staging13.keylargoscubadiving.com/my-account/:splat"
+status = 200
+force = true
+
+[[redirects]]
+from = "/order/*"
+to = "https://wp.staging13.keylargoscubadiving.com/order/:splat"
+status = 200
+force = true
+
+# Add-to-cart passthrough
+[[redirects]]
+from = "/?add-to-cart=:id"
+to = "https://wp.staging13.keylargoscubadiving.com/?add-to-cart=:id"
+status = 200
+force = true
+
+[[redirects]]
+from = "/*?add-to-cart=:id"
+to = "https://wp.staging13.keylargoscubadiving.com/?add-to-cart=:id"
+status = 200
+force = true
+
+# SEO endpoints
+[[redirects]]
+from = "/robots.txt"
+to = "https://wp.staging13.keylargoscubadiving.com/robots.txt"
+status = 200
+force = true
+
+[[redirects]]
+from = "/sitemap.xml"
+to = "https://wp.staging13.keylargoscubadiving.com/sitemap.xml"
+status = 200
+force = true
+
+[[redirects]]
+from = "/sitemap_index.xml"
+to = "https://wp.staging13.keylargoscubadiving.com/sitemap_index.xml"
+status = 200
+force = true
+
+[[redirects]]
+from = "/sitemap-:rest"
+to = "https://wp.staging13.keylargoscubadiving.com/sitemap-:rest"
+status = 200
+force = true
+
+# Disable caching for cart/checkout/account
+[[headers]]
+for = "/cart/*"
+[headers.values]
+Cache-Control = "no-store"
+
+[[headers]]
+for = "/checkout/*"
+[headers.values]
+Cache-Control = "no-store"
+
+[[headers]]
+for = "/my-account/*"
+[headers.values]
+Cache-Control = "no-store"
