@@ -43,7 +43,7 @@ import {
 
 // Base API URL for category products
 const CATEGORY_API_BASE =
-  "https://keylargoscubadiving.com/wp-json/childtheme/v1/products-by-category/";
+  "https://wp.staging13.keylargoscubadiving.com/wp-json/childthemes/v1/products-by-category/";
 
 // Category chips with their IDs for featured gear
 const FEATURED_CATEGORIES = [

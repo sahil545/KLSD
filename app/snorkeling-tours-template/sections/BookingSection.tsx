@@ -71,7 +71,7 @@ export default function BookingSection({
   const fetchCustomFormFields = async () => {
     try {
       const response = await fetch(
-        `https://keylargoscubadiving.com/wp-json/childtheme/v1/product/${productId}`,
+        `https://wp.staging13.keylargoscubadiving.com/wp-json/childthemes/v1/product/${productId}`,
       );
 
       if (!response.ok) {

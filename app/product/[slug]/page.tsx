@@ -6,7 +6,7 @@ import ProductTemplate1a from "../../product-template-1a/page";
 import { Loader2 } from "lucide-react";
 
 const CATEGORY_API_BASE =
-  "https://keylargoscubadiving.com/wp-json/childtheme/v1/products-by-category/";
+  "https://wp.staging13.keylargoscubadiving.com/wp-json/childthemes/v1/products-by-category/";
 
 export default function ProductPage() {
   const searchParams = useSearchParams();

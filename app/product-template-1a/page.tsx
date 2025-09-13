@@ -405,7 +405,7 @@ export default function ProductTemplate1a({
       setLoadingRelated(true);
       try {
         // Fetch all products from the same category
-        const categoryApiUrl = `https://keylargoscubadiving.com/wp-json/childtheme/v1/products-by-category/${templateData.categoryId}`;
+        const categoryApiUrl = `https://wp.staging13.keylargoscubadiving.com/wp-json/childthemes/v1/products-by-category/${templateData.categoryId}`;
 
         const response = await fetch(categoryApiUrl);
 
