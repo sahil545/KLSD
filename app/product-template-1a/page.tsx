@@ -169,7 +169,7 @@ const generateWooCommerceUrl = (
   selectedSize: string,
 ) => {
   // Use the WooCommerce add-to-cart endpoint
-  const baseUrl = "https://keylargoscubadiving.com/cart/";
+  const baseUrl = "https://staging13.keylargoscubadiving.com/cart/";
 
   const url = new URL(baseUrl);
 
@@ -212,7 +212,7 @@ const addToWooCommerceCart = async (
     // Create a hidden form and submit it to add to cart
     const form = document.createElement("form");
     form.method = "POST";
-    form.action = "https://keylargoscubadiving.com/cart/";
+    form.action = "https://staging13.keylargoscubadiving.com/cart/";
     form.target = "_blank";
     form.style.display = "none";
 
@@ -274,16 +274,16 @@ const redirectToWooCommerce = async (
   if (action === "checkout") {
     // For checkout, redirect to checkout page
     if (selectedVariation?.id) {
-      url = `https://keylargoscubadiving.com/checkout/?add-to-cart=${productData.id}&variation_id=${selectedVariation.id}&quantity=${quantity}`;
+      url = `https://staging13.keylargoscubadiving.com/checkout/?add-to-cart=${productData.id}&variation_id=${selectedVariation.id}&quantity=${quantity}`;
     } else {
-      url = `https://keylargoscubadiving.com/checkout/?add-to-cart=${productData.id}&quantity=${quantity}`;
+      url = `https://staging13.keylargoscubadiving.com/checkout/?add-to-cart=${productData.id}&quantity=${quantity}`;
     }
   } else {
     // For cart, use the add-to-cart URL that redirects to cart
     if (selectedVariation?.id) {
-      url = `https://keylargoscubadiving.com/?add-to-cart=${productData.id}&variation_id=${selectedVariation.id}&quantity=${quantity}`;
+      url = `https://staging13.keylargoscubadiving.com/?add-to-cart=${productData.id}&variation_id=${selectedVariation.id}&quantity=${quantity}`;
     } else {
-      url = `https://keylargoscubadiving.com/?add-to-cart=${productData.id}&quantity=${quantity}`;
+      url = `https://staging13.keylargoscubadiving.com/?add-to-cart=${productData.id}&quantity=${quantity}`;
     }
   }
 
@@ -889,7 +889,7 @@ export default function ProductTemplate1a({
                         size="sm"
                         onClick={() =>
                           window.open(
-                            "https://keylargoscubadiving.com/cart",
+                            "https://staging13.keylargoscubadiving.com/cart",
                             "_blank",
                           )
                         }
